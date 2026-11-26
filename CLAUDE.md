@@ -12,7 +12,7 @@ A tactics game for phones, written in plain JavaScript with no build step.
 
 ## Design docs
 
-Design docs live in `docs/design/`. Update a doc's status line and knock-on checklist there as work finishes. More docs are copied in from the old claude.ai Project only when the work needs them; if a doc this one refers to is missing, ask for it. This repo is the source of truth for code and design.
+Design docs live in the claude.ai Project "Tactics Game" (`design/*.md`), not in this repo. The Project also holds older copies of game code. Those copies are stale; this repo is the source of truth for code.
 
 ## Working rules
 
