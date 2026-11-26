@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Call of Calamity — Headless Balance Simulator</title>
+  <style>
+    body { font-family: system-ui, -apple-system, sans-serif; background: #121418; color: #e4e7eb; padding: 16px; max-width: 1200px; margin: 0 auto; }
+    h1 { font-size: 1.35rem; margin-bottom: 4px; color: #f59e0b; }
+    p.sub { font-size: 0.85rem; color: #9ca3af; margin-top: 0; }
+    .controls { background: #1e2229; padding: 12px; border-radius: 8px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-bottom: 16px; }
+    button { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 6px; font-weight: 600; cursor: pointer; }
+    select, input { background: #111317; color: #f3f4f6; border: 1px solid #374151; padding: 8px; border-radius: 6px; }
+    .summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 16px; }
+    .card { background: #1e2229; padding: 12px; border-radius: 8px; }
+    .card .val { font-size: 1.4rem; font-weight: 700; color: #34d399; }
+    .card .lbl { font-size: 0.75rem; color: #9ca3af; text-transform: uppercase; }
+    table { width: 100%; border-collapse: collapse; background: #1e2229; border-radius: 8px; overflow: hidden; font-size: 0.9rem; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #2d333f; }
+    th { background: #262b35; color: #9ca3af; font-size: 0.78rem; text-transform: uppercase; }
+    .win-high { color: #34d399; font-weight: 700; }
+    .win-low { color: #f87171; font-weight: 700; }
+    .bar-bg { background: #111317; height: 8px; border-radius: 4px; width: 90px; overflow: hidden; display: inline-block; vertical-align: middle; margin-right: 6px; }
+    .bar-fill { background: #3b82f6; height: 100%; }
+    .scroll { overflow-x: auto; margin-bottom: 8px; }
+    .scroll table { min-width: 100%; width: max-content; font-size: 0.82rem; }
+    .scroll th, .scroll td { padding: 6px 8px; white-space: nowrap; text-align: right; }
+    .scroll th:first-child, .scroll td:first-child { text-align: left; position: sticky; left: 0; background: #1e2229; z-index: 1; }
+    table.sortable th { user-select: none; } table.sortable th:hover { color: #f59e0b; }
+    table.heat { font-size: 0.68rem; } table.heat th, table.heat td { padding: 3px 4px; text-align: center; } table.heat th:first-child { text-align: left; }
+    table.heat td { color: #fff; min-width: 26px; } table.heat td.hx { background: #181b21; color: #555; }
+    .hist { display: flex; align-items: flex-end; gap: 6px; height: 96px; background: #1e2229; padding: 8px 10px; border-radius: 8px; overflow-x: auto; }
+    .hist .hb { display: flex; flex-direction: column; align-items: center; justify-content: flex-end; font-size: .65rem; color: #9ca3af; }
+    .hist .hbar { width: 22px; background: #3b82f6; border-radius: 3px 3px 0 0; }
+    .exports { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; } .exports button { padding: 6px 12px; font-size: .8rem; background: #374151; }
+  </style>
+</head>
+<body>
+  <p style="margin:0 0 6px"><a href="index.html" style="color:#9ca3af;font-size:.85rem">&larr; Back to the game</a></p>
+  <h1>Call of Calamity — Balance Simulator</h1>
+  <p class="sub">Reads your live <code>/data/*.js</code> files (1v1–6v6 squads, every battle map, height &amp; rocks, 4 AP, CT casts, passive triggers, statuses &amp; gear). Battles use the same rules and the same enemy AI as the game, with both sides AI-controlled, so it shows how fights play out in-game. Not covered: campaign objectives, enemy skill kits and uniques. Gear can be set to any of the seven tiers; uniques are not in the pool.</p>
+
+  <div class="controls">
+    <label>Matches: <input type="number" id="matchCount" value="500" min="10" max="50000" style="width:75px" /></label>
+    <label>Size:
+      <select id="teamSize">
+        <option value="1">1v1</option>
+        <option value="2">2v2</option>
+        <option value="3" selected>3v3</option>
+        <option value="4">4v4</option>
+        <option value="5">5v5</option>
+        <option value="6">6v6</option>
+      </select>
+    </label>
+    <label>Pool:
+      <select id="tierFilter">
+        <option value="all">All Selectable Classes</option>
+        <option value="tier2">Tier 2 Only (Exclude Entry)</option>
+        <option value="entry">Tier 1 Entry Only</option>
+      </select>
+    </label>
+    <label>Map:
+      <select id="mapFilter">
+        <option value="rotate">Rotate All Maps</option>
+        <option value="classic">Rotate 5 Classic Maps</option>
+      </select>
+    </label>
+    <label>Unit level: <input id="unitLevel" type="number" min="1" max="50" value="1" style="width:56px" title="Level of every unit on both sides (same scaling as the game)"></label>
+    <label>Builds:
+      <select id="buildMode">
+        <option value="base">Base Classes Only</option>
+        <option value="gear">Random Equippable Loadout (gear only)</option>
+        <option value="equipped">Random Equippable Loadout + Passives</option>
+      </select>
+      <select id="secMode" title="Give every unit a random secondary class (full access to its skills)">
+        <option value="none">No Secondary Class</option>
+        <option value="random">Random Secondary Class</option>
+      </select>
+    </label>
+    <label>Gear tier:
+      <select id="gearTier" title="Every unit on both sides wears gear of this tier (Iron, Steel, Silversteel, Mithril, Adamant, Dragonsteel, Starforged). Uniques are never used.">
+        <option value="1" selected>1 · Iron</option>
+        <option value="2">2 · Steel</option>
+        <option value="3">3 · Silversteel</option>
+        <option value="4">4 · Mithril</option>
+        <option value="5">5 · Adamant</option>
+        <option value="6">6 · Dragonsteel</option>
+        <option value="7">7 · Starforged</option>
+      </select>
+    </label>
+    <button onclick="runSimulation()">Run Sim</button>
+  </div>
+
+  <div class="summary" id="summaryCards"></div>
+  <div id="resultsTable"></div>
+
+  <script>
+    window.GAME_DATA = {};
+    window.onerror = function(msg, src, line) {
+      document.getElementById('summaryCards').innerHTML =
+        '<div class="card" style="border:1px solid #ef4444; grid-column: 1 / -1;">' +
+        '<div class="lbl" style="color:#f87171;">Syntax / Script Error</div>' +
+        '<div style="font-size:0.85rem; margin-top:4px;">' + msg + '<br><small>' + (src || 'sim.html') + ' — Line ' + line + '</small></div></div>';
+    };
+  </script>
+  <script src="data/combatRules.js"></script>
+  <script src="data/maps.js"></script>
+  <script src="data/classes.js"></script>
+  <script src="data/abilities.js"></script>
+  <script src="data/races.js"></script>
+  <script src="data/passives.js"></script>
+  <script src="data/gear.js"></script>
+  <script src="data/loadout.js"></script>
+  <script src="data/shapes.js"></script>
+  <script src="data/triggers.js"></script>
+  <script src="data/gear_tiers.js"></script>
+  <script src="data/simEngine.js"></script>
+<script>window.addEventListener('load',function(){try{var sel=document.getElementById('mapFilter'),M=(window.GAME_DATA&&GAME_DATA.maps)||{};Object.keys(M).forEach(function(k){var o=document.createElement('option');o.value=k;o.textContent=M[k].name||k;sel.appendChild(o)})}catch(e){}});</script>
+</body>
+</html>

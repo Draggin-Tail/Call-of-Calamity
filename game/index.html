@@ -1,0 +1,1630 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Call of Calamity</title>
+<style>
+:root{--bg:#121c26;--panel:#1b2a38;--t1:#27394a;--t2:#2c4054;--rock:#0d141b;--ink:#e9e4d3;--dim:#8da1af;--gold:#e2b24c;--ally:#4ea5cc;--foe:#cc6150;--ok:#7cc480;--line:#3a5266}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.4 system-ui,sans-serif;display:flex;justify-content:center}
+#app{width:100%;max-width:480px;padding:10px;display:flex;flex-direction:column;gap:10px}
+#top{display:flex;justify-content:space-between;align-items:center}
+h1{font:600 18px Palatino,Georgia,serif;margin:0;letter-spacing:.02em}
+#obj{font:600 12px system-ui;color:#e2b24c;text-align:center;padding:3px 0 0;min-height:15px}
+#bar{display:flex;gap:5px;overflow-x:auto;padding:4px 0 2px 5px}
+.chip{flex:0 0 auto;width:36px;height:36px;border-radius:6px;display:grid;place-items:center;font:700 13px Palatino,Georgia,serif;border:2px solid var(--line);background:var(--panel);position:relative}
+.chip.P{border-color:var(--ally)}.chip.E{border-color:var(--foe)}
+.chip.now{background:var(--gold);color:#1a1405;border-color:var(--gold)}
+.chip.again::after{content:"";position:absolute;inset:-5px auto -5px -5px;width:2px;background:var(--gold)}
+#cv{display:block;touch-action:pan-x pan-y}
+#bwo{position:relative}#bw{position:relative;overflow:auto;max-height:60vh;-webkit-overflow-scrolling:touch}
+.vt{position:absolute;top:6px;left:6px;height:30px;min-width:42px;border-radius:15px;border:1px solid var(--line);background:#1b2a38cc;color:var(--ink);font:700 13px system-ui;padding:0 10px;z-index:5}
+.zm{position:absolute;top:6px;right:6px;display:flex;flex-direction:column;gap:6px;z-index:5}.zm button{width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#1b2a38cc;color:var(--ink);font:700 18px system-ui;padding:0}
+.rot{position:absolute;bottom:6px;width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:#1b2a38cc;color:var(--ink);font-size:22px;line-height:1;display:grid;place-items:center;padding:0}
+.rot.l{left:6px}.rot.r{right:6px}
+#cards{display:grid;grid-template-columns:1fr 1fr;gap:6px}#cards:empty{display:none}
+.uc{display:flex;gap:7px;align-items:stretch;padding:6px;border-radius:9px;border:1px solid var(--line);background:linear-gradient(100deg,#1b2a38,#233a4e);min-width:0;position:relative}
+.uc.E{background:linear-gradient(100deg,#2a1c1e,#4a2a2c);border-color:#6a3a38}
+.uc.now{box-shadow:0 0 0 2px var(--gold)}.uc.empty{opacity:.5;align-items:center;justify-content:center;color:var(--dim);font-size:12px;text-align:center}
+.uc .pt{position:relative;flex:0 0 66px;width:66px;height:66px;border-radius:6px;overflow:hidden;background:#0d141b;align-self:flex-start}
+.uc .pt img,.rc .pt img{display:block;width:100%;height:100%;image-rendering:auto}.uc .pt span,.rc .pt span{display:grid;place-items:center;height:100%;font:700 20px Palatino,Georgia,serif}
+.uc .lv{position:absolute;left:0;bottom:0;background:#000b;color:var(--ink);font:700 10px system-ui;padding:1px 4px;border-radius:0 5px 0 0}
+.uc .ub{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.uc .nm{font:700 14px Palatino,Georgia,serif;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.15}
+.uc small{font:11px/1.2 system-ui;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.uc .bar{position:relative;height:11px;border-radius:3px;background:#0d141b;overflow:hidden}.uc .bar i{position:absolute;inset:0 auto 0 0;display:block}
+.uc .bar span{position:absolute;inset:0;font:700 9px/11px system-ui;padding:0 4px;display:flex;justify-content:space-between;text-shadow:0 1px 1px #000}
+.uc .bar.hp i{background:linear-gradient(#7cc480,#3f8a4a)}.uc .bar.hp.lo i{background:linear-gradient(#e0a24c,#b0562a)}.uc .bar.mp i{background:linear-gradient(#7aa8e0,#3f64b0)}.uc .bar.ct i{background:linear-gradient(#e2b24c,#a8802a)}
+.uc .stl{font:10px/1.2 system-ui;color:#cdbff0;min-height:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#cards .pred{background:#1b2a38;border:1px solid var(--gold);border-radius:9px;padding:6px 8px;display:flex;flex-direction:column;gap:3px}
+.pred .hd{font:600 11px system-ui;color:var(--gold);text-transform:uppercase;letter-spacing:.04em}.pred .pr{display:flex;align-items:baseline;gap:8px;font-size:13px}
+.pred .pr b{font:700 13px Palatino,Georgia,serif;min-width:70px;max-width:110px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.pred b.E{color:#e07d6c}.pred b.P{color:#6fb9dd}
+.pred .v{font:700 17px Palatino,Georgia,serif;color:#f0e6c8;min-width:28px;text-align:right}.pred .v.good{color:#9be0a4}.pred small{flex:1;color:var(--dim);font:11px/1.25 system-ui}
+.pred .ko{font:700 10px system-ui;font-style:normal;background:#b0392b;color:#fff;border-radius:6px;padding:1px 6px;white-space:nowrap}
+button.a.cf{background:var(--ally);color:#06141c;font-weight:700;justify-content:center}button.a.cf.no{background:var(--t2);color:var(--ink)}
+.uc .pdm{position:absolute;right:0;top:0;background:#b0392b;color:#fff;font:700 13px Palatino,Georgia,serif;padding:1px 6px;border-radius:0 0 0 6px}
+.pred.conf .cost small{color:var(--dim);font-size:11px}
+button.a.rep{grid-column:1/-1;border-color:var(--gold);background:#3a3a2a}
+#deploy{grid-column:1/-1;display:flex;flex-direction:column;gap:6px}#deploy .hd{display:flex;justify-content:space-between;font:600 13px system-ui;color:var(--dim)}#deploy .hd b{color:var(--gold)}
+.strip{display:flex;gap:6px;overflow-x:auto;padding:2px 1px 6px;-webkit-overflow-scrolling:touch}
+.rc{flex:0 0 80px;border-radius:9px;border:1px solid var(--line);background:linear-gradient(#233a4e,#1b2a38);padding:5px;display:flex;flex-direction:column;gap:3px;text-align:left;color:var(--ink);font:inherit;position:relative}
+.rc .pt{width:66px;height:66px;border-radius:6px;overflow:hidden;background:#0d141b;position:relative}.rc .pt .tick{position:absolute;right:3px;top:3px;background:var(--ok);color:#06140a;border-radius:9px;font:700 10px system-ui;padding:0 5px}
+.rc b{font:700 12px/1.15 Palatino,Georgia,serif;word-break:break-word;min-height:2.3em}.rc small{font:10.5px/1.2 system-ui;color:var(--dim)}
+.rc.off{opacity:.62}.rc.off .pt img{filter:grayscale(.6)}.rc.sel{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold);opacity:1}
+#info{background:var(--panel);border-radius:8px;padding:10px 12px;display:flex;flex-direction:column;gap:8px}
+#who{display:flex;justify-content:space-between;align-items:center;font:600 16px Palatino,Georgia,serif;gap:8px}
+#who button.a.tb{width:auto;flex:none;min-height:0;padding:8px 14px;margin:0;white-space:nowrap}
+#who small{display:block;font:12px system-ui;color:var(--dim)}
+.pips{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}.pip{width:16px;height:16px;border-radius:50%;border:2px solid var(--gold)}.pip.on{background:var(--gold)}
+.pip.b{border-color:var(--ally)}.pip.b.on{background:var(--ally)}
+#acts{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button.a{background:var(--t2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:8px 10px;font:inherit;display:flex;justify-content:space-between;align-items:center;gap:6px;min-height:44px;text-align:left}
+button.a small{display:block;color:var(--dim);font-size:11px;line-height:1.2}
+button.a b{background:var(--gold);color:#1a1405;border-radius:10px;padding:0 8px;font-size:13px}
+button.a.sel{border-color:var(--gold);box-shadow:0 0 0 2px var(--gold)}
+button.a.dis{opacity:.35}
+#cv,.rot,button.a,.chip,.pips{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+#tip{position:fixed;display:none;z-index:30;pointer-events:none;background:var(--panel);border:1px solid var(--gold);border-radius:8px;padding:9px 12px;font-size:13px;line-height:1.4;white-space:pre-line;width:max-content;max-width:min(340px,calc(100vw - 16px));box-shadow:0 4px 16px #000a}
+button.end{grid-column:1/-1;background:var(--ally);color:#06141c;font-weight:700;justify-content:center}
+button.sm{min-height:0;padding:4px 10px}
+#hint{color:var(--dim);font-size:13px;min-height:1.4em}
+
+#logp{position:fixed;inset:0;background:#000d;display:none;z-index:50}
+#logp>div{background:var(--panel);width:100%;max-width:520px;height:100%;margin:0 auto;display:flex;flex-direction:column}
+#lph{padding:10px 12px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;border-bottom:1px solid #0006}
+#lph h2{font:600 18px Palatino,Georgia,serif;margin:0 auto 0 0}
+#lph button,#lpf button{font:600 12px system-ui;padding:5px 9px;border-radius:7px;border:0;background:var(--t2);color:var(--ink)}
+#lph button.on,#lpf button.on{background:#e2b24c;color:#1b1b1b}
+#lpf{padding:6px 12px;display:flex;gap:5px;flex-wrap:wrap;align-items:center;font-size:12px;color:var(--dim)}
+#lpb{flex:1;overflow:auto;padding:4px 12px 16px;font-size:12.5px;line-height:1.45}
+#lpb .tn{margin:10px 0 3px;padding:3px 6px;background:#0004;border-left:3px solid #888;color:var(--ink);font-weight:600}
+#lpb .tn.P{border-color:#4ea5cc}#lpb .tn.E{border-color:#cc6150}
+#lpb .ln{padding:1px 0 1px 8px;color:var(--dim)}
+#lpb .ln b{color:var(--ink)}#lpb .P{color:#6fb9dd}#lpb .E{color:#e07d6c}
+#lpb .ln.dmg{color:#e8c9b8}#lpb .ln.heal{color:#b7e3c2}#lpb .ln.death{color:#ff9a8a;font-weight:600}#lpb .ln.status{color:#cdbff0}
+#lpb table{width:100%;border-collapse:collapse;margin:6px 0 14px;font-size:12px}
+#lpb th,#lpb td{padding:3px 5px;text-align:right;border-bottom:1px solid #0004}#lpb th:first-child,#lpb td:first-child{text-align:left}
+#lpb th{color:var(--dim);font-weight:600;position:sticky;top:0;background:var(--panel)}
+#lpb h3{font:600 14px Palatino,Georgia,serif;margin:12px 0 2px;color:var(--ink)}
+#log{color:var(--dim);font-size:13px;min-height:3.9em}
+#log div:first-child{color:var(--ink)}
+#over,#setup{position:fixed;inset:0;background:#000d;display:none;place-items:center;overflow:auto;padding:12px}
+#over>div,#setup>div{background:var(--panel);padding:20px;border-radius:12px;text-align:center;width:100%;max-width:420px}
+#over h2,#setup h2{font:600 22px Palatino,Georgia,serif;margin:0 0 12px}
+#setup{display:grid}#setup h3{font:600 14px Palatino,Georgia,serif;margin:0 0 6px;color:var(--dim)}
+.cmd small{color:var(--gold)}
+.sub{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px;padding-left:8px;border-left:3px solid var(--gold)}
+.fld{display:block;font-size:12px;color:var(--dim);margin-top:6px}
+.pk{width:100%;margin-top:2px}
+.pkl{display:grid;gap:6px;margin-top:6px;padding-left:8px;border-left:3px solid var(--gold)}
+.pkl button{width:100%}
+.chip.cast{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#3b2f5a;border-style:dashed;color:#d6c2ff;line-height:1}
+.chip.cast small{font-size:9px;color:var(--ink)}
+.card{background:var(--t1);border-radius:8px;padding:8px;margin-bottom:8px;text-align:left}
+.card select{margin-bottom:0}
+details summary{color:var(--dim);font-size:13px;padding:6px 0 2px}
+label{display:block;font-size:12px;color:var(--dim);margin-top:6px}
+label select{margin-top:2px;margin-bottom:0}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+select{background:var(--t2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;width:100%;margin-bottom:8px}
+</style>
+
+<div id="app">
+  <div id="top"><h1>Tactics Prototype</h1><span><button class="a sm" id="fxb" onclick="this.textContent=FX.cycle()">FX</button> <button class="a sm" onclick="openLog()">Log</button> <button class="a sm skirm" onclick="showSetup()">Parties</button></span></div>
+  <div id="obj"></div>
+  <div id="bar"></div>
+  <div id="bwo"><div id="bw"><canvas id="cv"></canvas></div>
+    <button class="rot l" data-d="Rotate the view 60° counter-clockwise. You can also swipe across the board." onclick="rotateView(-1)">↺</button>
+    <button class="rot r" data-d="Rotate the view 60° clockwise. You can also swipe across the board." onclick="rotateView(1)">↻</button>
+    <button class="vt" id="vtb" data-d="Switch between the angled 3D view and a flat top-down view. Top-down shows heights as shading and numbers, and nothing can hide behind a hill." onclick="toggleView()">3D</button>
+    <div class="zm"><button data-d="Zoom in. Drag the board to look around when zoomed." onclick="zoomBy(1.25)">+</button><button data-d="Zoom out." onclick="zoomBy(.8)">−</button><button data-d="Centre on the active unit." onclick="focusActive(true)">◎</button></div></div>
+  <div id="cards"></div>
+  <div id="info"><div id="who"></div><div id="hint"></div><div id="acts"></div></div>
+  <div id="log"></div>
+</div>
+<div id="logp"><div><div id="lph"><h2>Combat log</h2><button id="tabL" class="on" onclick="lpTab('L')">Log</button><button id="tabS" onclick="lpTab('S')">Stats</button><button onclick="closeLog()">✕</button></div>
+  <div id="lpf"></div><div id="lpb"></div></div></div>
+<div id="tip"></div>
+<div id="over"><div><h2 id="msg"></h2>
+  <button class="a end" style="width:100%;margin-bottom:8px" onclick="start()">Play again</button>
+  <button class="a end" style="width:100%;background:var(--t2);color:var(--ink)" onclick="showSetup()">Change parties</button></div></div>
+<div id="setup"><div><h2>Choose parties</h2>
+  <p style="color:var(--dim);font-size:13px;margin:0 0 10px">Open a unit's Loadout to pick a secondary class, passives and gear. Hold any item to read what it does.</p>
+  <label style="display:block;margin:0 0 10px;color:var(--dim);font-size:13px">Map <select id="mapSel"></select></label>
+  <div id="setupBody"></div>
+  <button class="a end" style="width:100%" onclick="begin()">Start battle</button></div></div>
+
+<script src="data/combatRules.js"></script>
+<script src="data/maps.js"></script>
+<script src="data/arena_maps.js"></script>
+<script src="data/abilities.js"></script>
+<script src="data/classes.js"></script>
+<script src="data/passives.js"></script>
+<script src="data/races.js"></script>
+<script src="data/factions.js"></script>
+<script src="data/gear.js"></script>
+<script src="data/loadout.js"></script>
+<script src="data/shapes.js"></script>
+<script src="data/triggers.js"></script>
+<script src="data/gamestate.js"></script>
+<script src="data/campaign.js"></script>
+<script src="shell.js"></script>
+<script src="fx.js"></script>
+<script src="sprites.js"></script>
+<script src="portraits.js"></script>
+<script>
+if(!window.GAME_DATA||!window.GAME_DATA.combatRules||!window.GAME_DATA.abilities||!window.GAME_DATA.classes){
+  document.body.innerHTML='<p style="padding:20px;color:#e9e4d3">Data files missing. Keep the data folder next to this HTML file.</p>';throw new Error('GAME_DATA missing');
+}
+// All stats, abilities and rules are read from window.GAME_DATA (see /data).
+const GD=window.GAME_DATA,CR=GD.combatRules,AB=GD.abilities,JOBS=GD.classes,PAS=GD.passives||{},GEAR=GD.gear||{},BLD=CR.build,LO=window.GAME_LOADOUT;
+let W=CR.grid.width,H=CR.grid.height,MAXH=CR.height.maxLevel;const AP=CR.turn.pointsPerTurn;
+// The battlefield is switchable (setMap) so skirmishes and the campaign can use any map from data/maps.js. These are read at call time everywhere.
+const rockKeys=rs=>(rs||[]).map(r=>Array.isArray(r)?r.join(','):r);
+const SQ3=Math.sqrt(3);
+let VOID=new Set(),ROCKS=rockKeys(CR.battlefield.rocks),HT=CR.battlefield.heights,POS=CR.battlefield.spawns,MAPKEY='default',THEME='steel',PROPS={},ZN={},PL=null;
+const HEIGHT_RULES=CR.height.rulesText;
+function setMap(key){const m=key&&window.GAME_DATA.maps&&window.GAME_DATA.maps[key];const bf=m||CR.battlefield;HT=bf.heights;VOID=new Set((bf.voids||[]).map(([x,y])=>x+','+y));ROCKS=rockKeys(bf.rocks).concat([...VOID]);POS=bf.spawns;MAPKEY=m?key:'default';THEME=bf.theme||'steel';PROPS=bf.props||{};ZN=bf.zones||{};
+  H=HT.length;W=HT[0].length;MAXH=Math.max(CR.height.maxLevel,...HT.map(r=>Math.max(...r)));CEN={x:(W-1+.5)/2*SQ3,y:(H-1)*.75};EXT=null;ZOOM=null;FOCUSED=null;const bwEl=document.getElementById('bw');if(bwEl){bwEl.scrollLeft=0;bwEl.scrollTop=0}}
+const PICK=Object.keys(JOBS).filter(id=>JOBS[id].selectable);
+const SD=k=>CR.statuses[k].desc;
+const TICK=Object.keys(CR.statuses).filter(k=>CR.statuses[k].tick==='ownTurnStart'); // poison, bleed, regen
+for(const [cid,c] of Object.entries(JOBS))for(const a of c.ab)if(!AB[a])console.warn(`classes.js: ${cid} lists unknown ability "${a}"`);
+const DEC=Object.keys(CR.statuses).filter(k=>CR.statuses[k].decrement==='ownTurnEnd');
+const TR=window.GAME_TRIGGERS;
+TR.validate(GD).forEach(m=>console.warn(m)); // reports any unknown trigger/condition/effect/tag/status word in the JSON
+const ht=(x,y)=>HT[y][x];
+const toBuild=id=>({primary:id,secondary:null,passives:[],gear:LO.defaultGear(id)});
+const DEF={P:CR.battlefield.defaultParties.P.map(toBuild),E:CR.battlefield.defaultParties.E.map(toBuild)};
+let OBJ=null,PT=0,NP=1,HOLD=0; // battle objective (see mkObjective), player turns started, party size, rounds held
+let KILLS=[],BATTLE=null,ENDED=false,LOG=[],TURN=0,CUR=null,HC=null,party=DEF,units,traps=[],active,spent,bonus,mode,over,busy,logs,inspect='',FOCUS=null,menu=null,preview=null,PREV=null,HZ=null,DRAW=false; // HZ: arena hazard groups for this fight; menu: open skill list ('p' primary, 's' secondary)
+const $=id=>document.getElementById(id);
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const cube=p=>({q:p.x-(p.y-(p.y&1))/2,r:p.y});
+const dist=(a,b)=>{const A=cube(a),B=cube(b),dq=A.q-B.q,dr=A.r-B.r;return(Math.abs(dq)+Math.abs(dr)+Math.abs(dq+dr))/2};
+const nbrs=(x,y)=>(y&1?[[1,0],[-1,0],[0,-1],[1,-1],[0,1],[1,1]]:[[1,0],[-1,0],[0,-1],[-1,-1],[0,1],[-1,1]]).map(([dx,dy])=>[x+dx,y+dy]);
+const inb=(x,y)=>x>=0&&y>=0&&x<W&&y<H;
+const alive=()=>units.filter(u=>u.hp>0);
+const at=(x,y)=>alive().find(u=>u.x===x&&u.y===y);
+const atR=(x,y)=>alive().find(u=>u===active&&u.x===x&&u.y===y)||at(x,y);
+const say=(t,o)=>{logs.unshift(t);logs=logs.slice(0,3);LOG.push({ev:'msg',turn:TURN,seq:LOG.length,t,dup:!!(o&&o.dup),hid:!!(o&&o.hid)})};
+const EV=o=>{o.turn=TURN;o.seq=LOG.length;LOG.push(o);return o};
+const tm=u=>u?(u.baseTeam||u.team):null,hidE=u=>!!u&&tm(u)!==VIEWER&&!!u.st.vanish;
+const newSt=()=>Object.fromEntries(Object.entries(CR.statuses).filter(([,v])=>!v.storedOn).map(([k])=>[k,CR.statuses[k].tick?null:0]));
+const sp=u=>Math.max(CR.turn.minSpeed,u.spd+LO.speedMod(u));
+const apNow=()=>AP+(active?LO.apMod(active):0); // Fatigue and Orders change the turn's points
+const left=()=>apNow()+bonus-spent;
+const isMove=m=>m==='move'||(m&&AB[m].k==='move');
+function flank(u,t){ // an ally of the attacker stands on the opposite side of the target
+  if(dist(u,t)!==1)return false;
+  const A=cube(u),T=cube(t),q=2*T.q-A.q,r=2*T.r-A.r,o=at(q+(r-(r&1))/2,r);
+  if(o&&o!==u&&o.team===u.team)return true;
+  // onFlankCheck specs with {type:'flankHexes',value:'rear3'} (Opportunist): the two rear-side hexes count too
+  const wide=(u.trig.onFlankCheck||[]).some(x=>(x.spec.effects||[]).some(e=>e.type==='flankHexes'&&e.value==='rear3'));
+  if(wide)return nbrs(t.x,t.y).some(([x,y])=>{const w=at(x,y);return w&&w!==u&&w.team===u.team&&dist(u,{x,y})===2});
+  return false;
+}
+function normBuild(b){
+  const o={primary:b.primary,secondary:null,passives:[],gear:{}};if(b.race)o.race=b.race; // race traits (stats, armor, ranged reduction, push immunity)
+  if(b.id!==undefined)o.id=b.id;if(b.name)o.name=b.name;if(b.faction)o.faction=b.faction; // campaign identity, passed through to the unit
+  if(b.level>1)o.level=LO.levelMods(b.level).level; // campaign level scales HP and damage (see combatRules.level)
+  if(Array.isArray(b.skills))o.skills=b.skills.slice();if(Array.isArray(b.secSkills))o.secSkills=b.secSkills.slice(); // campaign: only skills the unit has learned (JP); absent = the whole kit
+  if(BLD.secondarySlots>0&&b.secondary&&b.secondary!==b.primary&&JOBS[b.secondary]&&JOBS[b.secondary].selectable)o.secondary=b.secondary;
+  for(const id of b.passives||[])if(id&&PAS[id]&&!o.passives.includes(id)&&o.passives.length<BLD.passiveSlots)o.passives.push(id);
+  o.gear=LO.cleanGear(o.primary,b.gear||{},o.passives); // only what this class may equip (passives can unlock more); a two-hander clears the off hand
+  return o;
+}
+// Fear: at the start of its turn the unit runs from the nearest enemies (free movement), then cannot act.
+function fleeMove(u){
+  const foes=alive().filter(f=>f.team!==u.team);if(!foes.length||u.hp<=0)return;
+  const nd=(x,y)=>Math.min(...foes.map(f=>dist({x,y},f)));let best=null,bd=nd(u.x,u.y);
+  for(const k of reach(u).keys()){const[x,y]=k.split(',').map(Number),d=nd(x,y);if(d>bd){bd=d;best=[x,y]}}
+  if(best){say(`${u.n} flees in terror`);u.x=best[0];u.y=best[1];u.movedAny=true}
+}
+function mk(build,team,x,y){
+  const b=normBuild(typeof build==='string'?toBuild(build):build),J=JOBS[b.primary];
+  const dup=units.filter(u=>u.team===team&&u.job===b.primary).length;
+  const dv=LO.derive(b.primary,b.gear,b.passives,b.race);
+  const mods={cost:dv.cost,power:dv.power},stat=dv.stat,trig={};
+  dv.sources.forEach(sr=>TR.normalize(sr.src).forEach((sp,i)=>{(trig[sp.on]=trig[sp.on]||[]).push({id:sr.id+'#'+i,spec:sp})})); // behavioural triggers from JSON
+  const sec=b.secondary?JOBS[b.secondary].ab.filter(a=>AB[a]&&!J.ab.includes(a)&&(!b.secSkills||b.secSkills.includes(a))):[];
+  const prim=b.skills?J.ab.filter(a=>b.skills.includes(a)):J.ab;
+  const lm=LO.levelMods(b.level||1),hp=Math.round((J.hp+stat.hp)*lm.hp);
+  return{lvl:lm.level,lvPow:lm.power,job:b.primary,build:b,team,uid:b.id!==undefined?b.id:null,faction:b.faction||null,n:b.name||J.name+(dup?' '+(dup+1):''),g:J.g,hp,max:hp,spd:J.spd+stat.spd,mv:J.mv+stat.mv,jump:(J.jump||CR.height.defaultClimb)+stat.jump,
+    ab:[dv.attackId,...prim,...sec],secAbs:new Set(sec),mods,wpn:dv.wpn,attackId:dv.attackId,armor:dv.armor,bldArmor:dv.bloodiedArmor,bldRes:dv.bloodiedRes,rangedReduce:dv.rangedReduce,apBonus:dv.apBonus||0,pushImmune:dv.pushImmune,res:dv.res,elemRes:dv.elemRes,spellPow:dv.spellPow,healPow:dv.healPow,crit:dv.crit,canGuard:dv.guard,mana:dv.manaMax,manaMax:dv.manaMax,manaRegen:dv.manaRegen,x,y,meter:CR.turn.startingMeter,guard:false,charge:0,cd:{},st:newSt(),castHaste:stat.castHaste||0,painPower:(J.painPower||0)+(dv.painPower||0),quarry:null,metaNow:null,cast:null,hasMovedThisTurn:false,trig,tf:{},bf:{},armed:[],baseTeam:team,usedAb:new Set(),dead:false};
+}
+// Point costs and power after secondary penalty, passives and gear.
+const moveCost=u=>Math.max(BLD.minMoveCost,CR.turn.moveCost+(u.mods.cost.move||0));
+const guardCost=u=>(JOBS[u.job].guard===null||!u.canGuard)?null:Math.max(BLD.minGuardCost,JOBS[u.job].guard+(u.mods.cost.guard||0)); // null = cannot Guard
+const qcOn=(u,a)=>!!(u.st&&u.st.quickcast>0&&AB[a]&&AB[a].k!=='self'&&AB[a].k!=='summon'&&LO.isSpell(AB[a])); // Apprentice: Quick Cast takes 1 AP off the next spell
+const cost=(u,a)=>AB[a].free?0:Math.max(BLD.minAbilityCost,AB[a].c+(u.secAbs.has(a)?BLD.secondaryCostPenalty:0)+(u.mods.cost[a]||0)-(qcOn(u,a)?1:0));
+function powerBonus(u,A,a){return LO.powerBonus(u,A,a)}
+const manaCost=(u,a)=>LO.manaCost(AB[a]);
+// Effective damage or heal of a skill for this unit: weapon strike + skill power + gear, then spell or heal power. (Crit and armor come later.)
+const effP=(u,A,a)=>{let p=(A.p||0)+(LO.weaponSkill(A)?LO.weaponPart(u,A):0)+LO.castPart(u,A);if(A.k==='dmg'&&p>0)p+=powerBonus(u,A,a);return Math.round(p*LO.potency(u,A))};
+let FLK=false; // the current hit is a flank or ambush (dagger crits)
+const loadoutText=u=>{const b=u.build,o=[JOBS[b.primary].name+(b.secondary?' / '+JOBS[b.secondary].name:'')];
+  if(b.passives.length)o.push('Passives: '+b.passives.map(id=>PAS[id].name).join(', '));
+  const g=Object.values(b.gear).map(id=>GEAR[id].name);if(g.length)o.push('Gear: '+g.join(', '));return o.join(' · ')};
+
+function showSetup(){$('over').style.display='none';$('setup').style.display='grid'}
+const opt=(v,t,sel)=>`<option value="${v}" ${v===sel?'selected':''}>${t}</option>`;
+// Passive/gear pickers are button lists (not native selects) so every option can be held to read its description.
+const pkTip=(src,v)=>{const X=src[v];return X?`${X.name}${X.slot?' ('+X.slot+')':''}: ${X.desc}`:'Nothing selected.'};
+const pkBody=(src,v)=>{const X=src[v];return `<span>${X?X.name:'— none —'}${X?`<small>${X.desc}</small>`:''}</span><b>▾</b>`};
+function pkHtml(id,label,items,sel,src){
+  const cur=items.some(i=>i[0]===sel)?sel:'';
+  return `<div class="fld">${label}<input type="hidden" id="${id}" value="${cur}"><button type="button" class="a pk" id="pk${id}" ${dd(pkTip(src,cur))} onclick="togglePk('${id}')">${pkBody(src,cur)}</button><div class="pkl" id="ls${id}" style="display:none">${items.map(([v,n,d])=>`<button type="button" class="a" ${dd(pkTip(src,v))} onclick="setPk('${id}','${v}','${src===PAS?'p':'g'}')"><span>${n}${d?`<small>${d}</small>`:''}</span></button>`).join('')}</div></div>`;
+}
+function togglePk(id){const l=$('ls'+id),show=l.style.display==='none';document.querySelectorAll('.pkl').forEach(e=>e.style.display='none');l.style.display=show?'grid':'none'}
+function setPk(id,v,w){const src=w==='p'?PAS:GEAR;$(id).value=v;$('pk'+id).innerHTML=pkBody(src,v);$('pk'+id).setAttribute('data-d',pkTip(src,v));$('ls'+id).style.display='none';setupSync()}
+// What a class may equip depends on its primary class and passives, so changing either rebuilds the setup cards (open cards stay open).
+function setupSync(newPrim){
+  const open=[...document.querySelectorAll('#setupBody details')].map(d=>d.open);
+  party={P:[0,1,2].map(i=>readBuild('P',i)),E:[0,1,2].map(i=>readBuild('E',i))};
+  if(newPrim){const [t,i]=newPrim;party[t][i].gear=LO.defaultGear(party[t][i].primary)}
+  ['P','E'].forEach(t=>party[t]=party[t].map(normBuild));
+  buildSetup();{const b=$('vtb');if(b)b.textContent=VMODE==='top'?'2D':'3D'}document.querySelectorAll('#setupBody details').forEach((d,k)=>{d.open=!!open[k]});
+}
+function buildSetup(){
+  $('setupBody').innerHTML=['P','E'].map(t=>`<h3>${t==='P'?'Your party':'Enemy party'}</h3>`+[0,1,2].map(i=>{
+    const b=party[t][i];
+    const pItems=[['','— none —','']].concat(Object.entries(PAS).map(([id,x])=>[id,x.name,x.desc]));
+    const pas=[...Array(BLD.passiveSlots)].map((_,k)=>pkHtml(`pa${t}${i}${k}`,`Passive ${k+1}`,pItems,(b.passives||[])[k]||'',PAS)).join('');
+    const gear=BLD.equipmentSlots.map(sl=>pkHtml(`g${t}${i}${sl}`,sl,[['','— none —','']].concat(LO.itemsFor(b.primary,sl,b.passives,(b.gear||{}).MainHand).map(id=>[id,GEAR[id].name,GEAR[id].desc])),(b.gear||{})[sl]||'',GEAR)).join('');
+    return `<div class="card"><select id="pr${t}${i}" onchange="setupSync(['${t}',${i}])">${PICK.map(id=>opt(id,JOBS[id].name,b.primary)).join('')}</select><details><summary>Loadout</summary><label>Secondary class<select id="sc${t}${i}">${opt('','— none —','')}${PICK.map(id=>opt(id,JOBS[id].name,b.secondary||'')).join('')}</select></label>${pas}${gear}</details></div>`;
+  }).join('')).join('');
+}
+const readBuild=(t,i)=>({primary:$('pr'+t+i).value,secondary:$('sc'+t+i).value||null,passives:[...Array(BLD.passiveSlots)].map((_,k)=>$('pa'+t+i+k).value||null),gear:Object.fromEntries(BLD.equipmentSlots.map(sl=>[sl,$('g'+t+i+sl).value||null]))});
+function begin(){BATTLE=null;setMap($('mapSel').value);party={P:[0,1,2].map(i=>readBuild('P',i)),E:[0,1,2].map(i=>readBuild('E',i))};$('setup').style.display='none';start()}
+// Objectives: rout (default, defeat all) | leader (defeat the marked foe) | survive N rounds | reach a zone | hold a zone for N rounds. Any of them may have a round limit (a loss when passed).
+// A round is one turn for each party member (counted from the party's own turns), so it reads the same however fast anyone is.
+// spec: {type, turns, limit, leader:enemyIndex, zone:'centre'|'enemy_camp'|'player_camp', size, tiles:[[x,y]], label}
+function mkObjective(sp){
+  if(!sp||!sp.type||sp.type==='rout')return null;
+  const o={type:sp.type,turns:sp.turns||0,limit:sp.limit||0,leader:sp.leader||0,label:sp.label||'',tiles:[]};
+  if(o.type==='reach'||o.type==='hold'){
+    let t=sp.tiles;
+    if(!t&&sp.zone&&ZN[sp.zone])t=ZN[sp.zone].slice();
+    else if(!t&&sp.zone==='enemy_camp')t=POS.E.slice();
+    else if(!t&&sp.zone==='player_camp')t=POS.P.slice();
+    else if(!t){const all=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(!ROCKS.includes(x+','+y)&&PROPS[x+','+y]!=='h')all.push([x,y]);const cx=(W-1)/2,cy=(H-1)/2;
+      all.sort((a,b)=>ht(b[0],b[1])-ht(a[0],a[1])||Math.hypot(a[0]-cx,a[1]-cy)-Math.hypot(b[0]-cx,b[1]-cy));t=all.slice(0,sp.size||1)}
+    o.tiles=t;o.set=new Set(t.map(([x,y])=>x+','+y));
+  }
+  return o;
+}
+const ROUND=()=>Math.floor(Math.max(0,PT-1)/Math.max(1,NP))+1;
+function objText(){const t=objText0(),h=hzBanner();return h?(t?t+' · ':'')+h:t}
+function objText0(){
+  if(!OBJ)return'Defeat all enemies';
+  const lim=OBJ.limit?` · round ${Math.min(ROUND(),OBJ.limit)}/${OBJ.limit}`:'';
+  if(OBJ.type==='leader'){const L=units&&units.find(u=>u.leader);return'Defeat '+(L?L.n:'the leader')+lim}
+  if(OBJ.type==='survive')return`Survive ${OBJ.turns} rounds · round ${Math.min(ROUND(),OBJ.turns)}/${OBJ.turns}`;
+  if(OBJ.type==='reach')return(OBJ.label||'Reach the marked ground')+lim;
+  if(OBJ.type==='hold')return`${OBJ.label||'Hold the marked ground'}: ${HOLD}/${OBJ.turns} rounds${lim}`;
+  return'';
+}
+function holdTick(){ // at each new round: the party holds if one of them stands on the zone and no foe does
+  const mine=alive().some(u=>u.baseTeam==='P'&&OBJ.set.has(u.x+','+u.y)),theirs=alive().some(u=>u.baseTeam==='E'&&OBJ.set.has(u.x+','+u.y));
+  if(mine&&!theirs){HOLD++;say(`The ground is held (${HOLD}/${OBJ.turns})`)}else say(mine?'The ground is contested':'The ground is not held');
+}
+function start(){
+  units=[];['P','E'].forEach(t=>party[t].forEach((b,i)=>units.push(mk(b,t,...POS[t][i]))));
+  OBJ=mkObjective(BATTLE&&BATTLE.objective);PT=0;HOLD=0;NP=units.filter(u=>u.baseTeam==='P').length;
+  if(OBJ&&OBJ.type==='leader'){const es=units.filter(u=>u.baseTeam==='E');const L=es[Math.min(OBJ.leader,es.length-1)];if(L)L.leader=true}
+  logs=[];LOG=[];KILLS=[];ENDED=false;TURN=0;CUR=null;HC=null;traps=[];HZ=hzInit();DRAW=false;over=false;busy=false;mode=null;inspect='';bonus=0;
+  $('over').style.display='none';
+  FOCUS=null;
+  if(BATTLE&&BATTLE.placement&&(POS.P.length>units.filter(u=>u.baseTeam==='P').length||(BATTLE.benchBuilds||[]).length)){ // FFT-style: choose who goes in and arrange them on the blue tiles first
+    const mineN=units.filter(u=>u.baseTeam==='P');
+    PL={sel:null,limit:Math.max(mineN.length,BATTLE.limit||mineN.length),pool:[...mineN.map((u,i)=>({b:party.P[i],u})),...(BATTLE.benchBuilds||[]).map(b=>({b:normBuild(b),u:null}))]};active=null;render();return}
+  units.forEach(u=>fire('onBattleStart',u,{}));nextTurn();
+}
+// ---- Predicted result of a single-target skill on one unit, with no side effects. Mirrors resolveAct + hurt: weapon + skill power, ability bonuses, flank / ambush,
+// level, Wither, Empowered, damage-taken statuses, crit, armor or resist, Guard and shields. Not counted: Intercept, Death Ward, reactions and other triggers.
+function predict(u,a,h,pOver){
+  const A=AB[a];if(!A||!h)return null;
+  if(A.k==='heal'){let P=Math.round((A.p+LO.castPart(u,A))*LO.potency(u,A)*(u.lvPow||1));if(A.lowHpBonus&&h.hp<h.max*A.lowHpBonus.pct)P+=A.lowHpBonus.p;return{heal:Math.max(0,Math.min(P,h.max-h.hp)),raw:P}}
+  if(A.k!=='dmg')return null;
+  const D=CR.damage,amb=u.st.vanish>0,bld=!!A.bloodied&&u.hp<=u.max*CR.resourceCosts.bloodiedThreshold,p0=pOver!==undefined?pOver:(A.p||0),p00=p0+(LO.weaponSkill(A)?LO.weaponPart(u,A):0)+(p0>0?LO.castPart(u,A):0);
+  if(!(p00>0))return null;
+  const sF=FLK,sE=EXO;
+  try{
+    FLK=amb||flank(u,h);EXO=0;
+    let p=Math.max(1,Math.round((p00+powerBonus(u,A,a)+(bld&&A.bloodied.p||0)+abBonus(u,A,h,amb,A.spendCharge&&A.spendCharge.dmgPer?u.charge:0))*LO.potency(u,A)*abMult(A,h)));let fl='';
+    if(A.flank){if(amb){p*=D.ambushMultiplier;fl='ambush'}else if(FLK){p=Math.ceil(p*D.flankMultiplier);fl='flank'}}
+    const calc=crit=>{let d=p;
+      if(u.lvPow&&u.lvPow>1)d=Math.round(d*u.lvPow);
+      if(u.st.wither)d=Math.round(d*D.witherMultiplier);
+      if(u.st.empowered>0)d=Math.ceil(d*CR.statuses.empowered.damageDealtMultiplier);
+      for(const k in CR.statuses){const D2=CR.statuses[k];if(D2.damageTakenMultiplier&&h.st[k]>0)d=Math.ceil(d*D2.damageTakenMultiplier)}
+      if(crit)d=Math.ceil(d*LO.critMult());
+      const mp=LO.mitigationPct(u,h,A);if(mp>0)d=Math.max(CR.loadout.minHit,Math.round(d*(1-mp/100)));
+      let sh=0;if(!A.ignore){if(h.guard)d=Math.ceil(d*D.guardMultiplier);sh=Math.min(h.st.shield,d);d-=sh}
+      return{d,sh}};
+    const n=calc(false),c=calc(true);
+    return{dmg:n.d,crit:c.d,chance:Math.round(LO.critChance(u,A,FLK)||0),shield:n.sh,fl,ko:n.d>=h.hp,koCrit:c.d>=h.hp}
+  }finally{FLK=sF;EXO=sE}
+}
+function predRows(tg,A){
+  if(!A||!tg||!tg.length||(A.k!=='dmg'&&A.k!=='heal')||groundTargeted(A))return'';
+  const rows=tg.slice(0,8).map(h=>{const r=predict(active,mode,h);if(!r)return'';
+    const nm=`<b class="${h.baseTeam}">${esc(h.n)}</b>`;
+    if(r.heal!==undefined)return`<div class="pr">${nm}<span class="v good">+${r.heal}</span><small>${h.hp}/${h.max} HP${r.heal<r.raw?' · full':''}</small></div>`;
+    const left=Math.max(0,h.hp-r.dmg);
+    return`<div class="pr">${nm}<span class="v">${r.dmg}</span><small>${r.shield?r.shield+' shielded · ':''}${r.fl?r.fl+' · ':''}${r.chance?r.chance+'% crit for '+r.crit+' · ':''}${r.ko?'':'leaves '+left+' HP'}</small>${r.ko?'<i class="ko">KO</i>':r.koCrit&&r.chance?'<i class="ko">KO on crit</i>':''}</div>`}).join('');
+  return rows?`<div class="pred" style="grid-column:1/-1"><div class="hd">${esc(A.n)}: expected result</div>${rows}</div>`:'';
+}
+
+// ---- Unit cards (FFT style): portrait, name, level, class, HP, MP and the turn meter. Left card = the acting unit, right card = the unit you tapped (or are previewing).
+const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function portraitHTML(x,team){const src=window.PORT&&PORT.url(x,team);return src?`<img alt="" src="${src}">`:`<span>${esc((x.g||(x.n||x.name||'?')[0]||'?'))}</span>`}
+function unitCard(u,cls,badge){
+  const J=JOBS[u.job]||{name:u.job},R=window.GAME_DATA.races&&window.GAME_DATA.races[u.build&&u.build.race||'human'],rn=R&&R.name&&(u.build&&u.build.race)&&u.build.race!=='human'?R.name+' ':'';
+  const ct=Math.max(0,Math.min(100,Math.round(u.meter/CR.turn.meterThreshold*100))),hp=Math.max(0,u.hp),pc=Math.round(100*hp/Math.max(1,u.max));
+  return `<div class="uc ${u.baseTeam} ${cls||''}" ${dd(unitTip(u))}><div class="pt">${portraitHTML(u,u.baseTeam)}<i class="lv">Lv ${u.lvl||1}</i>${badge?`<i class="pdm">${badge}</i>`:''}</div><div class="ub"><b class="nm">${esc(u.n)}</b><small>${esc(rn+(u.build&&u.build.secondary&&JOBS[u.build.secondary]?J.name+' / '+JOBS[u.build.secondary].name:J.name))}</small>`
+   +`<div class="bar hp ${pc<=30?'lo':''}"><i style="width:${pc}%"></i><span><em>HP</em><em>${hp}/${u.max}</em></span></div>`
+   +(u.manaMax>0?`<div class="bar mp"><i style="width:${Math.round(100*u.mana/u.manaMax)}%"></i><span><em>MP</em><em>${u.mana}/${u.manaMax}</em></span></div>`:'')
+   +`<div class="bar ct"><i style="width:${ct}%"></i><span><em>CT</em><em>${ct}</em></span></div><div class="stl">${esc(stText(u))}</div></div></div>`;
+}
+const stLabel=k=>(CR.statuses[k]&&CR.statuses[k].label)||k;
+function fxList(fx){ // statuses a skill applies, in words
+  const o=[];for(const k in fx||{}){const v=fx[k];if(k==='shield')o.push('+'+v+' shield');else if(Array.isArray(v))o.push(stLabel(k)+' '+v[1]+'×'+v[0]);else o.push(stLabel(k)+(typeof v==='number'&&v>1?' '+v+' turns':''))}
+  return o;
+}
+function affected(A){ // units the pending skill will touch, each with the power it uses
+  const pv=preview;if(!pv)return[];
+  if(pv.self&&A.k==='self')return[{h:active,p:A.p}];
+  if(pv.unit&&!PREV)return[{h:pv.unit,p:A.p}];
+  if(PREV){const C=A.area==='chain'?CR.areaShapes.chain:null,pr=pv.unit;return alive().filter(f=>PREV.hit.has(f.x+','+f.y)).sort((a,b)=>(a===pr?-1:b===pr?1:0)).map(f=>({h:f,p:C&&f!==pr?C.extraPower:A.p}))}
+  return[];
+}
+function effRow(A,e){
+  const h=e.h,a=mode,parts=[];let big='✦',cls='';
+  const fx=A.k==='buff'?LO.wardFx(active,A):A.fx;
+  if(A.k==='dmg'){const r=predict(active,a,h,e.p);if(r){big='−'+r.dmg;if(r.shield)parts.push(r.shield+' absorbed by shield');if(r.fl)parts.push(r.fl);if(r.chance)parts.push(r.chance+'% crit for '+r.crit);parts.push(r.ko?'KO':'leaves '+Math.max(0,h.hp-r.dmg)+' HP')}}
+  else if(A.k==='heal'){const r=predict(active,a,h);if(r){big='+'+r.heal;cls='good';parts.push(h.hp+r.heal+'/'+h.max+' HP')}}
+  else if(fx&&fx.shield){big='+'+fx.shield;cls='good'}
+  const l=fxList(fx).filter(t=>!(fx&&fx.shield&&t.endsWith('shield')&&big==='+'+fx.shield));
+  return`<div class="pr"><b class="${h.baseTeam}">${esc(h.n)}</b><span class="v ${cls}">${big}</span><small>${esc(parts.concat(l).join(' · '))}</small></div>`;
+}
+function confirmPanel(A){
+  const aff=affected(A),c=cost(active,mode),mc=manaCost(active,mode);
+  const sf=A.selfFx?fxList(A.selfFx):[];
+  let body=aff.map(e=>effRow(A,e)).join('');
+  if(!body)body=`<div class="pr"><small>${A.k==='summon'?'Summons '+esc((JOBS[A.summonId||'skeleton']||{name:'a minion'}).name)+' on that tile.':A.k==='trap'?'Hides it on that tile. Only your team can see it.':'Nothing stands in the area.'}</small></div>`;
+  return`<div class="pred conf" style="grid-column:1/-1"><div class="hd">${esc(A.n)}: expected result</div>${body}${sf.length?`<div class="pr"><small>You: ${esc(sf.join(' · '))}</small></div>`:''}<div class="pr cost"><small>Costs ${c} point${c>1?'s':''}${mc?' · '+mc+' mana':''}${A.cd?' · cooldown '+A.cd:''}${A.ct>0?' · cast time '+Math.min(CR.cast.maxCt,A.ct)+'%':''}</small></div></div>`;
+}
+function movePanel(){
+  const m=mode,A=m==='move'?null:AB[m],c=m==='move'?moveCost(active):cost(active,m),mc=A?manaCost(active,m):0,dh=ht(preview.x,preview.y)-ht(active.x,active.y),d=dist(active,preview);
+  const foes=alive().filter(f=>f.team!==active.team&&!hidden(f)&&dist(f,preview)<=1).length;
+  return`<div class="pred conf" style="grid-column:1/-1"><div class="hd">${esc(A?A.n:'Move')}: destination</div><div class="pr"><small>${d} tile${d===1?'':'s'} away · height ${ht(preview.x,preview.y)}${dh?' ('+(dh>0?'+':'')+dh+' from here)':''}${foes?' · next to '+foes+' foe'+(foes>1?'s':''):''}</small></div><div class="pr cost"><small>Costs ${c} point${c>1?'s':''}${mc?' · '+mc+' mana':''}${A&&A.cd?' · cooldown '+A.cd:''}</small></div></div>`;
+}
+function renderCards(tg,A){
+  if(preview&&mode&&isMove(mode)&&!busy&&!over&&!isAI(active)){const c=$('cards');if(c){c.innerHTML=unitCard(active,'now')+'<div class="uc empty">Pick a tile, then Confirm</div>'+movePanel();return}}
+  if(A&&preview&&!isMove(mode)&&!busy&&!over&&!isAI(active)){ // confirm step: the acting unit, the primary target and what will happen
+    const c=$('cards');if(!c)return;const aff=affected(A),prim=(preview.unit)||(aff.find(e=>e.h!==active)||{}).h||null,pr=prim&&A.k==='dmg'?predict(active,mode,prim):null;
+    c.innerHTML=unitCard(active,'now')+(prim?unitCard(prim,'',pr?'−'+pr.dmg:(A.k==='heal'?'+'+(predict(active,mode,prim)||{}).heal:'')):'<div class="uc empty">No target card</div>')+confirmPanel(A);return;
+  }
+  const c=$('cards');if(!c)return;
+  const f=(preview&&preview.unit&&preview.unit.hp>0?preview.unit:null)||(FOCUS&&FOCUS.hp>0&&units.includes(FOCUS)&&FOCUS!==active?FOCUS:null);
+  c.innerHTML=(active?unitCard(active,'now'):'')+(f?unitCard(f):'<div class="uc empty">Tap any unit to see its card</div>')+predRows(tg,A);
+}
+
+// ---- Deployment (FFT style): a strip of roster cards with names. Tap a card to bring that unit in (up to the fight's limit) or select it,
+// then tap a blue tile to place it; tap a unit on the board to select it, or another of yours to swap. 'Begin battle' starts the fight.
+const mineU=()=>units.filter(u=>u.baseTeam==='P');
+const plN=()=>PL.pool.filter(e=>e.u).length,plEntry=u=>PL.pool.find(e=>e.u===u);
+const freeSpawn=()=>POS.P.find(([x,y])=>!ROCKS.includes(x+','+y)&&!units.some(u=>u.x===x&&u.y===y));
+function plDeploy(e,x,y){e.u=mk(e.b,'P',x,y);units.push(e.u)}
+function plBench(e){const i=units.indexOf(e.u);if(i>=0)units.splice(i,1);if(PL.sel===e.u)PL.sel=null;e.u=null}
+function cardTap(i){
+  const e=PL.pool[i];if(!e)return;FOCUS=null;
+  if(e.u){PL.sel=PL.sel===e.u?null:e.u;inspect=PL.sel?`${e.u.n}: tap a blue tile to move there, or another of your units to swap.`:''}
+  else if(plN()<PL.limit){const t=freeSpawn();if(!t){inspect='No free deployment tile.';render();return}plDeploy(e,t[0],t[1]);PL.sel=e.u;inspect=`${e.b.name||JOBS[e.b.primary].name} joins the fight. Tap a blue tile to place them.`}
+  else if(PL.sel){const s=PL.sel,se=plEntry(s),x=s.x,y=s.y;plBench(se);plDeploy(e,x,y);PL.sel=e.u;inspect=`${e.u.n} takes ${s.n}'s place.`}
+  else inspect=`This ground holds ${PL.limit}. Tap one of your deployed units first, then a waiting card to swap them.`;
+  render();
+}
+function sendBack(){const s=PL&&PL.sel,e=s&&plEntry(s);if(!e||plN()<=1)return;plBench(e);inspect=`${s.n} stays back.`;render()}
+function placeTap(x,y){
+  const k=x+','+y,inPool=POS.P.some(([a,b])=>a===x&&b===y),here=units.find(u=>u.x===x&&u.y===y);
+  if(here&&here.baseTeam==='P'){
+    if(PL.sel&&PL.sel!==here){const a=PL.sel,t={x:here.x,y:here.y};here.x=a.x;here.y=a.y;a.x=t.x;a.y=t.y;PL.sel=null}else PL.sel=PL.sel===here?null:here;
+    FOCUS=null;inspect=PL.sel?`${PL.sel.n}: tap a blue tile to move there, or another of your units to swap.`:'';render();return;
+  }
+  if(here){FOCUS=here;inspect=`${here.n}: ${here.hp}/${here.max} HP · height ${ht(x,y)}. Foes start where you see them.`;PL.sel=null;render();return}
+  if(PL.sel&&inPool&&!ROCKS.includes(k)){PL.sel.x=x;PL.sel.y=y;PL.sel=null;inspect='';render();return}
+  inspect=PROPS[k]==='h'?`Stone wall: ${ht(x,y)} high. Only units that can climb 2 levels can get on top.`:ROCKS.includes(k)?`${PROPN[PROPS[k]]||'Obstacle'}: blocks movement.`:`Height ${ht(x,y)} tile.${inPool?'':' Not a deployment tile.'}`;render();
+}
+function autoPlace(){mineU().forEach((u,i)=>{u.x=POS.P[i][0];u.y=POS.P[i][1]});PL.sel=null;inspect='';render()}
+function beginBattle(){
+  if(!PL||!plN())return;const ids=mineU().map(u=>u.uid).filter(id=>id!==null&&id!==undefined);
+  NP=mineU().length;PL=null;inspect='';FOCUS=null;
+  if(BATTLE&&BATTLE.onDeploy)BATTLE.onDeploy(ids);
+  units.forEach(u=>fire('onBattleStart',u,{}));nextTurn();
+}
+function rosterCard(e,i){
+  const b=e.b,J=JOBS[b.primary],R=window.GAME_DATA.races&&window.GAME_DATA.races[b.race||'human'],rn=b.race&&b.race!=='human'&&R?R.name+' ':'',nm=b.name||J.name;
+  return `<button class="rc ${e.u?'':'off'} ${e.u&&PL.sel===e.u?'sel':''}" onclick="cardTap(${i})"><div class="pt">${portraitHTML({build:b,primary:b.primary,name:nm,g:J.g},'P')}${e.u?'<i class="tick">In</i>':''}</div><b>${esc(nm)}</b><small>${esc(rn+J.name)} · Lv ${b.level||1}</small></button>`;
+}
+function renderPlace(){
+  $('bar').innerHTML='';$('obj').textContent=units?objText():'';drawBoard(new Map(),[],[],null);if(FOCUSED!=='pl'){FOCUSED='pl';focusActive()}
+  const n=plN(),f=FOCUS&&units.includes(FOCUS)?FOCUS:null; // a foe you tapped; your own selection is shown on the strip
+  $('cards').innerHTML=(f?`<div style="grid-column:1/-1">${unitCard(f)}</div>`:'')+`<div id="deploy"><div class="hd"><span>Your party</span><span>Deployed <b>${n}/${PL.limit}</b></span></div><div class="strip">${PL.pool.map(rosterCard).join('')}</div></div>`;
+  $('who').innerHTML='<span>Place your party</span>';
+  $('hint').textContent=inspect||(PL.pool.length>PL.limit?'Tap a card to bring a unit in or select it, then tap a blue tile. Units you bring in are who fights.':'Tap one of your units, then a blue tile to move it. Tap another unit to swap places.');
+  $('acts').innerHTML=`<button class="a" onclick="autoPlace()"><span>Auto-arrange</span></button><button class="a ${PL.sel&&n>1?'':'dis'}" onclick="sendBack()"><span>Send back</span></button><button class="a end" onclick="beginBattle()"><span>Begin battle</span></button>`;
+  $('log').innerHTML='';
+}
+
+// Charge-time turn order: meters fill by Speed; the first to reach 100 acts.
+// Next event = a unit's turn meter reaching the threshold, or a pending cast finishing (casts win ties).
+const evSort=(a,b)=>(Math.abs(a.t-b.t)>1e-9?a.t-b.t:0)||a.p-b.p||a.team-b.team;
+function advance(){
+  for(let i=0;i<200;i++){
+    const evs=[];
+    for(const u of alive()){
+      evs.push({t:Math.max(0,(CR.turn.meterThreshold-u.meter)/sp(u)),p:1,team:u.team==='P'?0:1,u});
+      if(u.cast)evs.push({t:Math.max(0,(u.cast.need-u.cast.meter)/sp(u)),p:0,team:0,u,cast:true});
+    }
+    evs.sort(evSort);const e=evs[0];
+    alive().forEach(u=>{const d=e.t*sp(u);u.meter+=d;if(u.cast)u.cast.meter+=d});
+    if(!e.cast)return e.u;
+    resolveCast(e.u);
+    if(over)return null;
+  }
+  return null;
+}
+function nextTurn(){
+  const best=advance();
+  if(!best){render();return}
+  TURN++;CUR=null;active=best;if(best.baseTeam==='P'){PT++;if(OBJ&&OBJ.type==='hold'&&PT>1&&(PT-1)%NP===0)holdTick();if(HZ&&PT>1&&(PT-1)%NP===0){hzRound();checkEnd()}}
+  active.team=active.baseTeam;active.guard=false;active.hasMovedThisTurn=false;active.movedAny=false;active.tf={};active.usedAb=new Set();active.armed=[];active.pulled=null;spent=0;bonus=active.charge*CR.charge.bonusPointsPerCharge+(active.apBonus||0);mode=null;menu=null;inspect='';FOCUS=null;
+  if(active.st.charm>0)active.team=active.baseTeam==='P'?'E':'P'; // charmed: fights for the other team during its own turn
+  for(const k of TICK){ // start of own turn: poison/bleed/burn hurt, regen heals
+    const p=active.st[k];if(!p)continue;
+    const prev=active.hp,nInst=LO.dotInsts(p).length;let tick=0;
+    if(CR.statuses[k].negative){tick=Math.min(prev,LO.dotInsts(p).reduce((s,i)=>s+i.d,0));active.hp=Math.max(0,prev-tick);if(window.FX&&tick>0)FX.num(active,tick,{dot:k});say(`${active.n} takes ${tick} ${k}`+(nInst>1?` (${nInst} stacks)`:''),{dup:1});EV({ev:'dot',tgt:active.n,tt:tm(active),status:k,amt:tick,left:p.n-1,hp0:prev,hp1:active.hp})}
+    else{const want=Math.round(LO.dotInsts(p).reduce((s,i)=>s+i.d,0)*LO.healMult(active)),h=Math.min(want,active.max-active.hp);active.hp+=h;if(window.FX&&h>0)FX.num(active,h,{regen:1});say(`${active.n} regenerates ${h}`,{dup:1});EV({ev:'heal',src:active.n,st:tm(active),tgt:active.n,tt:tm(active),ab:k,amt:h,over:want-h,hp0:prev,hp1:active.hp})}
+    if(LO.dotAdvance(p)){active.st[k]=null;EV({ev:'expire',tgt:active.n,tt:tm(active),status:k});fire('onStatusExpired',active,{status:k})}
+    if(active.hp<=0){onDeath(active,null,k);break}
+    checkBloodied(active,prev);
+  }
+  if(HZ&&active.hp>0&&!over)hzTurn(active);
+  checkEnd();
+  if(active.hp<=0){if(!over)nextTurn();else render();return}
+  say(`${active.n}'s turn`+(active.st.charm>0?' (charmed)':''));EV({ev:'turn',actor:active.n,tt:tm(active),hp:active.hp,max:active.max,ap:apNow()+bonus,stat:stText(active)});
+  active.mana=Math.min(active.manaMax,active.mana+active.manaRegen+LO.manaRegenBonus(active)); // mana trickles back at the start of your turn
+  fire('onTurnStart',active,{});checkEnd();
+  if(!over&&active.hp>0&&active.st.fear>0)fleeMove(active);
+  if(over){render();return}
+  render();
+  if(skipsTurn(active)){skipTurn(active);return}
+  if(isAI(active))ai();
+}
+async function skipTurn(u){ // stun: the unit loses its turn (no onTurnEnd triggers)
+  busy=true;say(`${u.n} is stunned and loses the turn`);EV({ev:'skip',actor:u.n,tt:tm(u)});render();
+  await sleep(CR.ai.thinkDelayMs);
+  busy=false;if(!over&&active===u)endTurn(true);
+}
+function endTurn(skipped){
+  if(over)return;
+  if(!skipped){fire('onTurnEnd',active,{});checkEnd();if(over){render();return}}
+  const used=Math.min(bonus,Math.max(0,spent-apNow())); // bonus points are spent last
+  active.charge=Math.max(0,active.charge-Math.ceil(used/CR.charge.bonusPointsPerCharge));
+  for(const k of DEC)if(active.st[k]>0&&--active.st[k]<=0){EV({ev:'expire',tgt:active.n,tt:tm(active),status:k,hid:k==='vanish'&&hidE(active)});fire('onStatusExpired',active,{status:k})}
+  for(const k in active.cd)if(active.cd[k]>0)active.cd[k]--;
+  active.team=active.baseTeam; // charm only lasts through its own turn
+  active.meter=-spent*CR.turn.meterPenaltyPerPointSpent+(active.meterBank||0);active.meterBank=0;nextTurn();
+}
+
+const jumpDelta=u=>{let d=0;if(u&&u.st)for(const k in u.st)if(u.st[k]>0&&CR.statuses[k]&&CR.statuses[k].jumpDelta)d+=CR.statuses[k].jumpDelta;return d};
+const jumpOf=(u,extra=0)=>(u.jump||CR.height.defaultClimb)+jumpDelta(u)+extra;
+const zocPenalty=u=>alive().some(f=>f.team!==u.team&&f.st.zoc>0&&dist(f,u)===1)?CR.statuses.zoc.zocRangePenalty:0; // enemy Zone of Control
+const moveRange=u=>Math.max(1,u.mv-zocPenalty(u)+LO.moveMod(u));
+function reach(u,mv=moveRange(u),jb=0,av=null){ // av: tiles to path around (the AI avoids live hazards)
+  const prev=new Map([[u.x+','+u.y,null]]),dd=new Map([[u.x+','+u.y,0]]),q=[[u.x,u.y]],out=new Map();
+  while(q.length){
+    const [x,y]=q.shift(),k0=x+','+y,d=dd.get(k0);
+    if(d>=mv)continue;
+    for(const [nx,ny] of nbrs(x,y)){
+      const k=nx+','+ny;
+      if(!inb(nx,ny)||dd.has(k)||ROCKS.includes(k)||(av&&av.has(k))||Math.abs(ht(nx,ny)-ht(x,y))>jumpOf(u,jb))continue;
+      const o=at(nx,ny);
+      if(o&&o.team!==u.team)continue; // enemies block, allies can be passed through
+      dd.set(k,d+1);prev.set(k,k0);q.push([nx,ny]);
+      if(!o){const path=[];for(let c=k;c!==null;c=prev.get(c))path.unshift(c.split(',').map(Number));out.set(k,path.slice(1))}
+    }
+  }
+  return out;
+}
+const slipMap=(u,a)=>{const o=new Map();for(const [k,v] of reach(u,AB[a].mv,AB[a].climbBonus||0)){const [x,y]=k.split(',').map(Number);if(alive().some(f=>f.team!==u.team&&dist(f,{x,y})===1))o.set(k,v)}return o};
+const mvMap=()=>mode==='move'?reach(active):(isMove(mode)?slipMap(active,mode):new Map());
+function inRange(from,A,x,y){
+  const d=dist(from,{x,y});if(d===0)return true;
+  const dh=ht(from.x,from.y)-ht(x,y);
+  if(A.r<=CR.targeting.meleeRange)return d===1&&Math.abs(dh)<=CR.targeting.meleeMaxHeightGap; // melee cannot cross a cliff
+  return d<=Math.max(CR.height.minRange,A.r+Math.trunc(dh/CR.height.rangedReach.levelsPerRange)+rangeMod(from)); // ranged reach: trunc(height difference / 2), Blind lowers it
+}
+function targets(u,a){
+  const A=AB[a];
+  return alive().filter(t=>{
+    if(!inRange(u,A,t.x,t.y))return false;
+    if(A.minR&&dist(u,t)<A.minR)return false; // minimum range
+    if(A.k==='dmg'||A.k==='debuff')return t.team!==u.team&&(A.revealsHidden||!hidden(t));
+    if(A.k==='heal')return t.team===u.team&&t.hp<t.max;
+    if(A.k==='buff')return t.team===u.team;
+    return false;
+  });
+}
+const summonTiles=u=>nbrs(u.x,u.y).filter(([x,y])=>inb(x,y)&&!ROCKS.includes(x+','+y)&&!at(x,y)&&Math.abs(ht(x,y)-ht(u.x,u.y))<=CR.summons.maxHeightStep).map(([x,y])=>x+','+y);
+
+// ---- status rules read from combatRules.statuses (blocks, rangeDelta, skipsTurn, ignoresVanish, ...)
+const stActive=(u,pred)=>Object.keys(CR.statuses).find(k=>u.st[k]>0&&pred(CR.statuses[k]));
+const blocker=(u,what)=>{const k=stActive(u,D=>(D.blocks||[]).includes(what));return k?CR.statuses[k].label:''};
+const isBlocked=(u,what)=>!!blocker(u,what);
+const petOf=u=>units.find(s=>s.owner===u&&s.hp>0&&!s.dead);
+const blockReason=(u,a)=>{
+  const A=AB[a];
+  if(A.needsPet&&!petOf(u))return 'You have no summon.';
+  if(A.needsBloodied&&!bloodiedAt(u))return 'Only while Bloodied.';
+  if(isBlocked(u,'ability'))return blocker(u,'ability')+'.';
+  if(A.k==='move'&&isBlocked(u,'dash'))return blocker(u,'dash')+'.';
+  if(manaCost(u,a)>u.mana)return 'Not enough mana ('+manaCost(u,a)+' needed, '+u.mana+' left).';
+  if(LO.weaponBlocked(u,A))return 'Needs a ranged weapon.';
+  const k=stActive(u,D=>(D.blocks||[]).some(b=>b.startsWith('tag:')&&(A.tags||[]).includes(b.slice(4))));
+  return k?CR.statuses[k].label+'.':'';
+};
+const hidden=t=>!!t.st.vanish&&!stActive(t,D=>D.ignoresVanish);
+const rangeMod=u=>{let d=0;if(u&&u.st)for(const k in u.st)if(u.st[k]>0&&CR.statuses[k]&&CR.statuses[k].rangeDelta)d+=CR.statuses[k].rangeDelta;return d};
+const skipsTurn=u=>!!stActive(u,D=>D.skipsTurn);
+const isAI=u=>u.st.confused>0||u.team==='E'; // confused units always act on their own
+const NEG=Object.keys(CR.statuses).filter(k=>CR.statuses[k].negative);
+function cleanse(u,n,list){let c=0;for(const k of (list||NEG)){if(c>=n)break;if(CR.statuses[k]&&u.st[k]){if(CR.statuses[k].tick){if(n>=99||LO.dotPopNewest(u.st[k]))u.st[k]=null}else u.st[k]=0;c++;say(`${u.n} is cleansed of ${k}`);if(window.FX)FX.text(u,'Cleansed','#bff0d0')}}}
+const bloodiedAt=u=>u.hp<=u.max*CR.resourceCosts.bloodiedThreshold;
+function checkBloodied(u,prev){if(prev>u.max*CR.resourceCosts.bloodiedThreshold&&u.hp>0&&bloodiedAt(u))fire('onBloodied',u,{})}
+function payHp(u,A){ // hpCostPct: sacrifice floor(current HP x pct), never lethal
+  if(!A.hpCostPct)return;const c=Math.min(Math.floor(u.hp*A.hpCostPct),u.hp-1);
+  if(c>0){const prev=u.hp;u.hp-=c;say(`${u.n} sacrifices ${c} HP`);checkBloodied(u,prev)}
+}
+// Forced movement (push / pull). A unit can be knocked down any drop (a cliff too) but only up within its climb.
+// Falling costs more with each level: fallBase for the first, then +fallStep more for each level after (3, 3+4, 3+4+5 ...). A push stopped by a unit or rock hurts too.
+const fallDmg=n=>n>0?n*CR.forced.fallBase+CR.forced.fallStep*n*(n-1)/2:0;
+function pushPath(t,from,hexes,dir){ // plans the move without doing it: [[x,y,drop]...] and whether a unit or rock stopped it. Straight line away from (or toward) the source; it never slides around an obstacle.
+  const px=(x,y)=>[x+(y&1?0.5:0),y*0.8660254];
+  let x=t.x,y=t.y;const steps=[];let hit=false;
+  for(let i=0;i<hexes;i++){
+    const a0=px(x,y),f0=px(from.x,from.y);let vx=a0[0]-f0[0],vy=a0[1]-f0[1];if(dir==='pull'){vx=-vx;vy=-vy}
+    const vl=Math.hypot(vx,vy);if(vl<1e-9)break;
+    let best=null,bs=0.5; // must point roughly the right way
+    for(const[a,b]of nbrs(x,y)){const c=px(a,b),dx=c[0]-a0[0],dy=c[1]-a0[1],sc=(dx*vx+dy*vy)/(Math.hypot(dx,dy)*vl);if(sc>bs){bs=sc;best=[a,b]}}
+    if(!best)break;const[a,b]=best;
+    if(!inb(a,b))break;
+    if(dir==='pull'&&dist({x:a,y:b},from)<1)break;
+    if(ht(a,b)-ht(x,y)>jumpOf(t))break; // a wall higher than its climb stops it
+    if(ROCKS.includes(a+','+b)||at(a,b)){if(dir==='push')hit=true;break}
+    steps.push([a,b,Math.max(0,ht(x,y)-ht(a,b))]);x=a;y=b;
+  }
+  return{steps,hit,fall:steps.reduce((n,s)=>n+(s[2]>jumpOf(t)?fallDmg(s[2]):0),0)};
+}
+function forcedMove(t,from,hexes,dir,opts){ // push / pull effects; Rooted units cannot be moved
+  if(!from||isBlocked(t,'forcedMove'))return;
+  if(dir==='push'&&t.pushImmune){say(`${t.n} cannot be pushed`);return}
+  const fx0=t.x,fy0=t.y,P=pushPath(t,from,hexes,dir);
+  for(const[a,b]of P.steps){t.x=a;t.y=b}
+  if(window.FX&&(t.x!==fx0||t.y!==fy0))FX.shove(fx0,fy0,t.x,t.y);
+  if(t.x!==fx0||t.y!==fy0){say(`${t.n} is ${dir==='push'?'pushed':'pulled'}`);trapCheck(t)}
+  const src=opts&&opts.src;
+  if(P.fall>0&&t.hp>0){say(`${t.n} falls ${P.steps.reduce((n,s)=>n+s[2],0)} level${P.steps.reduce((n,s)=>n+s[2],0)>1?'s':''}`);directLoss(t,P.fall,src)}
+  if(P.hit&&t.hp>0){say(`${t.n} is slammed into an obstacle`);directLoss(t,CR.forced.collision,src)}
+}
+function addShield(t,n){t.st.shield+=n;if(window.FX&&n>0)FX.shield(t,n)}
+function directLoss(t,n,src){const prev=t.hp;t.hp=Math.max(0,t.hp-n);if(window.FX&&n>0)FX.num(t,n,{});say(`${t.n} takes ${n}`);if(t.hp<=0)onDeath(t,src);else checkBloodied(t,prev)}
+
+// ---- generic triggers (data/triggers.js): this adapter tells the shared runner how to act on this engine's units
+const TA={
+  specsFor(o,trgName,ctx){
+    const out=(o.trig[trgName]||[]).map(x=>({id:x.id,spec:x.spec}));
+    if(ctx.byOwner&&ctx.ability&&AB[ctx.ability]&&AB[ctx.ability].triggers)
+      AB[ctx.ability].triggers.forEach((sp,i)=>{if(sp.on===trgName)out.push({id:'ab:'+ctx.ability+'#'+i,spec:sp})});
+    for(const ar of o.armed)if(ar.spec.on===trgName)out.push({id:'armed:'+ar.spec.label,spec:ar.spec,armed:ar});
+    return out;
+  },
+  hpPct:u=>u.hp/u.max*100,has:(u,s)=>!!u.st[s],bloodied:bloodiedAt,dist,height:u=>ht(u.x,u.y),team:u=>u.team,alive:u=>u.hp>0,
+  unitsWithin:(o,r,w)=>alive().filter(f=>f!==o&&dist(f,o)<=r&&(w==='ally'?f.team===o.team:f.team!==o.team)),
+  unspentAP:u=>u===active?Math.max(0,left()):0,usedCount:u=>u.usedAb.size,isOwnTurn:u=>u===active,
+  tags:a=>(AB[a]&&AB[a].tags)||[],kind:a=>AB[a]&&AB[a].k,
+  limit(o,id,kind){const bag=kind==='oncePerBattle'?o.bf:o.tf;if(bag[id])return false;bag[id]=true;return true},
+  damage(src,t,n,opt){
+    if(opt.direct){directLoss(t,n,src);return}
+    const d=hurt(src,t,n,opt.ignoreShield?{ignore:1}:{},null);say(`${src.n} hits ${t.n} for ${d}`+(t.hp?'':' — down'));checkEnd();
+  },
+  heal(src,t,n){const h=Math.min(n,t.max-t.hp);t.hp+=h;if(h>0)say(`${t.n} recovers ${h}`)},
+  shield(src,t,n){addShield(t,n);say(`${t.n} gains ${n} shield`)},
+  status(src,t,name,v){
+    const D=CR.statuses[name];
+    if(D&&D.tick&&!Array.isArray(v)){console.warn(`applyStatus "${name}" needs payload:[turns, amount]`);return}
+    applyFx(t,{[name]:v});
+  },
+  cleanse:(t,n,list)=>cleanse(t,n,list),
+  refundAP(u,n){if(u===active){spent=Math.max(0,spent-n);say(`${u.n} refunds ${n} AP`)}},
+  gainCharge(t,n){t.charge=Math.min(CR.charge.max,t.charge+n)},gainMana(t,n){if(t.manaMax)t.mana=Math.min(t.manaMax,t.mana+n)},
+  reduceCooldown(t,ab,n){for(const k in t.cd)if(!ab||k===ab)t.cd[k]=Math.max(0,t.cd[k]-n)},
+  stagger(t,n){t.meter-=n;t.charge=0;cancelCast(t)},
+  cancelCast:t=>cancelCast(t),
+  forcedMove,
+  arm(o,spec){o.armed.push({spec});say(`${o.n} stands on ${spec.label}`)},
+  disarm(o,e){o.armed=o.armed.filter(x=>x!==e)},
+  hasMoved:u=>!!u.movedAny,
+  pet:u=>petOf(u)||null,aim:()=>CUR&&CUR.tile||null,
+  flanking:(o,s)=>flank(o,s)||(!!FLK&&!!CUR&&CUR.u===o),
+  stripBuffs(t,n,list){
+    const L=list||Object.keys(CR.statuses).filter(k=>!CR.statuses[k].negative&&!CR.statuses[k].skipsTurn);let c=0;
+    for(const k of L){if(c>=n)break;if(CR.statuses[k]&&t.st[k]){t.st[k]=CR.statuses[k].tick?null:0;c++;say(`${t.n} loses ${k}`);if(window.FX)FX.text(t,'Dispelled','#cfd6dd')}}
+  },
+  detonateDots(o,t,mult,list){
+    let tot=0;for(const k of (list||['poison','bleed','burn']))if(t.st[k]){tot+=LO.dotTotal(t.st[k]);t.st[k]=null}
+    tot=Math.floor(tot*mult);if(tot>0){say(`${t.n}'s wounds detonate`);directLoss(t,tot,o);checkEnd()}
+  },
+  gainMeter(t,n){if(t===active)t.meterBank=(t.meterBank||0)+n;else t.meter+=n}, // the active unit's meter is reset when its turn ends, so bank it
+  teleport(t,mode,anchor,hexes){
+    if(!anchor||isBlocked(t,'dash'))return;
+    const all=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)all.push({x,y});
+    const h=TR.pickTeleportHex(mode,t,anchor,hexes,{dist,all:()=>all,free:(x,y)=>!ROCKS.includes(x+','+y)&&!at(x,y)});
+    if(h){const x0=t.x,y0=t.y;t.x=h.x;t.y=h.y;if(window.FX)FX.blink(x0,y0,h.x,h.y);say(`${t.n} blinks`);trapCheck(t)}
+  },
+  summon(o,id,opt){
+    const tiles=summonTiles(o);if(!tiles.length)return;
+    const mine=units.filter(s=>s.owner===o&&s.job===id&&s.hp>0),max=(opt&&opt.max)||1;
+    while(mine.length>=max){const s=mine.shift();s.hp=0;s.dead=true}
+    const [x,y]=tiles[0].split(',').map(Number),s=mk(id,o.team,x,y);s.owner=o;s.meter=CR.summons.initialMeter;units.push(s);say(`${o.name||o.n} summons ${s.n}`);
+  },
+  say:t=>say(t),warn:t=>console.warn(t)
+};
+const fire=(name,o,ctx)=>TR.run(TA,name,o,ctx||{});
+function noteAbility(u,a,t){ // onAbilityUsed + cooldown
+  if(u.uid!==null&&a!==u.attackId){const T=u.tally||(u.tally={uses:0,helps:0});T.uses++;if(t&&t!==u&&t.team===u.team)T.helps++} // JP tally for the campaign
+  u.lastAb=a;CUR={u,a};const AA=AB[a];EV({ev:'ab',actor:u.n,tt:tm(u),ab:a,tgt:t?t.n:null,cost:cost(u,a),left:Math.max(0,left()),hid:tm(u)!==VIEWER&&!!(AA.k==='trap'||(AA.fx&&AA.fx.vanish)||hidE(u))});
+  u.mana-=manaCost(u,a);u.usedAb.add(a);if(AB[a].cd)u.cd[a]=AB[a].cd;
+  if(AA.tags&&AA.tags.includes('song')&&!AA.spendVerse)u.verse=Math.min((CR.verse&&CR.verse.max)||6,(u.verse||0)+1); // Bard: every song banks a verse for Crescendo
+  fire('onAbilityUsed',u,{ability:a,target:t||null,subject:t||null,byOwner:true});
+}
+function onDeath(v,killer,aid){ // onKill + onAnyDeath
+  if(v.dead)return;v.dead=true;if(window.FX)FX.death(v);KILLS.push({killer:killer?(killer.uid!==null?killer.uid:killer.n):null,killerTeam:killer?killer.baseTeam:null,victim:v.uid!==null?v.uid:v.n,victimTeam:v.baseTeam,victimFaction:v.faction||null,ability:aid||null,turn:TURN});EV({ev:'death',tgt:v.n,tt:tm(v),src:killer?killer.n:null,st:killer?tm(killer):null,ab:aid||null});
+  if(killer&&killer.quarry===v&&killer===active){spent=Math.max(0,spent-1);say(`${killer.n} refunds 1 AP (Quarry)`)}
+  if(killer&&killer.hp>0)fire('onKill',killer,{victim:v,subject:v,ability:aid||null,byOwner:true});
+  for(const w of alive())fire('onAnyDeath',w,{victim:v,subject:v,killer:killer||null});
+}
+function applyFx(t,fx){
+  if(window.FX)for(const k in fx){if(k==='shield')continue;const bad=NEG.includes(k),D0=CR.statuses[k];FX.status(t,bad?'debuff':'buff',k);if(D0&&D0.label&&!(k==='vanish'&&tm(t)!==VIEWER))FX.text(t,D0.label,bad?'#dcc0ff':'#ffe27a')}
+  for(const k in fx){
+    const v=fx[k],D=CR.statuses[k];
+    if(Array.isArray(v))LO.addDot(t,k,v,CUR&&CUR.u?(CUR.u.root||CUR.u.job):null,CUR?CUR.a:null);else if(LO.stackApply(t,k,v)){}else if(k==='shield'){const cp0=CUR&&AB[CUR.a]&&AB[CUR.a].shieldCap,cp=cp0&&cp0+(CUR.u?LO.wardBonus(CUR.u,AB[CUR.a]):0),s0=t.st.shield;t.st.shield=cp?Math.max(t.st.shield,Math.min(t.st.shield+v,cp)):t.st.shield+v;if(window.FX&&t.st.shield>s0)FX.shield(t,t.st.shield-s0)}else t.st[k]=v; // shieldCap: the skill tops the shield up to the cap instead of stacking
+    EV({ev:'status',tgt:t.n,tt:tm(t),status:k,val:v,src:CUR&&CUR.u?CUR.u.n:null,ab:CUR?CUR.a:null,hid:k==='vanish'&&tm(t)!==VIEWER});
+    if(D&&D.clearsOnApply){if(D.clearsOnApply.includes('cast'))cancelCast(t);if(D.clearsOnApply.includes('charge'))t.charge=0} // Stun drops casts and Charge
+    fire('onStatusApplied',t,{status:k});
+  }
+}
+function hurt(u,t,p,A,aid){
+  const D=CR.damage,GC=D.guardCounter;
+  const hc=HC;HC=null;let d=p,SHD=0,ICP=0;const M=[];
+  if(t.st.evasion>0){t.st.evasion=0;say(`${t.n} evades the hit`);return 0} // Evasion: the hit misses
+  if(u.lvPow&&u.lvPow>1){d=Math.round(d*u.lvPow);M.push('Level '+u.lvl+' ×'+u.lvPow.toFixed(2))}
+  if(u.st.wither){d=Math.round(d*D.witherMultiplier);M.push('Wither ×'+D.witherMultiplier)}
+  if(u.st.empowered>0){d=Math.ceil(d*CR.statuses.empowered.damageDealtMultiplier);M.push('Empowered ×'+CR.statuses.empowered.damageDealtMultiplier)} // Press the Attack
+  {const dm=LO.dealtMult(u);if(dm!==1){d=Math.ceil(d*dm);M.push('Reckless ×'+dm)}} // Reckless
+  if(u.quarry===t&&t.st.quarry>0){d=Math.ceil(d*CR.quarry.damageMultiplier);M.push('Quarry ×'+CR.quarry.damageMultiplier)} // Tracker's Quarry
+  for(const k in CR.statuses){const D2=CR.statuses[k];if(D2.damageTakenMultiplier&&t.st[k]>0){d=Math.ceil(d*D2.damageTakenMultiplier);M.push((D2.label||k)+' ×'+D2.damageTakenMultiplier)}} // Marked, Steeled...
+  if(A.k==='dmg'){const ch=LO.critChance(u,A,FLK);if(ch>0&&Math.random()*100<ch){d=Math.ceil(d*LO.critMult());M.push('Crit ×'+LO.critMult())}} // weapon and spell crits
+  {const mp=LO.mitigationPct(u,t,A);if(mp>0){d=Math.max(CR.loadout.minHit,Math.round(d*(1-mp/100)));M.push((LO.isSpell(A)?'Resist ':'Armor ')+Math.round(mp)+'%')}}
+  if(d>0){const ft=LO.flatTaken(t);if(ft){d+=ft;M.push('Judged +'+ft)}} // Judged: +2 holy damage, ignores armor
+  if(!A.ignore){if(t.guard){d=Math.ceil(d*D.guardMultiplier);M.push('Guard ×'+D.guardMultiplier)}const pre0=d,ab=Math.min(t.st.shield,d);t.st.shield-=ab;d-=ab;SHD=ab}
+  const PRE=d+SHD;
+  // Intercept: an adjacent Intercepting ally of the victim takes half of the hit (after the victim's shield)
+  if(d>0){
+    const ic=alive().find(w=>w!==t&&w.team===t.team&&w.st.intercept>0&&dist(w,t)===1);
+    if(ic){const half=Math.floor(d*CR.statuses.intercept.redirectsAllyDamage);
+      if(half>0){d-=half;ICP=half;say(`${ic.n} intercepts ${half}`);const ab2=Math.min(ic.st.shield,half);ic.st.shield-=ab2;if(half-ab2>0)directLoss(ic,half-ab2,u)}}
+  }
+  // onAllyDamaged: allies with matching triggers may reduce the hit (Ancestral Link); onDamaged: the victim's own reactions
+  const allyCtx={attacker:u,victim:t,subject:t,damage:d,ability:aid||null};
+  if(d>0)for(const w of alive())if(w!==t&&w.team===t.team){fire('onAllyDamaged',w,allyCtx);if(allyCtx.damage<=0)break}
+  const selfCtx={attacker:u,victim:t,subject:u,damage:allyCtx.damage,ability:aid||null};
+  fire('onDamaged',t,selfCtx);d=selfCtx.damage;
+  if(d>=t.hp&&t.hp>0&&t.st.deathSave>0){const keep=t.st.deathSave;t.st.deathSave=0;t.hp=keep;d=0;say(`${t.n} is saved by a Death Ward`)}
+  if(d>=t.hp&&t.hp>0){const lc={attacker:u,victim:t,subject:u,damage:d,ability:aid||null,preventDeath:false,keepHp:1};fire('onLethalDamage',t,lc);if(lc.preventDeath){d=Math.max(0,Math.min(d,t.hp-lc.keepHp));say(`${t.n} refuses to fall`)}}
+  const prev=t.hp;t.hp=Math.max(0,t.hp-d);
+  {const ls=LO.lifesteal(u),act0=prev-t.hp;if(ls&&act0>0&&u.hp>0){const g=Math.floor(act0*ls/100);if(g>0){u.hp=Math.min(u.max,u.hp+g);say(`${u.n} drinks ${g} (Bloodthirst)`,{dup:1})}}} // Bloodthirst
+  EV({ev:'dmg',src:u.n,st:tm(u),tgt:t.n,tt:tm(t),ab:aid||null,base:hc?hc.p0:p,bonus:hc?hc.bonus:0,fl:hc?hc.fl:'',mods:M,pre:PRE,shield:SHD,icpt:ICP,hp:d,hp0:prev,hp1:t.hp,hid:hidE(u)&&false});
+  if(window.FX&&(d>0||SHD>0))FX.num(t,d,{crit:M.some(m=>m.startsWith('Crit')),el:FX.elementOf(AB[aid]||A),absorbed:SHD})
+  if(d>0)for(const k in CR.statuses)if(CR.statuses[k].breaksOnDamage&&t.st[k]>0){t.st[k]=0;say(`${t.n} is shaken out of ${CR.statuses[k].label}`)} // Mesmerized
+  if(t.hp<=0)onDeath(t,u,aid);else checkBloodied(t,prev);
+  if(d>0)fire('onHit',u,{attacker:u,victim:t,subject:t,damage:d,ability:aid||null,byOwner:true});
+  if(d>0&&t.st.wrath>0&&u.st.judged>0&&u.hp>0){say(`${u.n} is struck by Righteous Wrath`);directLoss(u,CR.statuses.wrath.judgedReflect,t)} // Righteous Wrath
+  if(d>0&&t.st.thorns>0&&u.hp>0&&aid&&AB[aid]&&AB[aid].r<=CR.targeting.meleeRange&&dist(u,t)===1){say(`${u.n} is pricked by thorns`);directLoss(u,CR.statuses.thorns.reflectDamage,t)} // melee hits on a Thorns unit
+  if(!A.ignore&&t.guard&&GC.classes.includes(t.job)&&dist(u,t)===GC.range&&t.hp>0){const pv=u.hp;u.hp=Math.max(0,u.hp-GC.damage);say(`${t.n} counters ${u.n} for ${GC.damage}`+(u.hp?'':' — down'));if(u.hp<=0)onDeath(u,t);else checkBloodied(u,pv)}
+  return d;
+}
+const SH=window.GAME_SHAPES;
+const isAreaSkill=A=>!!A.area||A.k==='summon';
+const groundTargeted=A=>SH.isGround(A); // area skills aimed at a tile (empty ground allowed), not at a unit
+const aimOf=(u,A,aim)=>A.self?{x:u.x,y:u.y}:aim;
+const aimSpec=A=>(A.area==='line'||A.area==='cone')&&(A.len||0)>(A.r||1)?Object.assign({},A,{r:A.len}):A; // directional shapes can be aimed anywhere along their reach, even when the skill is a melee one
+// Which tiles an area skill covers around centre tile ctr, and which units it will actually affect (mirrors resolveAct).
+// Metamagic (Wizard): Widen/Reach reshape the next spell. Active while the status is up, and while that spell resolves (u.metaNow).
+const metaOn=(u,k)=>u.st[k]>0||!!(u.metaNow&&u.metaNow[k]);
+const metaA=(u,A)=>{
+  if(!u||!A||!LO.isSpell(A)||!(u.st.widen>0||u.st.reach>0||u.metaNow))return A;
+  let o=A;if(metaOn(u,'widen')&&A.widen)o=Object.assign({},o,A.widen);
+  if(metaOn(u,'reach')&&(o.area==='line'||o.area==='cone'))o=Object.assign({},o,{len:(o.len||o.r||1)+2});
+  return o;
+};
+function aoeFootprint(u,A,ctr){
+  A=metaA(u,A);
+  const ally=A.k==='heal'||A.k==='buff',pool=A.k==='trap'?[]:alive().filter(f=>ally?f.team===u.team:f.team!==u.team&&!hidden(f)),hit=new Set(),tiles=new Set();
+  if(A.area==='chain'){
+    const C=CR.areaShapes.chain,tgt=pool.find(f=>f.x===ctr.x&&f.y===ctr.y);tiles.add(ctr.x+','+ctr.y);if(tgt)hit.add(tgt.x+','+tgt.y);
+    for(let y=0;y<H;y++)for(let x=0;x<W;x++)if(dist({x,y},ctr)<=C.radius)tiles.add(x+','+y);
+    pool.filter(f=>f!==tgt&&dist(f,ctr)<=C.radius).sort((a,b)=>dist(a,ctr)-dist(b,ctr)).slice(0,C.extraTargets).forEach(f=>hit.add(f.x+','+f.y));
+  }else{
+    SH.footprint(A,u,aimOf(u,A,ctr),inb).forEach(([x,y])=>tiles.add(x+','+y));
+    pool.filter(f=>tiles.has(f.x+','+f.y)).forEach(f=>hit.add(f.x+','+f.y));
+  }
+  return{tiles,hit,ally};
+}
+const areaUnits=(u,A,aim)=>{const fp=aoeFootprint(u,A,aim);return alive().filter(f=>fp.hit.has(f.x+','+f.y))}; // units a ground-aimed area skill affects
+// Entry point for every skill: spends the points now, then resolves immediately or starts a cast (ct = cast time %).
+function act(u,a,t,aim){
+  const A=AB[a],g=groundTargeted(A);
+  if(g){if(!aim)aim=t?{x:t.x,y:t.y}:{x:u.x,y:u.y};aim=aimOf(u,metaA(u,A)||A,aim);t=null} // ground skills lock a tile, not a unit
+  let meta=null; // Metamagic: the next spell takes Widen / Reach / Twin and uses them up
+  if(LO.isSpell(A)&&A.k!=='self'&&A.k!=='summon'&&(u.st.widen>0||u.st.reach>0||u.st.twin>0)){meta={widen:u.st.widen>0,reach:u.st.reach>0,twin:u.st.twin>0};u.st.widen=u.st.reach=u.st.twin=0}
+  spent+=cost(u,a);if(qcOn(u,a))u.st.quickcast=0;noteAbility(u,a,t);payHp(u,A);
+  if(A.ct>0)return startCast(u,a,t,g?aim:(t?{x:t.x,y:t.y}:{x:u.x,y:u.y}),meta);
+  resolveActM(u,a,t,g?aim:undefined,meta);
+}
+function resolveActM(u,a,t,tile,meta){u.metaNow=meta||null;try{resolveAct(u,a,t,tile)}finally{u.metaNow=null}}
+function summon(u,a,x,y){
+  spent+=cost(u,a);noteAbility(u,a);payHp(u,AB[a]);
+  if(AB[a].ct>0)return startCast(u,a,null,{x,y});
+  resolveSummon(u,a,x,y);
+}
+function startCast(u,a,t,tile,meta){
+  const A=AB[a],area=isAreaSkill(A),need=Math.max(CR.cast.minThreshold,Math.min(CR.cast.maxCt,A.ct)-(u.castHaste||0));
+  u.cast={a,t:area?null:t,tile:area?tile:null,meter:0,need,meta:meta||null,conf:u.st.confused>0}; // conf: a confused caster's cast may land on any team
+  say(`${u.n} begins casting ${A.n}`);
+  fire('onCastStart',u,{ability:a,target:t,subject:t,byOwner:true});
+}
+function cancelCast(u){if(u.cast){const a=u.cast.a;say(`${u.n}'s ${AB[a].n} is interrupted`);u.cast=null;fire('onCastInterrupted',u,{ability:a,byOwner:true})}}
+function resolveCast(u){
+  const c=u.cast;u.cast=null;if(!c||u.hp<=0)return;
+  const A=AB[c.a],hostile=A.k==='dmg'||A.k==='debuff';
+  if(A.k==='summon'){
+    if(at(c.tile.x,c.tile.y)||ROCKS.includes(c.tile.x+','+c.tile.y)){say(`${u.n}'s ${A.n} fizzles`);return}
+    say(`${u.n}'s ${A.n} resolves`);fire('onCastResolve',u,{ability:c.a,byOwner:true});resolveSummon(u,c.a,c.tile.x,c.tile.y);return;
+  }
+  if(groundTargeted(A)){say(`${u.n}'s ${A.n} resolves`);fire('onCastResolve',u,{ability:c.a,byOwner:true});resolveActM(u,c.a,null,c.tile,c.meta);return}
+  let t=c.t;
+  if(isAreaSkill(A)){const o=at(c.tile.x,c.tile.y);t=o&&(hostile?(c.conf||o.team!==u.team)&&!hidden(o):(c.conf||o.team===u.team))?o:null}
+  else if(t&&(t.hp<=0||(hostile&&hidden(t))))t=null;
+  if(!t&&A.k!=='self'&&!(isAreaSkill(A)&&hostile)){say(`${u.n}'s ${A.n} finds no target`);return}
+  say(`${u.n}'s ${A.n} resolves`);
+  fire('onCastResolve',u,{ability:c.a,target:t,subject:t,byOwner:true});
+  resolveActM(u,c.a,t,c.tile,c.meta);
+}
+// Spends ALL banked Charge (spendCharge). Bonus AP not yet spent this turn is lost with it, so Charge is never counted twice.
+function spendAllCharge(u){
+  const n=u.charge;if(n<=0)return 0;
+  if(u===active){const unspent=Math.max(0,left()-Math.max(0,apNow()-spent));bonus-=Math.min(unspent,n*CR.charge.bonusPointsPerCharge)}
+  u.charge=0;return n;
+}
+const echoed=u=>u.usedAb.size>=2; // already used a DIFFERENT ability this turn (the current one is already counted)
+let EXO=0; // statuses removed by the Exorcism being resolved
+function swapPlaces(a,b){const x=a.x,y=a.y;a.x=b.x;a.y=b.y;b.x=x;b.y=y}
+function abBonus(u,A,h,amb,chg){ // ability-level power bonuses: echo, spendCharge, bonusVsStatus, bonusIfVanished
+  let b=0;
+  if(A.echo&&A.echo.p&&echoed(u))b+=A.echo.p;
+  if(A.spendCharge&&A.spendCharge.dmgPer)b+=chg*A.spendCharge.dmgPer;
+  if(A.spendVerse)b+=(u.verse||0)*A.spendVerse.per;
+  for(const k in A.bonusVsStatus||{})if(h.st[k])b+=A.bonusVsStatus[k];
+  for(const k in A.bonusPerStack||{})b+=A.bonusPerStack[k]*LO.stacks(h,k); // Sunder: Execute vs Exposed stacks
+  if(u.painPower&&A.k==='dmg')b+=u.painPower*LO.selfDebuffs(u); // Berserker: Pain Is Power
+  if(amb&&A.bonusIfVanished)b+=A.bonusIfVanished;
+  if(A.rootedAim&&!u.movedAny)b+=A.rootedAim;
+  if(A.bonusIfPetAdjacent){const pt=petOf(u);if(pt&&dist(pt,h)===1)b+=A.bonusIfPetAdjacent}
+  if(A.bonusPerNegative)b+=A.bonusPerNegative*NEG.filter(k=>h.st[k]).length;
+  if(A.bonusFromOwnShield)b+=Math.floor(u.st.shield/A.bonusFromOwnShield);
+  if(A.bonusPerShieldedAlly)b+=A.bonusPerShieldedAlly*alive().filter(f=>f.team===u.team&&f!==u&&f.st.shield>0).length;
+  if(A.bonusIfMoved&&u.movedAny)b+=A.bonusIfMoved;
+  if(A.perDistinct)b+=Math.min(A.perDistinct.max,A.perDistinct.per*Math.max(0,u.usedAb.size-1));
+  if(A.exorcism)b+=A.exorcism.perStatus*EXO;
+  const dh=ht(u.x,u.y)-ht(h.x,h.y);
+  if(A.highGroundBonus&&dh>0)b+=A.highGroundBonus;
+  if(A.heightBonus&&dh>0)b+=A.heightBonus*dh;
+  return b;
+}
+function abMult(A,h){let m=1;for(const k in A.multVsStatus||{})if(h&&h.st[k])m*=A.multVsStatus[k];return m} // Breaching Shot: double damage to a shielded target
+let SCALE=1; // Twin's second cast deals a fraction of the damage
+function resolveAct(u,a,t,tile){
+  const A=AB[a];CUR={u,a,tile:tile||(t?{x:t.x,y:t.y}:{x:u.x,y:u.y})};if(window.FX)FX.cast(u,a,A,t,tile);
+  if(A.k==='trap'){placeTrap(u,a,tile);return}
+  if(A.k==='self'){
+    if(A.spendCharge&&A.spendCharge.shieldPer){const n=spendAllCharge(u);if(n>0){addShield(u,n*A.spendCharge.shieldPer);say(`${u.n} spends ${n} Charge for ${n*A.spendCharge.shieldPer} shield`)}}
+    if(A.charge)u.charge=Math.min(CR.charge.max,u.charge+A.charge);
+    if(A.cd)u.cd[a]=A.cd;
+    if(A.swapPet){const pt=petOf(u);if(pt)swapPlaces(u,pt)}
+    if(A.refundAP&&u===active)bonus+=A.refundAP;
+    if(A.fx)applyFx(u,LO.wardFx(u,A));
+    say(`${u.n} uses ${A.n}`,{dup:1});return;
+  }
+  if(A.k==='heal'||A.k==='buff'){
+    const grp=groundTargeted(A)?areaUnits(u,A,tile||(t?{x:t.x,y:t.y}:{x:u.x,y:u.y})):[t],out=[]; // area heals and buffs affect every ally in the footprint
+    let P=Math.round((A.p+(A.k==='heal'?LO.castPart(u,A):0))*LO.potency(u,A)*(A.k==='heal'&&u.lvPow?u.lvPow:1));if(A.k==='heal'&&A.consumeShield){const x=Math.min(u.st.shield,A.consumeShield);u.st.shield-=x;P+=x} // Lay on Hands spends your shield
+    let ch=0;const SC=A.spendCharge;if(SC&&(SC.healPer||SC.shieldPer)){ch=spendAllCharge(u);if(ch===0&&A.bankIfEmpty)u.charge=Math.min(CR.charge.max,u.charge+A.bankIfEmpty);if(SC.healPer)P+=ch*SC.healPer}
+    if(!grp.length){say(`${u.n}'s ${A.n} reaches no one`);return}
+    if(A.swap&&t&&t!==u){swapPlaces(u,t);say(`${u.n} swaps places with ${t.n}`);return}
+    if(A.transferStatus){
+      const k=NEG.find(n=>t.st[n]),foe=alive().filter(f=>f.team!==u.team&&!hidden(f)&&dist(f,t)<=3).sort((a,b)=>dist(a,t)-dist(b,t))[0];
+      if(k&&foe){foe.st[k]=t.st[k];t.st[k]=CR.statuses[k].tick?null:0;say(`${u.n} moves ${k} from ${t.n} to ${foe.n}`)}else say(`${u.n}'s ${A.n} has nothing to move`);
+      return;
+    }
+    for(const m of grp){
+      if(A.k==='heal'){
+        let Pm=P;if(A.lowHpBonus&&m.hp<m.max*A.lowHpBonus.pct)Pm+=A.lowHpBonus.p;
+        if(A.detonateRegen&&m.st.regen){Pm+=Math.floor(LO.dotTotal(m.st.regen)*A.detonateRegen);m.st.regen=null;say(`${m.n}'s Regeneration blooms`)}
+        Pm=Math.round(Pm*LO.healMult(m));const h=Math.min(Pm,m.max-m.hp),over=Pm-h,hp0=m.hp;m.hp+=h;if(window.FX&&h>0)FX.num(m,h,{heal:1});out.push(`${m.n} +${h}`);EV({ev:'heal',src:u.n,st:tm(u),tgt:m.n,tt:tm(m),ab:a,amt:h,over,pow:Pm,hp0,hp1:m.hp});
+        const ctx={target:m,subject:m,amount:h,overflow:over,ability:a,byOwner:true};
+        fire('onHeal',u,ctx);if(over>0)fire('onHealOverflow',u,ctx); // e.g. Overflowing Grace shields the target
+      }else{if(A.fx)applyFx(m,LO.wardFx(u,A));if(ch&&SC.shieldPer)addShield(m,ch*SC.shieldPer);out.push(m.n)}
+      if(A.cleanse)cleanse(m,A.cleanse);
+      if(A.echo&&A.echo.shield&&echoed(u)){addShield(m,A.echo.shield)}
+    }
+    if(A.selfFx)applyFx(u,A.selfFx);
+    say(A.k==='heal'?`${u.n} heals ${out.join(', ')}`:`${u.n} casts ${A.n} on ${out.join(', ')}`,{dup:1});
+    return;
+  }
+  const amb=u.st.vanish>0;u.st.vanish=0;
+  const bld=!!A.bloodied&&u.hp<=u.max*CR.resourceCosts.bloodiedThreshold; // Bloodied: caster at or below the HP threshold
+  const ground=groundTargeted(A),ctr=t||tile||{x:u.x,y:u.y},hits=(!ground&&t)?[[t,A.p]]:[],foes=alive().filter(f=>(u.st.confused>0?f!==u:f.team!==u.team)&&f!==t);
+  if(ground){areaUnits(u,A,tile||ctr).forEach(f=>hits.push([f,A.p]));if(hits.length)t=hits.slice().sort((a,b)=>dist(a[0],ctr)-dist(b[0],ctr))[0][0]} // the footprint decides who is hit; the nearest hit is the 'primary' for triggers
+  if(A.area==='chain'){const C=CR.areaShapes.chain;foes.filter(f=>dist(f,ctr)<=C.radius).sort((a,b)=>dist(a,ctr)-dist(b,ctr)).slice(0,C.extraTargets).forEach(f=>hits.push([f,C.extraPower]))}
+  let tot=0;const pDone=[],chg=A.spendCharge&&A.spendCharge.dmgPer?spendAllCharge(u):0;
+  const rfx=A.randomFx?A.randomFx[Math.floor(Math.random()*A.randomFx.length)]:null;if(rfx)say(`${u.n}'s song carries ${Object.keys(rfx)[0]}`);
+  if(A.spendVerse){say(`${u.n} releases ${u.verse||0} verse${(u.verse||0)===1?'':'s'}`)}
+  EXO=0;if(A.exorcism)for(const m of alive().filter(f=>f.team===u.team&&dist(f,u)<=A.exorcism.radius)){EXO+=NEG.filter(k=>m.st[k]).length;cleanse(m,99)} // Exorcism: cleanse first, power scales with what was removed
+  for(const [h,p0] of hits){
+    const hadNeg=NEG.some(k=>h.st[k]),hadVs=A.fxVsStatus?Object.keys(A.fxVsStatus).filter(k=>h.st[k]>0):[];
+    const p00=p0+(LO.weaponSkill(A)?LO.weaponPart(u,A):0)+(p0>0?LO.castPart(u,A):0); // physical skills build on the equipped weapon
+    let p=p00>0&&A.k==='dmg'?Math.max(1,Math.round((p00+powerBonus(u,A,a)+(bld&&A.bloodied.p||0)+abBonus(u,A,h,amb,chg))*LO.potency(u,A)*SCALE*abMult(A,h))):p00;const pb=p;let FL='';
+    FLK=amb||flank(u,h);
+    if(A.flank){if(amb){p*=CR.damage.ambushMultiplier;FL='ambush ×'+CR.damage.ambushMultiplier}else if(flank(u,h)){p=Math.ceil(p*CR.damage.flankMultiplier);FL='flank ×'+CR.damage.flankMultiplier}}
+    if(p>0){HC={p0:p00,bonus:pb-p00,fl:FL};tot+=hurt(u,h,p,A,a);HC=null}
+    pDone.push([h,p]);
+    if(A.consumeStatus&&h.st[A.consumeStatus]>0){h.st[A.consumeStatus]=0;say(`${h.n}'s ${CR.statuses[A.consumeStatus].label} is consumed`)} // Smite Evil consumes Judged
+    if(h.hp>0)for(const k of hadVs)applyFx(h,A.fxVsStatus[k]); // Consecrate pins Judged foes
+    if(A.selfHealIfNegative&&hadNeg&&u.hp>0){u.hp=Math.min(u.max,u.hp+A.selfHealIfNegative)}
+    if(A.petStrike&&h.hp>0){const pt=petOf(u);if(pt){
+      if(A.petStrike.teleport&&dist(pt,h)>1){const spot=nbrs(h.x,h.y).filter(([x,y])=>inb(x,y)&&!ROCKS.includes(x+','+y)&&!at(x,y)&&Math.abs(ht(x,y)-ht(h.x,h.y))<=jumpOf(pt)).sort((a,b)=>dist({x:a[0],y:a[1]},pt)-dist({x:b[0],y:b[1]},pt))[0];if(spot){pt.x=spot[0];pt.y=spot[1]}}
+      if(dist(pt,h)===1){say(`${pt.n} strikes ${h.n}`);tot+=hurt(pt,h,A.petStrike.p,{},'spirit_bite')}}}
+    if(A.swapMeter){TA.gainMeter(u,Math.max(0,h.meter));h.meter=-spent*CR.turn.meterPenaltyPerPointSpent;say(`${u.n} takes ${h.n}'s turn meter`)}
+    if(A.markQuarry&&h.hp>0){if(u.quarry&&u.quarry!==h)u.quarry.st.quarry=0;u.quarry=h;h.st.quarry=A.markQuarry} // Tracker: one Quarry at a time
+    if(h.hp>0){if(A.fx)applyFx(h,A.fx);if(rfx)applyFx(h,rfx);if(A.stagger){h.meter-=A.stagger;h.charge=0;cancelCast(h)}} // stagger interrupts a cast
+  }
+  if(u.metaNow&&A.k==='dmg'){ // Metamagic riders
+    const MM=CR.metamagic,meta=u.metaNow,enemies=()=>alive().filter(f=>f.team!==u.team&&!hidden(f));
+    if(meta.widen&&A.widenSplash&&t&&pDone.length){const pT=pDone[0][1];
+      for(const f of enemies().filter(f=>f!==t&&dist(f,t)<=MM.splashRadius)){if(pT>0)tot+=hurt(u,f,Math.max(1,Math.round(pT*MM.splashFraction)),A,a);if(f.hp>0&&A.fx)applyFx(f,A.fx)}}
+    if(meta.twin&&A.twin==='chain'){for(const[h,pp]of pDone.slice()){const f=enemies().filter(x=>x!==h&&dist(x,h)<=MM.chainRange).sort((x,y)=>dist(x,h)-dist(y,h))[0];if(f&&pp>0){say(`Lightning chains to ${f.n}`);tot+=hurt(u,f,Math.max(1,Math.round(pp*MM.chainFraction)),A,a)}}}
+    if(meta.twin&&A.twin==='pull2'){for(const[h]of pDone)if(h.hp>0)forcedMove(h,ctr,1,'pull')}
+    if(meta.twin&&A.twin==='repeat'){
+      const t2=t&&t.hp>0&&!hidden(t)?t:enemies().filter(f=>inRange(u,A,f.x,f.y)).sort((x,y)=>dist(x,u)-dist(y,u))[0];
+      if(t2&&!over){say(`${A.n} is cast again`);SCALE=MM.twinFraction;u.metaNow={widen:meta.widen,reach:meta.reach};try{resolveAct(u,a,t2,undefined)}finally{SCALE=1}}
+    }
+  }
+  if(A.spendVerse)u.verse=0;
+  if(A.k==='dmg'&&u.st.empowered>0){u.st.empowered=0;say(`${u.n}'s Empowerment is spent`)}
+  if(A.drainAlly&&tot>0){const al=alive().filter(f=>f.team===u.team&&f!==u&&dist(f,u)<=3&&f.hp<f.max).sort((a,b)=>(b.max-b.hp)-(a.max-a.hp))[0];if(al){const g=Math.min(al.max-al.hp,Math.round(tot*A.drainAlly)),h0=al.hp;al.hp+=g;say(`${al.n} recovers ${g}`);EV({ev:'heal',src:u.n,st:tm(u),tgt:al.n,tt:tm(al),ab:a,amt:g,over:0,hp0:h0,hp1:al.hp,note:'drain'})}}
+  if(A.drain){const pld=A.drainIfPulled&&u.pulled&&pDone.some(([h])=>u.pulled.has(h));const dm=pld?A.drainIfPulled:A.drainPerDebuff?A.drain+A.drainPerDebuff*LO.selfDebuffs(u):(bld&&A.bloodied.drainMult||1),h0=u.hp;u.hp=Math.min(u.max,u.hp+Math.round(tot*dm));if(u.hp>h0)EV({ev:'heal',src:u.n,st:tm(u),tgt:u.n,tt:tm(u),ab:a,amt:u.hp-h0,over:0,hp0:h0,hp1:u.hp,note:'lifesteal'})}
+  if(A.drainShield&&tot>0){const g=Math.round(tot*(bld&&A.bloodied.drainMult||1));addShield(u,g);say(`${u.n} gains ${g} shield`)}
+  if(A.selfFx)applyFx(u,A.selfFx); // e.g. Hold the Line: taunt a foe, shield yourself
+  if(!hits.length)say(`${u.n}'s ${A.n} hits nothing`);
+  else say(`${u.n} ${A.n} → ${t?t.n:'the marked tile'}`+(tot?` ${tot}`:'')+(amb&&A.flank?' (ambush)':'')+(bld?' (bloodied)':'')+(hits.length>1?` (+${hits.length-1} more)`:'')+(t&&!t.hp?' — down':''),{dup:1});
+  checkEnd();
+}
+function resolveSummon(u,a,x,y){
+  const id=AB[a].summonId||'skeleton';
+  units.forEach(s=>{if(s.owner===u&&s.hp>0){s.hp=0;s.dead=true}}); // one pet at a time per summoner: a new summon replaces the old one
+  const s=mk(id,u.team,x,y);s.owner=u;s.meter=CR.summons.initialMeter;units.push(s);if(window.FX)FX.summon(x,y);say(`${u.n} summons ${s.n}`);
+}
+function checkEnd(){
+  const p=alive().some(u=>u.baseTeam==='P'),e=alive().some(u=>u.baseTeam==='E');
+  let won=null; // true = win, false = loss, null = fight on
+  if(!p&&!e&&HZ){DRAW=true;won=false}
+  else if(!p)won=false;
+  else if(!e)won=true; // every objective is also met by wiping the foe out
+  else if(OBJ){
+    if(OBJ.type==='leader'){const L=units.find(u=>u.leader);if(!L||L.hp<=0)won=true}
+    else if(OBJ.type==='survive'){if(ROUND()>OBJ.turns)won=true}
+    else if(OBJ.type==='reach'){if(alive().some(u=>u.baseTeam==='P'&&OBJ.set.has(u.x+','+u.y)))won=true}
+    else if(OBJ.type==='hold'){if(HOLD>=OBJ.turns)won=true}
+    if(won===null&&OBJ.limit&&ROUND()>OBJ.limit){won=false;say('Out of time')}
+  }
+  if(won!==null){over=true;$('msg').textContent=DRAW?'Draw':won?'Victory':'Defeat';if(!(BATTLE&&BATTLE.hideOverlay))$('over').style.display='grid';finishBattle(won)}
+}
+// ---- Battle API: the campaign (or anything else) starts a fight with explicit parties and a map, and gets a result back.
+// Battle.start({ playerBuilds, enemyBuilds, map, hideOverlay, onEnd(result) })  builds may carry id, name and faction.
+// result = { won, mapKey, turns, survivors[{id,name,faction,hp,max}], fallen[...], kills[{killer,killerTeam,victim,victimTeam,victimFaction,ability,turn}], factionKills{faction:n}, log }
+function finishBattle(won){
+  if(ENDED)return;ENDED=true;
+  const info=u=>({id:u.uid,name:u.n,job:u.job,faction:u.faction,hp:Math.max(0,u.hp),max:u.max});
+  const mine=units.filter(u=>u.baseTeam==='P'),fk={};
+  KILLS.forEach(k=>{if(k.victimTeam==='E'&&k.victimFaction)fk[k.victimFaction]=(fk[k.victimFaction]||0)+1});
+  const ustats={};mine.forEach(u=>{ustats[u.uid]={uses:u.tally?u.tally.uses:0,helps:u.tally?u.tally.helps:0,kills:KILLS.filter(k=>k.killer===u.uid&&k.victimTeam==='E').length,alive:u.hp>0}});
+  const res={won:!!won,draw:!!DRAW,unitStats:ustats,mapKey:MAPKEY,turns:TURN,rounds:ROUND(),objective:OBJ?OBJ.type:'rout',survivors:mine.filter(u=>u.hp>0).map(info),fallen:mine.filter(u=>u.hp<=0).map(info),kills:KILLS.slice(),factionKills:fk,log:LOG.slice()};
+  window.Battle.last=res;
+  if(BATTLE&&BATTLE.onEnd){const cb=BATTLE.onEnd;setTimeout(()=>cb(res),0)}
+}
+window.Battle={
+  start(o){
+    BATTLE=o||{};setMap(BATTLE.map);if(BATTLE.swapSides)POS={P:POS.E,E:POS.P}; // zone and random encounters: half the time the party starts on the map's far side
+    party={P:(BATTLE.playerBuilds||DEF.P).map(normBuild),E:(BATTLE.enemyBuilds||DEF.E).map(normBuild)};
+    ['P','E'].forEach(t=>{if(party[t].length>POS[t].length)throw new Error('Map '+MAPKEY+' has '+POS[t].length+' spawn tiles for team '+t+', got '+party[t].length+' units')});
+    if(window.FX)FX.clear();$('setup').style.display='none';start();
+  },
+  abort(){if(!ENDED){PL=null;over=true;finishBattle(false)}}, // retreat: counts as a loss
+  last:null
+};
+// ---- Traps: hidden hex state. Only the owner's team sees them; the first enemy to end a step on one springs it (area effect around the tile).
+const VIEWER='P',seenU=u=>u.team===VIEWER||!hidden(u),trapAt=(x,y)=>traps.find(r=>r.x===x&&r.y===y);
+function trapTileOk(u,A,x,y){return inb(x,y)&&!ROCKS.includes(x+','+y)&&(A.persist||(!at(x,y)&&!trapAt(x,y)))&&inRange(u,aimSpec(A),x,y)}
+function trapHit(A,a,own,f){if(A.p)hurt(own,f,A.p*(own.quarry===f&&f.st.quarry>0?2:1),{},a);if(f.hp>0&&A.fx)applyFx(f,A.fx)}
+function placeTrap(u,a,tile){
+  const A=AB[a];if(A.cd)u.cd[a]=A.cd;
+  if(!tile||(!A.persist&&(at(tile.x,tile.y)||trapAt(tile.x,tile.y)))){say(`${u.n}'s ${A.n} fizzles`);return}
+  traps=traps.filter(r=>!(r.owner===u&&r.a===a)); // only one of each trap per caster: a new cast clears the old
+  const tl=A.persist?SH.footprint(A,u,tile,inb).filter(([x,y])=>!ROCKS.includes(x+','+y)):[[tile.x,tile.y]];
+  tl.forEach(([x,y])=>traps.push({x,y,team:u.team,owner:u,a}));
+  say(u.team===VIEWER?`${u.n} sets ${A.n}`:`${u.n} sets something on the ground`,{hid:u.team!==VIEWER});EV({ev:'trap',actor:u.n,tt:tm(u),ab:a,x:tile.x,y:tile.y,tiles:tl.length,hid:u.team!==VIEWER});
+  if(A.persist){const set=new Set(tl.map(([x,y])=>x+','+y));for(const f of alive().filter(f=>f.team!==u.team&&set.has(f.x+','+f.y)))trapHit(A,a,u,f)} // foes already standing there are caught
+}
+function trapCheck(m){ // true when the mover sprang a one-shot trap (hazards that linger do not stop movement)
+  if(m.hp<=0)return false;
+  if(HZ&&hzEnter(m))return true; // an arena hazard killed the mover
+  let stop=false,any=false;
+  for(const r of traps.filter(q=>q.x===m.x&&q.y===m.y&&q.team!==m.team)){
+    if(!traps.includes(r)||m.hp<=0)continue;
+    const A=AB[r.a],own=r.owner;any=true;
+    if(A.persist){say(`${m.n} steps on ${A.n}`);EV({ev:'spring',tgt:m.n,tt:tm(m),src:own.n,st:tm(own),ab:r.a,x:r.x,y:r.y,lingering:1});trapHit(A,r.a,own,m);continue}
+    traps.splice(traps.indexOf(r),1);stop=true;
+    const tiles=new Set(SH.footprint(A,own,{x:r.x,y:r.y},inb).map(([x,y])=>x+','+y));
+    if(window.FX)FX.spring(r.x,r.y);say(`${m.n} springs ${A.n}!`);EV({ev:'spring',tgt:m.n,tt:tm(m),src:own.n,st:tm(own),ab:r.a,x:r.x,y:r.y});
+    for(const f of alive().filter(f=>f.team!==r.team&&tiles.has(f.x+','+f.y)))trapHit(A,r.a,own,f);
+  }
+  if(any)checkEnd();return stop;
+}
+// ---- Arena hazards (design/arena.md): neutral, visible tiles that hurt both teams. A map lists them as data:
+// maps[key].hazards[layout] = [{kind, tiles|sets, at | from+every}]. at: lit from that round on. from/every: lit on that beat, cycling through sets.
+// Every lit tile is drawn; a tile that lights next round is outlined a round ahead. Hazard deaths give no kill credit (killer null).
+const HZK={spikes:{n:'Spike plates',t:'the spike plates',g:'✶',dmg:1,fx:()=>({slow:1})},
+  quicksand:{n:'Quicksand',t:'the quicksand',g:'≈',dmg:0,fx:()=>({slow:2})},
+  fire:{n:'Burning floor',t:'the burning floor',g:'♨',dmg:1,turn:1,lit:'The floor catches fire',fx:u=>({burn:[2,Math.max(1,Math.round(u.max*.03))]})},
+  jet:{n:'Fire jets',t:'a fire jet',g:'✦',dmg:1,lit:'Fire jets flare',fx:u=>({burn:[2,Math.max(1,Math.round(u.max*.03))]})},
+  vent:{n:'Steam vents',t:'a steam vent',g:'≋',dmg:1,lit:'Steam bursts from the vents'}};
+const hzSets=g=>g.sets||[g.tiles];
+function hzInit(){const bf=window.GAME_DATA.maps&&window.GAME_DATA.maps[MAPKEY],w=(BATTLE&&BATTLE.hazards)||'full';return bf&&bf.hazards&&w!=='none'?bf.hazards[w]||bf.hazards.full||null:null}
+function hzLit(r){ // tile key -> hazard kind lit in round r
+  const m=new Map();if(!HZ)return m;
+  for(const g of HZ){let t=null;
+    if(g.at!==undefined){if(r>=g.at)t=hzSets(g)[0]}
+    else if(g.from===undefined)t=hzSets(g)[0];
+    else if(r>=g.from&&(r-g.from)%g.every===0){const s=hzSets(g);t=s[((r-g.from)/g.every)%s.length]}
+    if(t)for(const [x,y] of t)m.set(x+','+y,g.kind)}
+  return m;
+}
+function hzHit(u,kind,how){ // how: 'enter' | 'flare' | 'turn'. ~6% max HP (at least 2), then the status. Lethal, no kill credit.
+  const K=HZK[kind];if(u.hp<=0)return false;
+  const amt=K.dmg?Math.max(2,Math.round(u.max*.06)):0,prev=u.hp;
+  say(`${u.n} ${how==='enter'?(kind==='quicksand'?'sinks into':'steps onto'):how==='turn'?'is scorched by':'is caught by'} ${K.t}`);
+  EV({ev:'hazard',tgt:u.n,tt:tm(u),kind,how,amt,hp0:prev,hp1:Math.max(0,prev-amt)});
+  if(amt)directLoss(u,amt,null);
+  if(u.hp>0&&K.fx)applyFx(u,K.fx(u));
+  return u.hp<=0;
+}
+function hzEnter(m){if(m.hp<=0)return false;const kind=hzLit(ROUND()).get(m.x+','+m.y);if(!kind)return false;const dead=hzHit(m,kind,'enter');checkEnd();return dead}
+function hzRound(){ // a new round starts: tiles that light now catch whoever stands on them; say what lights next
+  const r=ROUND(),now=hzLit(r),prev=hzLit(r-1),nxt=hzLit(r+1),fresh=new Set(),soon=new Set();
+  for(const [k,kind] of now)if(!prev.has(k)&&HZK[kind].lit)fresh.add(kind);
+  for(const kind of fresh)say(HZK[kind].lit);
+  for(const u of alive()){const k=u.x+','+u.y,kind=now.get(k);if(kind&&!prev.has(k)&&HZK[kind].lit&&u.hp>0)hzHit(u,kind,'flare')}
+  for(const [k,kind] of nxt)if(!now.has(k)&&HZK[kind].lit)soon.add(kind);
+  for(const kind of soon)say(`${HZK[kind].n} next round`);
+}
+function hzTurn(u){const r=ROUND(),k=u.x+','+u.y,kind=hzLit(r).get(k);if(kind&&HZK[kind].turn&&hzLit(r-1).get(k)===kind)hzHit(u,kind,'turn')} // standing in fire: it burns again at your turn start
+function hzBanner(){if(!HZ||over)return'';const now=hzLit(ROUND()),s=new Set();for(const [k,kind] of hzLit(ROUND()+1))if(!now.has(k)&&HZK[kind].lit)s.add(HZK[kind].n);return s.size?'⚠ '+[...s].join(', ')+' next round':''}
+const hzAvoid=()=>HZ?new Set(hzLit(ROUND()).keys()):null; // tiles the AI paths around right now
+function hzRisk(x,y){if(!HZ)return 0;const k=x+','+y,r=ROUND();return hzLit(r).has(k)||hzLit(r+1).has(k)?170:0} // above canHitScoreBonus (100): never worth standing there
+function moveTriggers(mover){ // onEnemyMoveNear: every enemy of the mover gets a chance to react (armed interrupts like Overwatch)
+  for(const w of alive())if(w!==mover&&w.team!==mover.team){fire('onEnemyMoveNear',w,{subject:mover,attacker:mover});if(mover.hp<=0||over)return true}
+  return false;
+}
+async function moveTo(u,x,y,mcost=moveCost(u),mvr=moveRange(u),std=true,jb=0){ // std=false for dash abilities
+  const path=reach(u,mvr,jb).get(x+','+y);
+  spent+=mcost;u.movedAny=true;if(std)u.hasMovedThisTurn=true;say(`${u.n} moves`,{dup:1});EV({ev:'move',actor:u.n,tt:tm(u),fx:u.x,fy:u.y,x:x,y:y,steps:path.length,cost:mcost,dash:!std,hid:hidE(u)});mode=null;menu=null;
+  const was=busy;busy=true;
+  for(const [px,py] of path){u.x=px;u.y=py;render();await sleep(CR.ai.moveStepMs);if(trapCheck(u)||moveTriggers(u)||over)break} // interrupts stop the mover
+  if(u.hp>0&&!over)fire('onMove',u,{byOwner:true});
+  busy=was;checkEnd();render(); // reaching an objective tile ends the fight
+}
+
+function queue(n=CR.turn.previewQueueLength){
+  const sim=alive().map(u=>({u,m:u.meter,c:u.cast?{m:u.cast.meter,need:u.cast.need,a:u.cast.a}:null}));
+  const me=sim.find(x=>x.u===active),out=me?[{u:active,now:true}]:[]; // active can be dead when poison ends the game
+  if(me)me.m=-spent*CR.turn.meterPenaltyPerPointSpent;
+  while(out.length<n&&sim.length){
+    const evs=[];
+    for(const x of sim){
+      evs.push({t:Math.max(0,(CR.turn.meterThreshold-x.m)/sp(x.u)),p:1,team:x.u.team==='P'?0:1,x});
+      if(x.c)evs.push({t:Math.max(0,(x.c.need-x.c.m)/sp(x.u)),p:0,team:0,x,cast:true});
+    }
+    evs.sort(evSort);const e=evs[0];
+    sim.forEach(x=>{const d=e.t*sp(x.u);x.m+=d;if(x.c)x.c.m+=d});
+    if(e.cast){out.push({u:e.x.u,cast:e.x.c.a});e.x.c=null} // a pending spell resolving
+    else{out.push({u:e.x.u,again:e.x.u===active});e.x.m=CR.turn.previewRestingMeter}
+  }
+  return out;
+}
+const stText=u=>{const s=u.st,o=[];if(s.shield)o.push('shield '+s.shield);for(const k of TICK)if(s[k])o.push(`${k} ${s[k].d}×${s[k].n}`);DEC.forEach(k=>s[k]&&o.push(k+' '+s[k]));if(s.vanish)o.push('vanished');if(u.charge)o.push('charge '+u.charge);if(u.guard)o.push('guarding');return o.join(', ')};
+const unitTip=u=>{const s=u.st,o=[`${u.n}${u.lvl>1?' (Lv '+u.lvl+')':''} · ${u.hp}/${u.max} HP · Speed ${sp(u)} · Height ${ht(u.x,u.y)}`,loadoutText(u),`Armor ${Math.round(u.armor)}% · Resist ${Math.round(u.res)}% · Mana ${u.mana}/${u.manaMax} (+${u.manaRegen}/turn)`+(u.spellPow?` · Spell +${u.spellPow}%`:'')+(u.healPow?` · Heal +${u.healPow}%`:'')];
+  if(s.shield)o.push(SD('shield')+' ('+s.shield+' left)');for(const k of TICK)if(s[k])o.push(SD(k)+` (${s[k].d} x ${s[k].n} turns)`);
+  [...DEC,'vanish'].forEach(k=>s[k]&&o.push(SD(k)));if(u.charge)o.push(SD('charge')+' ('+u.charge+')');if(u.guard)o.push(SD('guard'));if(u.armed.length)o.push('Armed: '+u.armed.map(x=>x.spec.label).join(', ')+' (until its next turn)');if(u.cast)o.push(`Casting ${AB[u.cast.a].n} (${Math.round(u.cast.meter/u.cast.need*100)}% charged)`);
+  return o.join('\n')};
+const dd=t=>`data-d="${t.replace(/"/g,'&quot;')}"`;
+const ICON={unmovable:'⚓',empowered:'⚔',mez:'❂',intercept:'⛨',deathSave:'✚',thorns:'✱',zoc:'⌖',siege:'▣',steeled:'▤',standfast:'▣',farsight:'◉',burn:'♨',stun:'✸',silence:'⊘',root:'⚓',blind:'◐',marked:'◎',charm:'♥',confused:'?',dontAct:'∅',exposed:'▽',chill:'❄',reckless:'⚡',winded:'≈',dazed:'✧',fear:'☠',grievous:'⊖',disarm:'✕',fatigue:'⏷',orders:'⏶',warded:'◈',evasion:'↯',overwatch:'⌖',clarity:'✦',bloodthirst:'☥',quarry:'⌾',widen:'⇔',reach:'⇢',twin:'⧉',judged:'⚖',wrath:'⚔'};
+const badge=u=>{const s=u.st;return(s.shield?'◈':'')+(s.poison?'☠':'')+(s.bleed?'≋':'')+(s.regen?'✚':'')+(s.slow?'▼':'')+(s.pin?'×':'')+(s.wither?'▽':'')+(s.taunt?'!':'')+(s.vanish?'~':'')+(u.charge?'⚡'+u.charge:'')+(u.cast?'✦':'')+(u.armed.length?'◉':'')+Object.keys(ICON).filter(k=>s[k]).map(k=>ICON[k]).join('')};
+const hpNote=X=>(X.hpCostPct?` Costs ${Math.round(X.hpCostPct*100)}% of your current HP (never lethal).`:'')+(X.bloodied?` Bloodied (HP at or below ${Math.round(CR.resourceCosts.bloodiedThreshold*100)}%):${X.bloodied.p?' +'+X.bloodied.p+' power':''}${X.bloodied.drainMult?' heal x'+X.bloodied.drainMult:''}.`:'');
+const calcNote=(u,A,a)=>{const t=u&&LO.skillCalcText(u,A,a);return t?` ${LO.typeLabel(A)}${A.k==='dmg'?' skill':''}. YOUR NUMBERS: ${t.head}${t.detail?' ('+t.detail+')':''}.${t.extra.length?' '+t.extra.join('. ')+'.':''}${A.k==='dmg'?' Enemy armor and resistance reduce damage.':''}`:''};
+const sum=(A,u,a)=>[LO.typeLabel(A),(A.p||LO.weaponSkill(A))?(u?(LO.skillCalc(u,A,a)||{total:effP(u,A,a)}).total:A.p)+(A.k==='heal'?' heal':' dmg'):'',LO.manaCost(A)?LO.manaCost(A)+' mana':'',A.r?'r'+A.r:'',A.fx?Object.keys(A.fx).join('/'):'',A.area||'',A.flank?'flank · ambush':'',A.ignore?'pierce':'',A.stagger?'stagger':'',A.drain?'drain':'',A.charge?'+1 pt next turn':'',A.cd?'cd '+A.cd:'',A.ct?'cast '+Math.min(CR.cast.maxCt,A.ct)+'%':'',A.hpCostPct?'-'+Math.round(A.hpCostPct*100)+'% HP':'',A.bloodied?'bloodied':'',A.mv?'dash '+A.mv+' to foe':'',A.k==='summon'?'1 pet':''].filter(Boolean).join(' · ');
+
+function render(){if(PL)return renderPlace();if(LOGOPEN)setTimeout(drawLog,0);const ob=$('obj');if(ob)ob.textContent=units?objText():'';
+  hideTip();
+  $('bar').innerHTML=queue().map(q=>q.cast?`<div class="chip cast ${q.u.team}" ${dd(`${q.u.n}'s ${AB[q.cast].n} resolves here.`)}><span>✦</span><small>${q.u.g}</small></div>`:`<div class="chip ${q.u.team} ${q.now?'now':''} ${q.again?'again':''}" ${dd(unitTip(q.u))}>${q.u.g}</div>`).join('');
+  const mine=!over&&!isAI(active)&&!busy,A=mode&&!isMove(mode)?AB[mode]:null;
+  PREV=null;
+  if(preview&&A){ // a pending target: self, one unit, a ground tile or a summon tile. Area skills also draw their footprint.
+    if(preview.self&&A.k==='self'){}
+    else if(preview.unit&&preview.unit.hp>0&&!groundTargeted(A)&&A.k!=='summon'){if(A.area==='chain')PREV=aoeFootprint(active,A,preview.unit)}
+    else if(preview.x!==undefined&&(groundTargeted(A)||A.k==='summon')){if(A.area&&A.k!=='summon')PREV=aoeFootprint(active,A,preview)}
+    else preview=null;
+  }else if(preview&&mode&&isMove(mode)&&preview.x!==undefined&&mvMap().has(preview.x+','+preview.y)){PREV={tiles:new Set([preview.x+','+preview.y]),hit:new Set([preview.x+','+preview.y]),ally:true}} // pending move: the destination tile is shaded green
+  else preview=null;
+  const mm=mvMap(),tg=A&&A.k!=='summon'?targets(active,mode):[],stl=A&&A.k==='summon'?summonTiles(active):[],rg=A?A.r:-1;
+  LAST=[mm,tg,stl,A];drawBoard(mm,tg,stl,A);if(active!==FOCUSED){FOCUSED=active;focusActive()}
+  const L=left(),pinned=isBlocked(active,'move'),movedLock=CR.movement.standardMoveOncePerTurn&&active.hasMovedThisTurn;
+  renderCards(tg,A);$('who').innerHTML=`<span><small>Action points</small></span><span class="pips" ${dd(`Action points. Gold pips are your ${AP} base points each turn; blue pips are banked Charge, spent last. Every point you spend delays your next turn.`)}>${Array.from({length:apNow()+bonus},(_,i)=>`<i class="pip ${i>=apNow()?'b':''} ${i<L?'on':''}"></i>`).join('')}</span><button class="a end tb ${mine?'':'dis'}" ${dd(`End turn: pass to the next unit. Each point you spent delays your next turn by ${CR.turn.meterPenaltyPerPointSpent} on the turn meter, so a lighter turn means acting again sooner.`)} onclick="endTurn()">End turn</button>`;
+  let hint;
+  if(over)hint='';
+  else if(mine&&preview&&mode&&isMove(mode))hint='Confirm, or tap the same tile again, to move there. Tap another green tile to change.';
+  else if(mine&&A&&preview)hint=`Confirm, or tap ${preview.unit?preview.unit.n:preview.self||A.self?'yourself':'the same tile'} again, to use ${A.n}${preview.unit?' on '+preview.unit.n:''}. Tap another target to re-aim.`;
+  else if(inspect&&!mode)hint=inspect;
+  else if(isMove(mode))hint='Tap a green tile to move.';
+  else if(A&&A.k==='summon')hint='Tap a gold tile next to you.';
+  else if(PREV&&A.k==='trap')hint=`Trap blast: the shaded tiles. Tap the same tile again to hide it there.`;
+  else if(PREV)hint=`${SH.NAMES[A.area]||'Area'}: ${PREV.hit.size} ${PREV.ally?'ally':'target'}${PREV.hit.size===1?'':'s'} affected.`+(A.self?' Tap yourself again to cast.':' Tap the same tile again to cast, or another tile to re-aim.');
+  else if(A&&A.k==='trap')hint=`Tap a tile within range ${A.r} to preview, tap again to hide it there. Only your team can see it, and a new cast replaces your old one.`;
+  else if(A&&groundTargeted(A))hint=A.self?`${SH.NAMES[A.area]} around you. Tap yourself to preview.`:`${SH.NAMES[A.area]}: blue tiles show range ${A.r}. Tap any tile to aim, empty ground included.`;
+  else if(A)hint=tg.length?`Blue tiles show range ${A.r}. Tap a gold unit.`:`Blue tiles show range ${A.r}. No target in range.`;
+  else hint=mine?(pinned?blocker(active,'move')+': you cannot move this turn.':'Choose an action. Tap a unit to inspect it. Swipe the board or use ↺ ↻ to rotate.'):(active.team==='E'?'Enemy turn…':'');
+  $('hint').textContent=hint;
+  const mc=moveCost(active),gc=guardCost(active),gBlock=blocker(active,'guard'),GC=CR.damage.guardCounter,counters=GC.classes.includes(active.job);
+  let b=`<button class="a ${mode==='move'?'sel':''} ${mine&&L>=mc&&!pinned&&!movedLock?'':'dis'}" ${dd(`Move: walk up to ${active.mv} tiles for a flat ${mc} points, however far. You can pass through allies, but not enemies. Each step can climb or drop at most ${active.jump} level${active.jump>1?'s':''}.`+(mine&&pinned?' ('+blocker(active,'move')+'.)':mine&&movedLock?' (Already moved this turn. Dash skills still work.)':mine&&L<mc?' (Not enough points.)':''))} onclick="pick('move')"><span>Move<small>${active.mv} tiles</small></span><b>${mc}</b></button>`;
+  const abBtn=(a,rep)=>{
+    const X=AB[a],c=cost(active,a),pw=X.k==='dmg'?powerBonus(active,X,a):0;
+    const why=L<c?'Not enough points.':blockReason(active,a)?blockReason(active,a):(active.cd[a]>0)?'Cooldown: '+active.cd[a]+' more turn'+(active.cd[a]>1?'s':'')+'.':(X.ct>0&&active.cast)?'Already casting '+AB[active.cast.a].n+'.':(X.k==='move'&&!slipMap(active,a).size)?'No enemy within dash range to land next to.':(X.charge&&active.charge>=CR.charge.max)?'Charge is full.':(X.k==='summon'&&!summonTiles(active).length)?'No free tile next to you.':'';
+    const dis=!mine||!!why,notes=(c!==X.c?` Base cost ${X.c}, now ${c} from your loadout.`:'')+(active.secAbs.has(a)?' Secondary-class skill.':'')+(pw?` Loadout bonus: +${pw} power.`:'')+(X.ct>0?` Cast time ${Math.min(CR.cast.maxCt,X.ct)}%: lands after a delay shown on the turn bar; a stagger hit cancels it.`:'')+hpNote(X);
+    return `<button class="a ${rep?'rep':''} ${mode===a?'sel':''} ${dis?'dis':''}" ${dd(`${rep?'Repeat your last action. ':''}${X.n} (${c} pt): ${X.desc}`+calcNote(active,X,a)+notes+(mine&&why?' ('+why+')':''))} onclick="pick('${a}')"><span>${rep?'↻ Repeat: ':''}${X.n}<small>${sum(X,active,a)}</small></span><b>${c}</b></button>`;
+  };
+  if(active.lastAb&&AB[active.lastAb]&&active.ab.includes(active.lastAb))b=abBtn(active.lastAb,true)+b; // repeat last action: the skill this unit used last, one tap to pick it again
+  // One command button per class (primary, then secondary); each opens that class's skill list.
+  b+=abBtn(active.attackId);
+  const cmds=[{k:'p',cls:active.build.primary,abs:JOBS[active.build.primary].ab.filter(a=>active.ab.includes(a)&&!active.secAbs.has(a))}]; // only skills this unit actually has (campaign units know just what they learned)
+  const secList=active.ab.filter(a=>active.secAbs.has(a));
+  if(active.build.secondary&&secList.length)cmds.push({k:'s',cls:active.build.secondary,abs:secList});
+  for(const C of cmds){
+    const J=JOBS[C.cls],open=menu===C.k,picked=C.abs.find(a=>a===mode),nm=J.command||J.name;
+    b+=`<button class="a cmd ${open||picked?'sel':''}" ${dd(`${nm}: ${J.name} skills`+(C.k==='s'?` (secondary class${BLD.secondaryCostPenalty?', +'+BLD.secondaryCostPenalty+' point each':''})`:'')+'. Tap to open the list.')} onclick="toggleMenu('${C.k}')"><span>${nm}<small>${picked?AB[picked].n:C.abs.length+' skill'+(C.abs.length>1?'s':'')}</small></span><b>${open?'▴':'▾'}</b></button>`;
+    if(open)b+=`<div class="sub">${C.abs.map(a=>abBtn(a)).join('')}</div>`;
+  }
+  b+=`<button class="a ${mine&&gc!==null&&!gBlock&&L>=gc&&!active.guard?'':'dis'}" ${dd(gc===null?(JOBS[active.job].guard===null?'This class cannot Guard.':'Guard needs a shield (or the Weapon Block passive).'):gBlock?gBlock+': cannot Guard.':`Guard (${gc} pt): halves damage taken until your next turn. Pierce attacks ignore it.`+(counters?` Counters melee attackers for ${GC.damage} damage.`:''))} onclick="guard()"><span>Guard<small>${counters?'halve dmg · counter':'halve dmg'}</small></span><b>${gc===null?'—':gc}</b></button>`;
+  $('acts').innerHTML=(mine&&preview&&(A||(mode&&isMove(mode))))?`<button class="a cf" onclick="confirmAct()"><span>Confirm</span></button><button class="a cf no" onclick="cancelAct()"><span>Cancel</span></button>`:b;
+  $('log').innerHTML=logs.map(l=>`<div>${l}</div>`).join('');
+}
+let KY=.6,LV=.55,CEN={x:(W-1+.5)/2*SQ3,y:(H-1)*.75},VMODE='iso',ZOOM=null,ZEFF=1,FOCUSED=null;try{if(localStorage.getItem('coc_view')==='top'){VMODE='top';KY=1;LV=0}}catch(e){}
+const VIEW={a:0,t:0}; // current and target view angle in degrees
+let HITS=[],LAST=null,EXT=null,rotRaf=0,FXP=null;
+const wpos=(x,y)=>[(x+.5*(y&1))*SQ3,y*1.5]; // hex centre in flat world space (odd-r rows)
+const rot=(x,y,deg)=>{const t=deg*Math.PI/180,c=Math.cos(t),s=Math.sin(t);return[x*c-y*s,x*s+y*c]};
+function extentWH(w,h){ // widest the board gets over every view angle, so zoom never jumps while rotating
+  const cen={x:(w-1+.5)/2*SQ3,y:(h-1)*.75};let mx=0,my=0;
+  for(let a=0;a<360;a+=15)for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const [wx,wy]=wpos(x,y);
+    for(let k=0;k<6;k++){const an=(-90+60*k)*Math.PI/180,[rx,ry]=rot(wx+Math.cos(an)-cen.x,wy+Math.sin(an)-cen.y,a);mx=Math.max(mx,Math.abs(rx));my=Math.max(my,Math.abs(ry))}
+  }
+  return{mx,my};
+}
+const EXT8=extentWH(8,8);
+function extent(){return EXT||(EXT=extentWH(W,H))}
+const inPoly=(x,y,P)=>{let c=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const[xi,yi]=P[i],[xj,yj]=P[j];if((yi>y)!==(yj>y)&&x<(xj-xi)*(y-yi)/(yj-yi)+xi)c=!c}return c};
+function pickTile(e){
+  const r=$('cv').getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
+  for(let i=HITS.length-1;i>=0;i--)if(HITS[i].polys.some(P=>inPoly(px,py,P)))return HITS[i];
+  return null;
+}
+function toggleView(){VMODE=VMODE==='top'?'iso':'top';KY=VMODE==='top'?1:.6;LV=VMODE==='top'?0:.55;try{localStorage.setItem('coc_view',VMODE)}catch(e){}const b=$('vtb');if(b)b.textContent=VMODE==='top'?'2D':'3D';if(units)render()}
+function zoomBy(f){ZOOM=Math.min(4,Math.max(1,ZEFF*f));if(units)render()}
+function focusActive(force){ // scroll the zoomed board so the active unit (or your deployment area) is in the middle
+  const bw=$('bw');if(!bw||bw.scrollWidth<=bw.clientWidth+2&&bw.scrollHeight<=bw.clientHeight+2)return;
+  const u=PL?null:active,t=u?HITS.find(h=>h.x===u.x&&h.y===u.y):(PL?HITS.find(h=>POS.P[0]&&h.x===POS.P[0][0]&&h.y===POS.P[0][1]):null);if(!t)return;
+  bw.scrollTo({left:Math.max(0,t.cx-bw.clientWidth/2),top:Math.max(0,t.cy-bw.clientHeight/2),behavior:force?'smooth':'auto'});
+}
+function rotateView(dir){VIEW.t+=60*dir;if(!rotRaf)rotRaf=requestAnimationFrame(stepRot)}
+function stepRot(){
+  rotRaf=0;const d=VIEW.t-VIEW.a;
+  if(Math.abs(d)<.5)VIEW.a=VIEW.t;else{VIEW.a+=d*.25;rotRaf=requestAnimationFrame(stepRot)}
+  if(units&&LAST)drawBoard(...LAST);
+}
+// Isometric-style view: the board is rotated in the flat plane, then squashed vertically and raised by height.
+// Back-to-front painter's order; walls are drawn only on edges that face the viewer.
+
+// Tile palettes per map theme (hue, saturation, lightness shift) and little drawn props for the blocking tiles a map lists in `props`.
+const THEMES={steel:{h:205,s:26,l:0},plains:{h:95,s:30,l:4},wheat:{h:48,s:40,l:7},forest:{h:135,s:28,l:0},deepwood:{h:150,s:26,l:-4},meadow:{h:110,s:34,l:6},marsh:{h:80,s:24,l:-2},swamp:{h:165,s:22,l:-5},snow:{h:205,s:20,l:15},highland:{h:100,s:18,l:2},stone:{h:30,s:9,l:3},cave:{h:262,s:10,l:-6},volcanic:{h:8,s:34,l:-5},ash:{h:20,s:5,l:1},ruins:{h:42,s:12,l:3},crypt:{h:272,s:14,l:-6},camp:{h:32,s:28,l:0},glass:{h:150,s:30,l:5},salt:{h:180,s:12,l:12},fen:{h:60,s:26,l:-3},obsidian:{h:250,s:10,l:-4},quarry:{h:40,s:8,l:6}};
+const PROPN={t:'Tree',d:'Dead tree',b:'Boulder',w:'Deep water',l:'Lava',p:'Ruined pillar',c:'Cart and crates',f:'Brazier',g:'Gravestone',h:'Stone wall',r:'Thick reeds',i:'Ice spire',k:'Crystal',v:'Steam vent',x:'Bone pile',n:'Banner pole',e:'Tent',y:'Sulphur pool',j:'Throne',a:'Altar',u:'Vat',o:'Obelisk'};
+function drawProp(g,k,cx,cy,R,sd){
+  const fillP=(pts,f,st)=>{g.beginPath();pts.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();g.fillStyle=f;g.fill();if(st){g.strokeStyle=st;g.lineWidth=1;g.stroke()}};
+  const circ=(x,y,r,f)=>{g.beginPath();g.arc(x,y,r,0,7);g.fillStyle=f;g.fill()},ln=(a,b,c,d,col,w)=>{g.beginPath();g.moveTo(a,b);g.lineTo(c,d);g.strokeStyle=col;g.lineWidth=w;g.stroke()};
+  ell0(g,cx,cy,R*.55,'rgba(0,0,0,.3)');
+  if(k==='t'){ln(cx,cy,cx,cy-R*.7,'#4a3220',R*.2);circ(cx,cy-R*1.0,R*.55,'#2f6a3a');circ(cx-R*.25,cy-R*.75,R*.4,'#3b7d45');circ(cx+R*.28,cy-R*1.2,R*.35,'#255a30')}
+  else if(k==='d'){ln(cx,cy,cx,cy-R*1.05,'#5a4a3a',R*.16);ln(cx,cy-R*.7,cx-R*.45,cy-R*1.1,'#5a4a3a',R*.1);ln(cx,cy-R*.85,cx+R*.45,cy-R*1.25,'#5a4a3a',R*.1)}
+  else if(k==='b'){fillP([[cx-R*.55,cy],[cx-R*.4,cy-R*.6],[cx,cy-R*.85],[cx+R*.45,cy-R*.5],[cx+R*.6,cy]],'#7b8189','#2b2f35');fillP([[cx-R*.4,cy-R*.6],[cx,cy-R*.85],[cx+R*.1,cy-R*.4]],'#98a0a8')}
+  else if(k==='p'){fillP([[cx-R*.3,cy],[cx-R*.3,cy-R*1.0],[cx+R*.3,cy-R*1.0],[cx+R*.3,cy]],'#a8a08c','#3a362c');fillP([[cx-R*.4,cy-R*1.0],[cx+R*.4,cy-R*1.0],[cx+R*.3,cy-R*1.2],[cx-R*.3,cy-R*1.2]],'#c4bca6','#3a362c');ln(cx-R*.3,cy-R*.4,cx+R*.3,cy-R*.55,'#4b463a',1.5)}
+  else if(k==='c'){fillP([[cx-R*.55,cy],[cx-R*.55,cy-R*.55],[cx+R*.2,cy-R*.55],[cx+R*.2,cy]],'#8a5a2c','#3a2410');fillP([[cx-R*.05,cy-R*.1],[cx-R*.05,cy-R*.75],[cx+R*.5,cy-R*.75],[cx+R*.5,cy-R*.1]],'#a06b34','#3a2410');ln(cx-R*.55,cy-R*.3,cx+R*.2,cy-R*.3,'#3a2410',1)}
+  else if(k==='f'){fillP([[cx-R*.4,cy],[cx-R*.3,cy-R*.45],[cx+R*.3,cy-R*.45],[cx+R*.4,cy]],'#5a5650','#26241f');const fl=1+Math.sin(Date.now()/160+sd)*.08;fillP([[cx-R*.25,cy-R*.45],[cx,cy-R*.45*(1+fl)-R*.5],[cx+R*.25,cy-R*.45]],'#ff8a2a');fillP([[cx-R*.12,cy-R*.45],[cx,cy-R*.95],[cx+R*.12,cy-R*.45]],'#ffd15a')}
+  else if(k==='g'){g.beginPath();g.moveTo(cx-R*.28,cy);g.lineTo(cx-R*.28,cy-R*.6);g.arc(cx,cy-R*.6,R*.28,Math.PI,0);g.lineTo(cx+R*.28,cy);g.closePath();g.fillStyle='#8f959b';g.fill();g.strokeStyle='#2a2e33';g.lineWidth=1;g.stroke();ln(cx,cy-R*.75,cx,cy-R*.4,'#40464c',1.5);ln(cx-R*.12,cy-R*.6,cx+R*.12,cy-R*.6,'#40464c',1.5)}
+  else if(k==='h'){fillP([[cx-R*.75,cy-R*.15],[cx-R*.75,cy-R*1.15],[cx+R*.75,cy-R*1.15],[cx+R*.75,cy-R*.15]],'#8a8478','#2c2a24');fillP([[cx-R*.75,cy-R*1.15],[cx-R*.55,cy-R*1.35],[cx+R*.95,cy-R*1.35],[cx+R*.75,cy-R*1.15]],'#a8a28f','#2c2a24');for(let i=0;i<3;i++)ln(cx-R*.75,cy-R*(.4+i*.3),cx+R*.75,cy-R*(.4+i*.3),'#5a564a',1)}
+  else if(k==='r'){for(let i=-2;i<=2;i++){ln(cx+i*R*.2,cy,cx+i*R*.2+(i%2?R*.1:-R*.1),cy-R*(.7+((i+sd)%3)*.12),'#8a9a4a',R*.1)}for(let i=-1;i<=1;i++)circ(cx+i*R*.3,cy-R*.95-((i+sd)%2)*R*.06,R*.07,'#5a3a1c')}
+  else if(k==='i'){fillP([[cx-R*.4,cy],[cx-R*.15,cy-R*1.1],[cx+R*.05,cy]],'#bfe6f5','#4f7b8c');fillP([[cx,cy],[cx+R*.25,cy-R*.8],[cx+R*.5,cy]],'#9fd0e6','#4f7b8c')}
+  else if(k==='k'){fillP([[cx-R*.4,cy],[cx-R*.2,cy-R*.95],[cx,cy]],'#6fe0a0','#1f6b4a');fillP([[cx,cy],[cx+R*.2,cy-R*.7],[cx+R*.45,cy]],'#4cc388','#1f6b4a');fillP([[cx-R*.15,cy],[cx+R*.02,cy-R*.5],[cx+R*.15,cy]],'#a6ffd0')}
+  else if(k==='v'){ell0(g,cx,cy,R*.45,'#1a1410');const a=.35+.15*Math.sin(Date.now()/300+sd);for(let i=0;i<3;i++)circ(cx+Math.sin(i+sd)*R*.15,cy-R*(.4+i*.35),R*(.18+i*.08),`rgba(200,200,190,${a-i*.08})`)}
+  else if(k==='x'){fillP([[cx-R*.5,cy],[cx-R*.3,cy-R*.4],[cx+R*.2,cy-R*.5],[cx+R*.55,cy]],'#d9d3bd','#6b654f');circ(cx-R*.1,cy-R*.55,R*.2,'#ece6d0');ln(cx-R*.45,cy-R*.1,cx+R*.4,cy-R*.35,'#f3eedc',R*.1)}
+  else if(k==='n'){ln(cx,cy,cx,cy-R*1.5,'#5a4a3a',R*.1);fillP([[cx,cy-R*1.5],[cx+R*.7,cy-R*1.35],[cx+R*.5,cy-R*1.1],[cx+R*.7,cy-R*.9],[cx,cy-R*1.05]],'#a02a22','#3a0f0c')}
+  else if(k==='e'){fillP([[cx-R*.65,cy],[cx,cy-R*1.1],[cx+R*.65,cy]],'#c9b98a','#4a3f22');fillP([[cx-R*.15,cy],[cx,cy-R*.5],[cx+R*.15,cy]],'#3a2a14')}
+  else if(k==='j'){fillP([[cx-R*.45,cy],[cx-R*.45,cy-R*1.45],[cx-R*.25,cy-R*1.65],[cx+R*.25,cy-R*1.65],[cx+R*.45,cy-R*1.45],[cx+R*.45,cy]],'#6b5a3a','#241c0e');fillP([[cx-R*.3,cy-R*.55],[cx-R*.3,cy-R*1.35],[cx+R*.3,cy-R*1.35],[cx+R*.3,cy-R*.55]],'#8a1f2a','#3a0c10');fillP([[cx-R*.6,cy],[cx-R*.6,cy-R*.55],[cx+R*.6,cy-R*.55],[cx+R*.6,cy]],'#8b7a52','#241c0e');circ(cx,cy-R*1.5,R*.09,'#e8c34a');circ(cx-R*.45,cy-R*1.45,R*.07,'#e8c34a');circ(cx+R*.45,cy-R*1.45,R*.07,'#e8c34a')}
+  else if(k==='a'){fillP([[cx-R*.6,cy],[cx-R*.5,cy-R*.6],[cx+R*.5,cy-R*.6],[cx+R*.6,cy]],'#9a948a','#2c2a24');fillP([[cx-R*.7,cy-R*.6],[cx-R*.55,cy-R*.78],[cx+R*.7,cy-R*.78],[cx+R*.55,cy-R*.6]],'#c9c2b2','#2c2a24');const gl=.35+.2*Math.sin(Date.now()/400+sd);circ(cx,cy-R*.9,R*.32,`rgba(170,120,255,${gl})`);ln(cx-R*.35,cy-R*.78,cx-R*.35,cy-R*1.05,'#efe6c8',R*.08);ln(cx+R*.35,cy-R*.78,cx+R*.35,cy-R*1.05,'#efe6c8',R*.08);circ(cx-R*.35,cy-R*1.1,R*.06,'#ffcf5a');circ(cx+R*.35,cy-R*1.1,R*.06,'#ffcf5a')}
+  else if(k==='o'){fillP([[cx-R*.4,cy],[cx-R*.25,cy-R*1.9],[cx,cy-R*2.2],[cx+R*.25,cy-R*1.9],[cx+R*.4,cy]],'#1c1824','#05040a');fillP([[cx,cy],[cx,cy-R*2.2],[cx+R*.25,cy-R*1.9],[cx+R*.4,cy]],'#2c2638');const gl=.45+.25*Math.sin(Date.now()/500+sd);for(let i=0;i<3;i++)ln(cx-R*.12,cy-R*(.5+i*.45),cx+R*.12,cy-R*(.62+i*.45),`rgba(200,120,255,${gl})`,R*.07)}
+  else if(k==='u'){fillP([[cx-R*.6,cy-R*.75],[cx-R*.5,cy],[cx+R*.5,cy],[cx+R*.6,cy-R*.75]],'#4a4640','#1c1a16');g.beginPath();g.ellipse(cx,cy-R*.75,R*.6,R*.6*KY*.6+R*.05,0,0,7);g.fillStyle='#5fbf3a';g.fill();g.strokeStyle='#1c1a16';g.lineWidth=1;g.stroke();ln(cx-R*.55,cy-R*.35,cx+R*.55,cy-R*.35,'#2a2722',R*.08);const bb=(Date.now()/350+sd)%3;circ(cx-R*.2+bb*R*.1,cy-R*.8,R*.08,'#9cf06a');circ(cx+R*.18,cy-R*.72-bb*R*.04,R*.06,'#c6ff92')}
+}
+function ell0(g,cx,cy,rx,f){g.beginPath();g.ellipse(cx,cy,rx,rx*KY,0,0,7);g.fillStyle=f;g.fill()}
+function drawBoard(mm,tg,stl,A){
+  const cv=$('cv'),bww=$('bw').clientWidth||460,dpr=window.devicePixelRatio||1,th=VIEW.a,{mx,my}=extent();
+  const zmin=Math.max(1,mx/EXT8.mx),zoom=Math.min(4,ZOOM===null?zmin:Math.max(1,ZOOM)),w=Math.round(bww*zoom);ZEFF=zoom;cv.style.width=w+'px';
+  const R=w/(2*mx+.3),cys=my*R*KY+MAXH*LV*R+4,hh=Math.ceil(cys+my*R*KY+4);
+  cv.width=Math.round(w*dpr);cv.height=Math.round(hh*dpr);cv.style.height=hh+'px';
+  const g=cv.getContext('2d');g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,hh);
+  HITS=[];
+  const castAt=new Map(); // tile -> casters aiming at it (area skills lock a tile, single-target skills follow their unit)
+  for(const c of alive())if(c.cast){const A2=AB[c.cast.a],T=isAreaSkill(A2)?c.cast.tile:(c.cast.t&&c.cast.t.hp>0?{x:c.cast.t.x,y:c.cast.t.y}:null);if(T)castAt.set(T.x+','+T.y,1)}
+  const castFp=new Set(); // faint footprint of pending area casts
+  for(const c of alive())if(c.cast){const A3=AB[c.cast.a];if(A3.area&&c.cast.tile)aoeFootprint(c,A3,c.cast.tile).tiles.forEach(t=>castFp.add(t))}
+  const P2=(wx,wy,z)=>{const [rx,ry]=rot(wx-CEN.x,wy-CEN.y,th);return[w/2+rx*R,cys+ry*R*KY-z,ry]};
+  FXP={P2,R};
+  if(window.SPR)SPR.frame((x,y)=>{const [wx,wy]=wpos(x,y);return P2(wx,wy,ht(x,y)*LV*R)});
+  const poly=(P,fill,stroke,lw=1)=>{g.beginPath();P.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw;g.stroke()}};
+  const ell=(cx,cy,rx,fill,stroke,lw,dash)=>{g.beginPath();g.ellipse(cx,cy,rx,rx*KY,0,0,7);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.setLineDash(dash||[]);g.strokeStyle=stroke;g.lineWidth=lw;g.stroke();g.setLineDash([])}};
+  const TH=THEMES[THEME]||THEMES.steel,DEP=PL?new Set(POS.P.map(([a,b])=>a+','+b)):null;
+  const tiles=[];
+  for(let y=0;y<H;y++)for(let x=0;x<W;x++){const [wx,wy]=wpos(x,y);tiles.push({x,y,wx,wy,depth:P2(wx,wy,0)[2]})}
+  tiles.sort((a,b)=>a.depth-b.depth||a.x-b.x);
+  const HZN=HZ?hzLit(ROUND()):null,HZX=HZ?hzLit(ROUND()+1):null,HZC={spikes:['rgba(150,160,170,.3)','#b4bec7'],quicksand:['rgba(200,160,80,.45)','#d2ad62'],fire:['rgba(255,100,30,.42)','#ff7a28'],jet:['rgba(255,120,40,.45)','#ff8a30'],vent:['rgba(205,228,242,.36)','#d4eaf6']};
+  for(const t of tiles){
+    if(VOID.has(t.x+','+t.y))continue; // a hole in the footprint: nothing drawn, nothing standable
+    const {x,y,wx,wy}=t,h=ht(x,y),d=h*LV*R,k=x+','+y,[cx,cy]=P2(wx,wy,d);
+    const C=[0,1,2,3,4,5].map(i=>{const an=(-90+60*i)*Math.PI/180;return P2(wx+Math.cos(an),wy+Math.sin(an),d).slice(0,2)});
+    const lt=24+h*8+((x+y)%2?2:0),polys=[C];
+    if(d>0)for(let i=0;i<6;i++){
+      const al=-60+60*i+th,facing=Math.sin(al*Math.PI/180);
+      if(facing<=.02)continue;
+      const a=C[i],b=C[(i+1)%6],W4=[a,b,[b[0],b[1]+d],[a[0],a[1]+d]];
+      if(PROPS[k]==='h'){const sh=46-14*(Math.cos((al-45)*Math.PI/180)+1)/2;poly(W4,`hsl(38 8% ${sh}%)`,'#1c1a16');g.strokeStyle='rgba(20,18,14,.55)';g.lineWidth=1;const n=Math.max(2,Math.round(h*2));for(let m=1;m<n;m++){const f=m/n;g.beginPath();g.moveTo(a[0],a[1]+d*f);g.lineTo(b[0],b[1]+d*f);g.stroke();for(let jx=0;jx<2;jx++){const u=(jx+.5+(m%2?0:.35))/2.2,px=a[0]+(b[0]-a[0])*u,py=a[1]+(b[1]-a[1])*u;g.beginPath();g.moveTo(px,py+d*f);g.lineTo(px,py+d*(f-1/n));g.stroke()}}polys.push(W4)}
+      else{poly(W4,`hsl(${TH.h} ${Math.max(5,TH.s-4)}% ${lt+TH.l-6-10*(Math.cos((al-45)*Math.PI/180)+1)/2}%)`,'#0c141b');polys.push(W4)}
+    }
+    const pk=PROPS[k];
+    const NBR=y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]];
+    poly(C,pk==='w'?`hsl(205 45% ${22+((x+y)%2?3:0)}%)`:pk==='y'?`hsl(${62+((x*5+y)%3)*5} 68% ${34+((x+y)%2?4:0)}%)`:pk==='l'?`hsl(${14+((x*3+y)%3)*4} 90% ${34+((x+y)%2?4:0)}%)`:pk==='h'?`hsl(40 10% ${(x+y)%2?60:57}%)`:`hsl(${TH.h} ${TH.s}% ${lt+TH.l}%)`,'#0c141b');
+    if(VMODE==='top')NBR.forEach(([a,b],i)=>{if(!inb(a,b))return;const dh=h-ht(a,b);if(dh>0){g.beginPath();g.moveTo(C[i][0],C[i][1]);g.lineTo(C[(i+1)%6][0],C[(i+1)%6][1]);g.strokeStyle=dh>1?'#04070a':'rgba(4,7,10,.75)';g.lineWidth=1.5+dh*1.4;g.stroke()}});
+    if(pk==='w'){g.strokeStyle='rgba(160,210,240,.35)';g.lineWidth=1;for(let q=-1;q<=1;q+=2){g.beginPath();g.moveTo(cx-R*.4,cy+q*R*.12);g.quadraticCurveTo(cx,cy+q*R*.12-R*.1,cx+R*.4,cy+q*R*.12);g.stroke()}}
+    else if(pk==='l'){g.strokeStyle='rgba(255,220,120,.5)';g.lineWidth=1.2;g.beginPath();g.moveTo(cx-R*.45,cy);g.lineTo(cx-R*.1,cy-R*.08);g.lineTo(cx+R*.1,cy+R*.08);g.lineTo(cx+R*.45,cy);g.stroke()}
+    else if(pk==='y'){g.fillStyle='rgba(230,240,120,.45)';for(let q=0;q<3;q++){g.beginPath();g.arc(cx+Math.sin(q*2+x)*R*.35,cy+Math.cos(q*3+y)*R*.12,R*.07+((q+x)%2)*R*.03,0,7);g.fill()}}
+    else if(pk==='h'){if(VMODE==='top'){g.strokeStyle='rgba(20,18,14,.5)';g.lineWidth=1;for(let m=-1;m<=1;m++){g.beginPath();g.moveTo(cx-R*.6,cy+m*R*.28);g.lineTo(cx+R*.6,cy+m*R*.28);g.stroke()}}}
+    else if(pk)VMODE==='top'?drawProp(g,pk,cx,cy+R*.32,R*.7,x*7+y):drawProp(g,pk,cx,cy,R,x*7+y);
+    const here=(window.SPR?units.filter(u=>u.x===x&&u.y===y&&(u.hp>0?seenU(u):SPR.dying(u))):alive().filter(u=>u.x===x&&u.y===y&&seenU(u))).sort((a,b)=>(a===active)-(b===active)),u=atR(x,y);
+    let col=null;
+    if((u&&tg.includes(u))||stl.includes(k))col=['rgba(226,178,76,.5)','#e2b24c'];
+    else if(mm.has(k))col=['rgba(124,196,128,.45)','#7cc480'];
+    else if(A&&A.r&&inRange(active,aimSpec(A),x,y)&&(x!==active.x||y!==active.y||A.k==='heal'||A.k==='buff'))col=['rgba(78,165,204,.4)','#4ea5cc'];
+    if(col)poly(C,col[0],col[1],2);
+    if(DEP&&DEP.has(k)&&!ROCKS.includes(k))poly(C,PL.sel&&PL.sel.x===x&&PL.sel.y===y?'rgba(226,178,76,.35)':'rgba(78,165,204,.32)',PL.sel&&PL.sel.x===x&&PL.sel.y===y?'#e2b24c':'#4ea5cc',2.5);
+    if(OBJ&&OBJ.set&&OBJ.set.has(k)){poly(C,'rgba(226,178,76,.2)','#e2b24c',2.5);if(!here.length){g.fillStyle='#e2b24c';g.font=`700 ${Math.round(R*.62)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText('⚑',cx,cy+R*.05)}}
+    if(HZN){const kn=HZN.get(k),kx=HZX.get(k);if(kn){poly(C,HZC[kn][0],HZC[kn][1],1.5);if(!here.length){g.fillStyle=HZC[kn][1];g.font=`700 ${Math.round(R*.46)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(HZK[kn].g,cx,cy-R*.12)}}else if(kx&&HZK[kx].lit){g.setLineDash([5,4]);poly(C,'rgba(255,170,60,.1)',HZC[kx][1],2);g.setLineDash([]);if(!here.length){g.globalAlpha=.65;g.fillStyle=HZC[kx][1];g.font=`700 ${Math.round(R*.4)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(HZK[kx].g,cx,cy-R*.12);g.globalAlpha=1}}} // hazards: lit now (filled), lighting next round (dashed)
+    if(castFp.has(k)&&!castAt.has(k))poly(C,'rgba(168,120,255,.16)','#a878ff',1.5);
+    if(castAt.has(k))poly(C,'rgba(168,120,255,.32)','#a878ff',3);
+    if(PREV&&PREV.tiles.has(k)){const hit=PREV.hit.has(k);poly(C,PREV.ally?(hit?'rgba(90,200,150,.5)':'rgba(90,200,150,.2)'):(hit?'rgba(255,110,60,.5)':'rgba(255,140,60,.2)'),PREV.ally?'#5ac896':'#ff8c3c',hit?3:2)} // targeting preview
+    if(h>0&&!here.length){g.fillStyle='rgba(255,255,255,.35)';g.font=`${Math.round(R*.34)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(h,cx,cy)}
+    const trp=traps.find(q=>q.x===x&&q.y===y&&q.team===VIEWER);
+    if(trp){g.fillStyle='rgba(226,178,76,.9)';g.font=`700 ${Math.round(R*.62)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(AB[trp.a].persist?'▲':'⚠',cx,cy+R*.05)} // only the owner's team can see a trap
+    const hit={x,y,polys,cx,cy};HITS.push(hit);
+    for(const u of here){
+      const r=R*.5,team=u.team==='P',spr=window.SPR&&SPR.ready(u),liv=u.hp>0;
+      let by=cy-r*(VMODE==='top'?.15:1.1),topY=by-r;
+      ell(cx,cy,R*.55,'rgba(0,0,0,.35)');
+      if(spr&&liv)ell(cx,cy,R*.62,team?'rgba(61,107,224,.24)':'rgba(204,70,58,.24)',team?'#3d6be0':'#cc463a',2.5); // team ring at the unit's feet
+      if(u===active&&liv)ell(cx,cy,R*.74,null,'#e2b24c',2.5);
+      if(u.guard&&liv)ell(cx,cy,R*.84,null,'#8da1af',2,[4,3]);
+      g.globalAlpha=u.st.vanish?.5:1;
+      if(spr){topY=SPR.draw(g,u,cx,cy,R,VMODE==='top');by=topY+r}
+      else{
+        g.beginPath();g.arc(cx,by,r,0,7);g.fillStyle=team?'#1f5f7c':'#7a2f25';g.fill();g.strokeStyle=team?'#4ea5cc':'#cc6150';g.lineWidth=2;g.stroke();
+        g.fillStyle='#fff';g.font=`700 ${Math.round(R*.4)}px Palatino,Georgia,serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(u.g,cx,by);
+      }
+      const bw=r*1.9,bx=cx-bw/2,bY=topY-7;
+      if(liv){
+        g.fillStyle='#000a';g.fillRect(bx,bY,bw,4);g.fillStyle='#7cc480';g.fillRect(bx,bY,bw*u.hp/u.max,4);
+        if(u.leader){g.fillStyle='#ffd24c';g.font=`700 ${Math.round(R*.5)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText('♛',cx,bY-R*.3)}
+        const bd=badge(u);if(bd){g.font='10px system-ui';g.fillStyle='#e9e4d3';g.textAlign='left';g.fillText(bd,cx+r*.6,topY+r*.1)}
+      }
+      g.globalAlpha=1;
+      hit.polys.push([[cx-r,bY-2],[cx+r,bY-2],[cx+r,cy],[cx-r,cy]]);
+    }
+    if(castAt.has(k)){g.fillStyle='#d6c2ff';g.font=`${Math.round(R*.5)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText('✦',cx-R*.55,cy+R*.05)}
+  }
+}
+if(window.FX){
+  FX.init({host:$('bw'),canvas:()=>$('cv'),
+    proj:(x,y,lift)=>{const [wx,wy]=wpos(x,y),d=ht(x,y)*LV*FXP.R,[px,py]=FXP.P2(wx,wy,d+(lift||0));return[px,py,FXP.R]},
+    footprint:(u,A,tile)=>[...aoeFootprint(u,A,tile).tiles].map(k=>k.split(',').map(Number)),
+    dist:(a,b)=>dist(a,b),unitAt:(x,y)=>!!alive().find(v=>v.x===x&&v.y===y)});
+  const fb=$('fxb');if(fb)fb.textContent=FX.label();
+  if(window.SPR)SPR.hook(FX);
+}
+if(window.SPR){SPR.setUnits(()=>units);SPR.setRedraw(()=>{if(units&&LAST&&!PL)drawBoard(...LAST)})}
+function toggleMenu(k){menu=menu===k?null:k;mode=null;inspect='';render()}
+function pick(m){
+  menu=null;preview=null;
+  if(m==='move'&&CR.movement.standardMoveOncePerTurn&&active.hasMovedThisTurn)return;
+  if(m!=='move'&&AB[m].k==='self'){mode=mode===m?null:m;preview=mode?{self:true}:null;inspect='';render();return} // self skills also wait for Confirm
+  mode=mode===m?null:m;inspect='';
+  if(mode&&!isMove(mode)&&groundTargeted(AB[mode])&&AB[mode].self)preview={x:active.x,y:active.y}; // self-centred shapes show straight away; tap yourself to cast
+  render();
+}
+function guard(){menu=null;const gcost=guardCost(active);if(gcost===null||isBlocked(active,'guard'))return;spent+=gcost;active.guard=true;say(`${active.n} guards`);fire('onGuard',active,{});mode=null;render()}
+async function tap(x,y){
+  if(over)return;
+  if(PL){placeTap(x,y);return}
+  const ut=atR(x,y);
+  if(!mode||busy||isAI(active)){FOCUS=ut||null;inspect=ut?`${ut.n}: ${ut.hp}/${ut.max} HP · height ${ht(x,y)}${stText(ut)?' · '+stText(ut):''}`:`Height ${ht(x,y)} tile. Hold a tile to read the height rules.`;render();return}
+  const k=x+','+y;
+  // Double tap: tapping the pending target or tile again does the same as the Confirm button
+  if(preview){
+    const pv=preview,same=pv.unit?ut===pv.unit:pv.self?(x===active.x&&y===active.y):(pv.x===x&&pv.y===y);
+    if(same){await confirmAct();return}
+  }
+  if(isMove(mode)){
+    if(!mvMap().has(k))return;
+    preview={x,y};render();return; // tap shows the destination; Confirm walks there (confirmAct)
+  }else if(AB[mode].k==='summon'){
+    if(!summonTiles(active).includes(k))return;preview={x,y};render();return;
+  }else if(groundTargeted(AB[mode])){
+    const A=AB[mode],aim=A.self?{x:active.x,y:active.y}:{x,y};
+    if(A.k==='trap'?!trapTileOk(active,A,x,y):A.self?(x!==active.x||y!==active.y):(ROCKS.includes(k)||!inRange(active,aimSpec(A),x,y)))return; // aim at any tile in range, empty ground included
+    preview={x:aim.x,y:aim.y};render();return; // tap previews the footprint and the result; Confirm casts
+  }else{
+    if(!ut||!targets(active,mode).includes(ut))return;
+    preview={unit:ut};render();return; // tap shows the target's card and the prediction; Confirm acts
+  }
+  mode=null;menu=null;preview=null;inspect='';
+  if(!over&&active.hp<=0){say(`${active.n} falls`);nextTurn();return} // e.g. killed by a counter on its own turn
+  render();
+}
+
+async function confirmAct(){
+  if(over||busy||!preview||!mode||isAI(active))return;
+  if(isMove(mode)){ // Move and dash skills: walk to the confirmed tile
+    const m=mode,pv=preview;preview=null;if(!mvMap().has(pv.x+','+pv.y)){mode=null;render();return}
+    const dashId=m==='move'?null:m;
+    await moveTo(active,pv.x,pv.y,m==='move'?moveCost(active):cost(active,m),m==='move'?moveRange(active):AB[m].mv,m==='move',m==='move'?0:(AB[m].climbBonus||0));
+    if(dashId)noteAbility(active,dashId);
+    mode=null;menu=null;inspect='';
+    if(!over&&active.hp<=0){say(`${active.n} falls`);nextTurn();return}
+    render();return;
+  }
+  const a=mode,A=AB[a],pv=preview;preview=null;
+  if(pv.self&&A.k==='self')act(active,a);
+  else if(A.k==='summon')summon(active,a,pv.x,pv.y);
+  else if(pv.unit)act(active,a,pv.unit);
+  else act(active,a,null,A.self?{x:active.x,y:active.y}:{x:pv.x,y:pv.y});
+  mode=null;menu=null;inspect='';
+  if(!over&&active.hp<=0){say(`${active.n} falls`);nextTurn();return}
+  render();
+}
+function cancelAct(){preview=null;mode=null;menu=null;inspect='';render()}
+
+// Enemy AI (scored). Every step, each usable action is scored for what it would do right now, and the best one is taken:
+//  damage counts flank, conditions, armour, Guard, Shield, damage over time, areas and kills; extra effects count when they matter
+//  (staggering a caster, silencing a spellcaster); heals count missing health; wards and stances count when foes are close;
+//  dashes count when they put a foe in reach; traps when foes are on their way. Cheap actions are not over-rated (score per AP,
+//  softened), repeating a skill this turn costs a little, and low mana makes skills a little less attractive than the free Attack.
+//  If nothing is worth doing, the unit closes in as before. Swaps (Spirit Swap, Tag Out) are still left to players.
+async function aiStep(u){
+  const AI=CR.ai,L=left();
+  if(u.st.confused>0)return aiConfused(u,L);
+  const ok=u.ab.filter(a=>AB[a]&&!AB[a].swap&&!AB[a].swapPet&&cost(u,a)<=L&&!(AB[a].ct>0&&u.cast)&&!(u.cd[a]>0)&&!blockReason(u,a));
+  const foes=alive().filter(f=>f.team!==u.team),ndHex=(x,y)=>foes.length?Math.min(...foes.map(f=>dist({x,y},f))):99,near=(t,r)=>foes.filter(f=>dist(f,t)<=r).length;
+  // walking distance to the nearest foe for this unit's climb (map pass 2): bridges, cliffs, chasms and walls send it the long way round instead of
+  // pressing against the straight line; tiles it cannot walk to from here fall back to the straight distance plus a large penalty
+  const pdJ=jumpOf(u),pd=new Map(),pq=[];for(const f of foes){const k=f.x+','+f.y;if(!pd.has(k)){pd.set(k,0);pq.push([f.x,f.y])}}
+  for(let i=0;i<pq.length;i++){const [x,y]=pq[i],d=pd.get(x+','+y);for(const [nx,ny] of nbrs(x,y)){const k=nx+','+ny;if(!inb(nx,ny)||pd.has(k)||ROCKS.includes(k)||Math.abs(ht(nx,ny)-ht(x,y))>pdJ)continue;pd.set(k,d+1);pq.push([nx,ny])}}
+  const usePd=pd.has(u.x+','+u.y),nd=(x,y)=>{if(!usePd)return ndHex(x,y);const v=pd.get(x+','+y);return v===undefined?ndHex(x,y)+40:v};
+  const lvl=u.lvPow&&u.lvPow>1?u.lvPow:1,amb=hidden(u),spellUser=t=>t.ab.some(a=>AB[a]&&AB[a].tags&&AB[a].tags.includes('spell')&&AB[a].k==='dmg');
+  const est=(a,t)=>{const A=AB[a];let p=(effP(u,A,a)+abBonus(u,A,t,amb,u.charge||0))*abMult(A,t);
+    if(A.flank&&(amb||flank(u,t)))p*=amb?2:1.5;p*=lvl;if(u.st.wither)p*=CR.damage.witherMultiplier;
+    for(const k in CR.statuses){const D2=CR.statuses[k];if(D2.damageTakenMultiplier&&t.st[k]>0)p*=D2.damageTakenMultiplier}
+    const mp=LO.mitigationPct(u,t,A);if(mp>0)p=Math.max(CR.loadout.minHit,p*(1-mp/100));
+    if(!A.ignore){if(t.guard)p*=CR.damage.guardMultiplier;p-=Math.min(t.st.shield||0,p)*0.6}return Math.max(0,p)};
+  const RW={slow:3,pin:4,root:4,stun:9,wither:3,marked:3,blind:3,taunt:2,confused:7,charm:9,mez:8,dontAct:8,silence:t=>spellUser(t)?7:2,exposed:3,chill:3,judged:5,fear:8,grievous:t=>t.max-t.hp>6||t.ab.some(x=>AB[x]&&AB[x].k==='heal')?4:1.5,disarm:t=>t.ab.some(x=>AB[x]&&AB[x].tags&&AB[x].tags.includes('physical')&&AB[x].k==='dmg')?5:1,fatigue:6,quarry:2};
+  const rider=(A,t)=>{let v=0;const fx=A.fx||{};
+  if(A.drainIfPulled&&u.pulled&&u.pulled.has(t))v+=7; // Soul Leech on a pulled foe: full heal
+  if(u.ab.includes('soul_leech')&&!(u.cd.soul_leech>0)&&L>=A.c+2&&A.triggers&&A.triggers.some(g=>g.effects&&g.effects.some(e=>e.type==='pull'&&e.target==='victim')))v+=4; // setting up Leech
+    if(A.stagger)v+=t.cast?10+A.stagger/5:A.stagger/5;
+    for(const k of ['poison','bleed','burn'])if(fx[k]&&!t.st[k]){const q=Array.isArray(fx[k])?fx[k]:[2,fx[k]];v+=q[0]*q[1]*0.8}
+    for(const k in fx){const w=RW[k];if(w&&!(t.st[k]>0))v+=typeof w==='function'?w(t):w}
+    if(A.triggers&&A.triggers.some(g=>g.effects&&g.effects.some(e=>/push|pull|stealMeter|stripBuffs|detonateDots/.test(e.type))))v+=3;
+    for(const g of A.triggers||[])for(const e of g.effects||[])if((e.type==='push'||e.type==='pull')&&e.target==='victim'){const P=pushPath(t,u,e.hexes||1,e.type);v+=P.fall+(P.hit?CR.forced.collision:0)} // a push off a ledge or into a wall is worth its damage
+    if(A.drain||A.drainShield||A.drainAlly)v+=2;if(A.petStrike)v+=(A.petStrike.p||4)*lvl;if(A.aiBonus)v+=A.aiBonus;if(A.randomFx)v+=3.5;for(const g of A.triggers||[])for(const e of g.effects||[]){if(e.type==='gainCharge'&&e.target==='self'&&u.charge<CR.charge.max)v+=2.5;if(e.type==='heal'&&e.target==='self')v+=Math.min(e.amount,u.max-u.hp)*0.8;if(e.type==='gainMana'&&e.target==='self'&&u.manaMax&&u.mana<u.manaMax*0.6)v+=Math.min(e.amount,u.manaMax-u.mana)*0.6}return v};
+  const ally=(A,t)=>{let v=0;const fx=A.fx||{},th=near(t,3)>0;
+    if(fx.shield)v+=Math.max(0,Math.min(fx.shield,12)-(t.st.shield||0)*0.6)*(th?0.7:0.25);if(fx.haste&&!(t.st.haste>0))v+=4;if(fx.empowered&&!(t.st.empowered>0))v+=5;
+    if(fx.regen&&!(t.st.regen>0)){const q=fx.regen;v+=Math.min(q[0]*q[1],t.max-t.hp)*0.6}if(fx.deathSave&&!(t.st.deathSave>0))v+=t.hp<t.max*0.5?9:2;
+    for(const k of ['zoc','thorns','intercept','steeled','unmovable','farsight','vanish','siege'])if(fx[k]&&!(t.st[k]>0))v+=th?3:1;
+    if(A.cleanse)v+=5*NEG.filter(k=>t.st[k]).length;if(A.transferStatus&&NEG.some(k=>t.st[k]))v+=6;
+    if(A.triggers)for(const g of A.triggers)for(const e of g.effects||[])if(e.type==='gainMeter'&&e.target==='target')v+=Math.min(e.amount||0,100-t.meter)/6;
+    if(A.aiBonus)v+=A.aiBonus;
+    if(!Object.keys(fx).length&&!A.cleanse&&!A.transferStatus)v+=2;return v};
+  const heal=(a,t)=>{const A=AB[a],miss=t.max-t.hp,P=effP(u,A,a)*lvl;if(miss<Math.max(3,P*0.4))return 0;return Math.min(P,miss)*(t.hp<t.max*AI.healBelowFraction?1.6:1)+ally(A,t)};
+  const pick=(a,list)=>{const tn=list.filter(x=>x.st.taunt>0&&x.team!==u.team);return tn.length?tn:list};
+  const C=[]; // [value, how(), ability]
+  for(const a of ok){const A=AB[a];
+    if(A.k==='summon'){if(!units.some(s=>s.owner===u&&s.hp>0)){const back=A.spot==='back',ts=summonTiles(u).map(k=>k.split(',').map(Number)).sort((x,y)=>back?nd(...y)-nd(...x):nd(...x)-nd(...y)),sid=A.summonId||'skeleton',d0=nd(u.x,u.y),sv=sid==='bone_golem'?(d0<=3?26:19):sid==='skeleton_archer'?(d0>6?24:d0>3?22:17):(d0>3&&d0<=6?24:d0<=3?21:20) /* pick the pet that fits: close fight golem, mid skeleton, far archer */;if(ts.length)C.push([sv,()=>summon(u,a,...ts[0]),a])}continue}
+    if(A.k==='dmg'||A.k==='debuff'){
+      if(groundTargeted(A)){const aims=A.self?[{x:u.x,y:u.y}]:pick(a,foes.filter(f=>!hidden(f)||A.revealsHidden)).map(f=>({x:f.x,y:f.y}));
+        for(const aim of aims){const fp=aoeFootprint(u,A,aim);if(!fp.hit.size||(!A.self&&!inRange(u,A,aim.x,aim.y)))continue;let v=0;
+          for(const f of foes)if(fp.hit.has(f.x+','+f.y)){const d=A.k==='dmg'?est(a,f):0;v+=d+rider(A,f)+(d>=f.hp?12:0)}
+          if(v>0)C.push([v,()=>act(u,a,null,aim),a])}}
+      else for(const t of pick(a,targets(u,a))){const d=A.k==='dmg'?est(a,t):0,v=d+rider(A,t)+(A.k==='debuff'?1:0)+(d>=t.hp?12:0)+(1-t.hp/t.max)*3;if(v>0)C.push([v,()=>act(u,a,t),a])}
+      continue}
+    if(A.k==='heal'){if(groundTargeted(A)){for(const t of alive().filter(f=>f.team===u.team&&f.hp<f.max)){const g=areaUnits(u,A,{x:t.x,y:t.y});const v=g.reduce((s,m)=>s+heal(a,m),0);if(v>0)C.push([v,()=>act(u,a,null,{x:t.x,y:t.y}),a])}}
+      else for(const t of targets(u,a)){const v=heal(a,t);if(v>0)C.push([v,()=>act(u,a,t),a])}continue}
+    if(A.k==='buff'){if(A.swap)continue;const pool=targets(u,a).filter(t=>t.team===u.team);
+      if(groundTargeted(A)){for(const t of pool){const v=areaUnits(u,A,{x:t.x,y:t.y}).reduce((s,m)=>s+ally(A,m),0)+(A.selfFx&&A.self?ally({fx:A.selfFx},u):0);if(v>0)C.push([v,()=>act(u,a,null,{x:t.x,y:t.y}),a])}}
+      else for(const t of pool){const v=ally(A,t)+(A.triggers&&t!==u?(Object.values(t.cd||{}).filter(n=>n>0).length):0);if(v>0)C.push([v,()=>act(u,a,t),a])}continue}
+    if(A.k==='self'){let v=0;const fx=A.fx||{},th=near(u,2);
+      if(A.charge)v+=u.charge<CR.charge.max?4:0;
+      if(fx.shield)v+=(A.shieldCap?Math.min(fx.shield,12,Math.max(0,A.shieldCap-(u.st.shield||0))):Math.max(0,Math.min(fx.shield,12)-(u.st.shield||0)*0.6))*(th?0.7:(A.shieldCap&&near(u,5)?0.5:0.15));
+      if(fx.vanish&&!amb)v+=near(u,5)?(u.ab.some(x=>AB[x]&&(AB[x].flank||AB[x].bonusIfVanished))?10:4):0;
+      if(fx.taunt)v+=alive().some(m=>m.team===u.team&&m!==u&&near(m,2))&&u.hp>u.max*0.5?5:0;
+      for(const k of ['steeled','thorns','zoc','unmovable','standfast'])if(fx[k]&&!(u.st[k]>0))v+=th?4:0.5;
+      if(fx.siege&&!(u.st.siege>0))v+=u.ab.some(x=>AB[x]&&AB[x].k==='dmg'&&AB[x].r>2)&&nd(u.x,u.y)<=5?4:0;
+      if(fx.farsight&&!(u.st.farsight>0))v+=3;if(fx.haste&&!(u.st.haste>0))v+=4;
+      if(fx.reckless&&!(u.st.reckless>0))v+=near(u,3)?6+(u.painPower||0):0; // Berserker: take the risk when a fight is close
+      if(u.painPower)for(const k of ['exposed','winded','dazed'])if(fx[k]&&!(u.st[k]>0))v+=near(u,3)?2+u.painPower:0;
+      if(fx.evasion&&!(u.st.evasion>0))v+=near(u,2)?4:0;
+      if(fx.wrath&&!(u.st.wrath>0))v+=foes.some(f=>f.st.judged>0&&dist(f,u)<=3)?8:0;
+      if((fx.widen||fx.reach||fx.twin)&&!(u.st.widen>0||u.st.reach>0||u.st.twin>0)){ // Metamagic: only worth the AP when a spell can follow
+        const sp1=u.ab.filter(x=>AB[x]&&AB[x].k==='dmg'&&LO.isSpell(AB[x])&&cost(u,x)+A.c<=L&&manaCost(u,x)<=u.mana&&!(u.cd[x]>0)&&!blockReason(u,x));
+        if(sp1.length){const f0=foes.filter(f=>!hidden(f)).sort((p,q)=>dist(p,u)-dist(q,u))[0],crowd=f0?near(f0,2):0;
+          if(fx.twin)v+=u.mana>=14?5:1.5;
+          if(fx.widen)v+=crowd>=2?2+2*crowd:1;
+          if(fx.reach)v+=f0&&!sp1.some(x=>inRange(u,AB[x],f0.x,f0.y))?8:0.5}
+      }
+      if(fx.quickcast&&!(u.st.quickcast>0))v+=u.ab.some(x=>AB[x]&&AB[x].k==='dmg'&&LO.isSpell(AB[x])&&AB[x].c>=2&&cost(u,x)<=L&&manaCost(u,x)<=u.mana&&!(u.cd[x]>0)&&!blockReason(u,x))?4:0; // Quick Cast: only when a 2+ AP spell can follow
+      if(fx.regen&&!(u.st.regen>0))v+=Math.min(fx.regen[0]*fx.regen[1],u.max-u.hp)*0.5;
+      if(A.triggers&&A.triggers.some(g=>g.effects&&g.effects.some(e=>e.type==='armInterrupt')))v+=near(u,2)?6:1;
+      if(A.refundAP)v+=u.hp>u.max*0.6&&L<=2?5:0;
+      if(A.spendCharge&&A.spendCharge.shieldPer)v+=(u.charge||0)*A.spendCharge.shieldPer*(th?0.7:0.2);
+      if(A.hpCostPct)v-=u.hp<u.max*0.5?6:1;
+      if(fx.deathSave&&!(u.st.deathSave>0))v+=near(u,3)&&u.hp>u.max*0.3?9:0;
+      if(A.aiBonus)v+=A.aiBonus;
+      for(const g of A.triggers||[])for(const e of g.effects||[]){
+        if(e.type==='teleport'&&e.anchor==='nearestEnemy'){const f0=foes.filter(f=>!hidden(f)).sort((p,q)=>dist(p,u)-dist(q,u))[0];if(f0&&dist(f0,u)<=1&&u.ab.some(x=>AB[x]&&AB[x].k==='dmg'&&AB[x].r>2)){const all=[];for(let y=0;y<H;y++)for(let x=0;x<W;x++)all.push({x,y});const hx=TR.pickTeleportHex(e.mode,u,f0,e.hexes,{dist,all:()=>all,free:(x,y)=>!ROCKS.includes(x+','+y)&&!at(x,y)});if(hx&&dist(hx,f0)>dist(u,f0)+1)v+=6+(u.hp<u.max*0.5?5:0)}}
+        if(e.type==='reduceCooldown'&&e.target==='self')v+=Object.values(u.cd).filter(n=>n>0).length*3;
+        if(e.type==='heal'&&e.target==='self')v+=Math.min(e.amount,u.max-u.hp)*0.8;
+        if(e.type==='gainMana'&&e.target==='self'&&u.manaMax&&u.mana<u.manaMax*0.6)v+=Math.min(e.amount,u.manaMax-u.mana)*0.6;
+        if(e.type==='heal'&&e.target==='pet'){const pt=petOf(u);if(pt)v+=Math.min(e.amount,pt.max-pt.hp)*0.8}}
+      if(v>0)C.push([v,()=>act(u,a,u),a]);continue}
+    if(A.k==='move'){const melee=u.ab.filter(x=>AB[x]&&AB[x].k==='dmg'&&AB[x].r<=1&&x!==a);
+      if(!melee.length||foes.some(f=>dist(f,u)===1&&!hidden(f)))continue;
+      let best=null,bv=0;for(const [k] of slipMap(u,a)){const [x,y]=k.split(',').map(Number);if(A.climbBonus&&ht(x,y)<=ht(u.x,u.y))continue;const adj=foes.filter(f=>dist(f,{x,y})===1&&!hidden(f));
+        for(const f of adj){const v=6+Math.max(...melee.map(m=>est(m,f)))*0.5+(1-f.hp/f.max)*3;if(v>bv){bv=v;best=[x,y]}}}
+      if(best){const tb=A.triggers?3:0;C.push([bv+tb,async()=>{await moveTo(u,best[0],best[1],cost(u,a),A.mv,false,A.climbBonus||0);noteAbility(u,a)},a])}continue}
+    if(A.k==='trap'){if(traps.some(r=>r.owner===u&&r.a===a))continue;const f0=foes.filter(f=>!hidden(f)).sort((x,y)=>dist(x,u)-dist(y,u))[0];if(!f0||dist(f0,u)<2||dist(f0,u)>6)continue;
+      let tile=null,td=99;for(let y=0;y<H;y++)for(let x=0;x<W;x++){if(!trapTileOk(u,A,x,y))continue;const d=dist({x,y},f0);if(d>=1&&d<td){td=d;tile={x,y}}}
+      if(tile)C.push([7,()=>act(u,a,null,tile),a]);continue}
+  }
+  const mc=a=>(typeof manaCost==='function'?manaCost(u,a):0)||0;
+  const fin=C.map(([v,go,a])=>{let s=v/(0.6+0.4*Math.max(1,cost(u,a)));if(u.usedAb&&u.usedAb.has(a)&&a!==u.attackId)s*=0.85;if(mc(a)>0&&u.manaMax&&u.mana<u.manaMax*0.25)s*=0.8;return [s,go]}).sort((x,y)=>y[0]-x[0]);
+  const canMove=L>=moveCost(u)&&!isBlocked(u,'move')&&!(CR.movement.standardMoveOncePerTurn&&u.hasMovedThisTurn);
+  const idle=!fin.length||fin[0][0]<3; // nothing worth much from here: close in first, then act
+  if(fin.length&&fin[0][0]>0.5&&!(idle&&canMove&&nd(u.x,u.y)>2)){await fin[0][1]();return true}
+  if(L>=moveCost(u)&&!isBlocked(u,'move')&&!(CR.movement.standardMoveOncePerTurn&&u.hasMovedThisTurn)){
+    const effs=u.ab.filter(a=>AB[a].k==='dmg').map(a=>[a,effP(u,AB[a],a)]),topP=Math.max(0,...effs.map(e=>e[1])),dmgA=effs.filter(e=>e[1]>0&&e[1]>=topP*0.5).map(e=>AB[e[0]]); // positioning counts only skills at least half as strong as the best one: a weak ranged poke must not pin a melee unit at range 3
+    const score=(x,y)=>{const hit=foes.some(f=>dmgA.some(A=>inRange({x,y,st:u.st},A,f.x,f.y)));return(hit?AI.canHitScoreBonus+nd(x,y):-nd(x,y))+ht(x,y)*AI.heightScorePerLevel-hzRisk(x,y)};
+    let best=null,bs=score(u.x,u.y);
+    for(const k of reach(u,moveRange(u),0,hzAvoid()).keys()){const [x,y]=k.split(',').map(Number),s=score(x,y);if(s>bs){bs=s;best=[x,y]}}
+    if(!best&&HZ)for(const k of reach(u).keys()){const [x,y]=k.split(',').map(Number),s=score(x,y);if(s>bs){bs=s;best=[x,y]}} // every safe way is blocked: take one hit crossing a hazard rather than stand off forever
+    if(best){await moveTo(u,best[0],best[1]);return true}
+  }
+  if(fin.length&&fin[0][0]>0.5){await fin[0][1]();return true} // no better tile: use the best skill rather than standing idle
+  return false;
+}
+// Confused: acts on its own with a random attack, debuff, heal or buff on a random unit of EITHER team in range; with nothing in range it walks toward the nearest unit (lowest HP breaks ties).
+async function aiConfused(u,L){
+  const others=alive().filter(f=>f!==u&&!hidden(f));
+  if(!others.length)return false;
+  const nearest=(x,y)=>others.map(f=>({f,d:dist({x,y},f)})).sort((a,b)=>a.d-b.d||a.f.hp-b.f.hp)[0];
+  const n0=nearest(u.x,u.y);
+  // random skill on a random unit of EITHER team: attacks, debuffs, heals and buffs all roll (a heal or buff may land on a foe, an attack or debuff on an ally)
+  const opts=u.ab.filter(a=>['dmg','debuff','heal','buff'].includes(AB[a].k)&&cost(u,a)<=L&&!(AB[a].ct>0&&u.cast)&&!(u.cd[a]>0)&&!blockReason(u,a));
+  const plays=[];
+  for(const a of opts){const A=AB[a];
+    const pool=alive().filter(t=>(A.k==='heal'||A.k==='buff'||t!==u)&&!(A.swap&&t===u)&&(t===u||!hidden(t))&&inRange(u,A,t.x,t.y)&&!(A.minR&&dist(u,t)<A.minR));
+    if(pool.length)plays.push([a,pool]);
+  }
+  if(plays.length){const [a,pool]=plays[Math.floor(Math.random()*plays.length)];act(u,a,pool[Math.floor(Math.random()*pool.length)]);return true}
+  if(L>=moveCost(u)&&!isBlocked(u,'move')&&!(CR.movement.standardMoveOncePerTurn&&u.hasMovedThisTurn)){
+    let best=null,bd=n0.d;
+    for(const k of reach(u).keys()){const [x,y]=k.split(',').map(Number),d=dist({x,y},n0.f);if(d<bd){bd=d;best=[x,y]}}
+    if(best){await moveTo(u,best[0],best[1]);return true}
+  }
+  return false;
+}
+async function ai(){
+  busy=true;const u=active;
+  try{
+    for(let n=0;n<CR.ai.maxActionsPerTurn&&!over;n++){
+      await sleep(CR.ai.thinkDelayMs);
+      if(u.hp<=0)break;
+      const did=await aiStep(u);render();
+      if(!did||u.hp<=0)break;
+    }
+  }catch(e){console.error(e)}
+  busy=false;
+  if(over)return;
+  if(u.hp<=0)nextTurn();else endTurn(); // a unit that died on its own turn (counter) just passes the turn on
+}
+// Hold any button, unit, turn chip or point pip to read what it does.
+let holdT=null,held=false,suppress=0;
+const tipEl=$('tip');
+function hideTip(){clearTimeout(holdT);tipEl.style.display='none';held=false}
+function showTip(el,text){
+  tipEl.textContent=text;tipEl.style.display='block';held=true;
+  const r=el.getBoundingClientRect(),w=tipEl.offsetWidth,h=tipEl.offsetHeight;
+  let top=r.top-h-8;if(top<8)top=r.bottom+8;
+  tipEl.style.top=top+'px';
+  tipEl.style.left=Math.max(8,Math.min(innerWidth-w-8,r.left+r.width/2-w/2))+'px';
+}
+const tileTip=(x,y)=>`Height ${ht(x,y)} tile.\n`+HEIGHT_RULES;
+document.addEventListener('pointerdown',e=>{
+  const el=e.target.closest('[data-d],#cv');if(!el||el.closest('#over'))return;
+  const cx=e.clientX,cy=e.clientY;
+  clearTimeout(holdT);
+  holdT=setTimeout(()=>{
+    let t=el.dataset.d,anchor=el;
+    if(!t&&el.id==='cv'){
+      const k=pickTile({clientX:cx,clientY:cy});
+      if(k){const u=atR(k.x,k.y);t=u?unitTip(u):tileTip(k.x,k.y);anchor={getBoundingClientRect:()=>({top:cy-28,bottom:cy+28,left:cx,width:0})}}
+    }
+    if(t)showTip(anchor,t);
+  },350);
+});
+let sw=null;
+$('cv').addEventListener('pointerdown',e=>{sw={x:e.clientX,done:false}});
+$('cv').addEventListener('pointermove',e=>{
+  if(!sw||sw.done||ZEFF>1.02)return;const dx=e.clientX-sw.x;
+  if(Math.abs(dx)>45){sw.done=true;clearTimeout(holdT);suppress=Date.now()+400;rotateView(dx>0?1:-1)}
+});
+['pointerup','pointercancel'].forEach(n=>$('cv').addEventListener(n,()=>{sw=null}));
+{let pd=null;const bw=$('bw'),dist2=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+ bw.addEventListener('touchstart',e=>{if(e.touches.length===2){pd={d:dist2(e.touches),z:ZEFF};sw=null}},{passive:true});
+ bw.addEventListener('touchmove',e=>{if(pd&&e.touches.length===2){e.preventDefault();pd.k=dist2(e.touches)/pd.d}},{passive:false});
+ bw.addEventListener('touchend',e=>{if(pd&&e.touches.length<2){const q=pd;pd=null;if(q.k){ZOOM=Math.min(4,Math.max(1,q.z*q.k));if(units)render()}}},{passive:true});}
+$('cv').addEventListener('click',e=>{const t=pickTile(e);if(t)tap(t.x,t.y)});
+window.addEventListener('resize',()=>{if(units)render()});
+const endHold=()=>{if(held)suppress=Date.now()+400;hideTip()};
+['pointerup','pointercancel'].forEach(n=>document.addEventListener(n,endHold,true));
+document.addEventListener('scroll',hideTip,true);
+document.addEventListener('contextmenu',e=>{if(e.target.closest('#app'))e.preventDefault()});
+document.addEventListener('click',e=>{
+  if(Date.now()<suppress||e.target.closest('.dis')){e.stopPropagation();e.preventDefault()}
+},true);
+$('mapSel').innerHTML=opt('','Default map','')+Object.entries(GD.maps||{}).filter(([k,m])=>!m.arena).map(([k,m])=>opt(k,m.name||k,'')).join('');
+buildSetup();
+
+// ---- Combat log panel: detailed event history, filters, per-unit / per-ability stats, export
+let LOGOPEN=false,LPTAB='L',LPF='all',LPREV=false;
+const lpU=(n,t)=>`<b class="${t||''}">${n}</b>`,abn=a=>a&&AB[a]?AB[a].n:(a||''),stn=k=>CR.statuses[k]&&CR.statuses[k].label||k;
+const fx=v=>Array.isArray(v)?`${v[1]}×${v[0]}t`:(typeof v==='number'?`(${v}t)`:'');
+function fmtEv(e){ // -> {cat, cls, h (html), t (plain text)}
+  const P=(h)=>({h,t:h.replace(/<[^>]+>/g,'')});
+  switch(e.ev){
+  case 'turn':return Object.assign({cat:'turn',cls:'tn '+e.tt},P(`Turn ${e.turn} · ${e.actor} (HP ${e.hp}/${e.max}, ${e.ap} AP)${e.stat?' · '+e.stat:''}`));
+  case 'ab':return Object.assign({cat:'act',cls:'ln'},P(`▸ ${lpU(e.actor,e.tt)} uses <b>${abn(e.ab)}</b>${e.tgt&&e.tgt!==e.actor?' on '+e.tgt:''} <i>(${e.cost} AP, ${e.left} left)</i>`));
+  case 'move':return Object.assign({cat:'move',cls:'ln'},P(`➜ ${lpU(e.actor,e.tt)} ${e.dash?'dashes':'moves'} (${e.fx},${e.fy}) → (${e.x},${e.y}) · ${e.steps} tile${e.steps===1?'':'s'}${e.dash?'':' · '+e.cost+' AP'}`));
+  case 'skip':return Object.assign({cat:'act',cls:'ln'},P(`∅ ${lpU(e.actor,e.tt)} loses the turn`));
+  case 'dmg':{
+    let b=`${e.base}`+(e.bonus?` +${e.bonus}`:'')+(e.fl?` ${e.fl}`:'')+e.mods.map(m=>` ${m}`).join('');
+    let h=`⚔ ${lpU(e.src,e.st)} → ${lpU(e.tgt,e.tt)} <b>${abn(e.ab)}</b>: ${b} = <b>${e.pre}</b>`+(e.shield?` · shield −${e.shield}`:'')+(e.icpt?` · intercepted −${e.icpt}`:'')+` · <b>−${e.hp} HP</b> (${e.hp0}→${e.hp1})`+(e.hp1<=0?' ☠':'');
+    return Object.assign({cat:'dmg',cls:'ln dmg'},P(h))}
+  case 'dot':return Object.assign({cat:'dmg',cls:'ln dmg'},P(`☠ ${lpU(e.tgt,e.tt)} takes <b>${e.amt}</b> from ${stn(e.status)} (${e.left} turn${e.left===1?'':'s'} left) (${e.hp0}→${e.hp1})`));
+  case 'heal':return Object.assign({cat:'heal',cls:'ln heal'},P(`✚ ${lpU(e.src,e.st||e.tt)} → ${lpU(e.tgt,e.tt)} <b>${e.note?e.note:abn(e.ab)||stn(e.ab)}</b>: <b>+${e.amt} HP</b> (${e.hp0}→${e.hp1})${e.over>0?` · ${e.over} overheal`:''}`));
+  case 'status':return Object.assign({cat:'status',cls:'ln status'},P(`◈ ${lpU(e.tgt,e.tt)} ${e.status==='shield'?`gains <b>${e.val} shield</b>`:`gains <b>${stn(e.status)}</b> ${fx(e.val)}`}${e.src?` <i>(${e.src}'s ${abn(e.ab)})</i>`:''}`));
+  case 'expire':return Object.assign({cat:'status',cls:'ln status'},P(`○ ${lpU(e.tgt,e.tt)} loses ${stn(e.status)}`));
+  case 'trap':return Object.assign({cat:'act',cls:'ln'},P(`⚠ ${lpU(e.actor,e.tt)} hides <b>${abn(e.ab)}</b> (${e.tiles} tile${e.tiles===1?'':'s'}) at (${e.x},${e.y})`));
+  case 'spring':return Object.assign({cat:'dmg',cls:'ln dmg'},P(`⚠ ${lpU(e.tgt,e.tt)} ${e.lingering?'steps on':'springs'} <b>${abn(e.ab)}</b> (${e.src}'s) at (${e.x},${e.y})`));
+  case 'hazard':return Object.assign({cat:'dmg',cls:'ln dmg'},P(`🔥 ${lpU(e.tgt,e.tt)} ${e.how==='enter'?'enters':e.how==='turn'?'is scorched by':'is caught by'} <b>${HZK[e.kind].n}</b>${e.amt?`: <b>−${e.amt} HP</b> (${e.hp0}→${e.hp1})`:''}${e.hp1<=0?' ☠':''}`));
+  case 'death':return Object.assign({cat:'death',cls:'ln death'},P(`☠ ${lpU(e.tgt,e.tt)} falls${e.src?` to ${lpU(e.src,e.st)}${e.ab?' ('+(abn(e.ab)||stn(e.ab))+')':''}`:(e.ab?' ('+stn(e.ab)+')':'')}`));
+  default:return Object.assign({cat:'other',cls:'ln'},P(e.t));
+  }
+}
+const lpVisible=e=>(LPREV||!e.hid)&&!(e.ev==='msg'&&(e.dup||/'s turn$/.test(e.t)));
+function lpStats(){
+  const U={},A={},get=(n,t)=>U[n]||(U[n]={n,t,dealt:0,taken:0,abs:0,heal:0,recv:0,over:0,kills:0,deaths:0,ap:0,casts:0});
+  for(const e of LOG){if(!LPREV&&e.hid)continue;
+    if(e.ev==='dmg'){const a=get(e.src,e.st),b=get(e.tgt,e.tt);a.dealt+=e.hp;b.taken+=e.hp;b.abs+=e.shield+e.icpt;const k=e.ab||'—',r=A[k]||(A[k]={k,uses:0,hits:0,dmg:0,heal:0,cast:0});r.hits++;r.dmg+=e.hp}
+    else if(e.ev==='dot'||e.ev==='hazard')get(e.tgt,e.tt).taken+=e.amt;
+    else if(e.ev==='heal'){const a=get(e.src,e.st||e.tt),b=get(e.tgt,e.tt);a.heal+=e.amt;b.recv+=e.amt;a.over+=Math.max(0,e.over||0);const k=e.ab||'—',r=A[k]||(A[k]={k,uses:0,hits:0,dmg:0,heal:0});r.heal+=e.amt}
+    else if(e.ev==='death'){get(e.tgt,e.tt).deaths++;if(e.src)get(e.src,e.st).kills++}
+    else if(e.ev==='ab'){const a=get(e.actor,e.tt);a.ap+=e.cost;a.casts++;const r=A[e.ab]||(A[e.ab]={k:e.ab,uses:0,hits:0,dmg:0,heal:0});r.uses++}
+    else if(e.ev==='move')get(e.actor,e.tt).ap+=e.dash?0:e.cost;
+  }
+  return{U:Object.values(U),A:Object.values(A)};
+}
+function drawLog(){
+  if(!LOGOPEN)return;
+  const f=$('lpf'),b=$('lpb'),cats=[['all','All'],['dmg','Damage'],['heal','Healing'],['status','Status'],['move','Moves'],['act','Actions'],['death','Deaths']];
+  const hidN=LOG.filter(e=>e.hid).length;
+  f.innerHTML=(LPTAB==='L'?cats.map(([k,l])=>`<button class="${LPF===k?'on':''}" onclick="LPF='${k}';drawLog()">${l}</button>`).join(''):'')+
+    `<label style="margin-left:auto"><input type="checkbox" ${LPREV?'checked':''} onchange="LPREV=this.checked;drawLog()"> reveal hidden${hidN?' ('+hidN+')':''}</label>`+
+    `<button onclick="copyLog()">Copy</button><button onclick="dlLog('txt')">.txt</button><button onclick="dlLog('json')">.json</button>`;
+  $('tabL').className=LPTAB==='L'?'on':'';$('tabS').className=LPTAB==='S'?'on':'';
+  const keep=b.scrollHeight-b.scrollTop-b.clientHeight<40;
+  if(LPTAB==='L'){
+    let out='';
+    for(const e of LOG){if(!lpVisible(e))continue;const x=fmtEv(e);if(LPF!=='all'&&x.cat!==LPF&&x.cat!=='turn')continue;out+=`<div class="${x.cls}">${x.h}</div>`}
+    b.innerHTML=out||'<div class="ln">Nothing yet.</div>';
+    if(keep)b.scrollTop=b.scrollHeight;
+  }else{
+    const {U,A}=lpStats(),r1=n=>Math.round(n*10)/10;
+    const row=u=>`<tr><td><b class="${u.t}">${u.n}</b></td><td>${u.dealt}</td><td>${u.taken}</td><td>${u.abs}</td><td>${u.heal}</td><td>${u.recv}</td><td>${u.over}</td><td>${u.kills}</td><td>${u.deaths}</td><td>${u.ap}</td></tr>`;
+    b.innerHTML=`<h3>Units</h3><table><tr><th>Unit</th><th title="HP damage dealt">Dmg</th><th title="HP lost">Taken</th><th title="Absorbed by shield or intercept">Abs</th><th title="Healing done">Heal</th><th title="Healing received">Recv</th><th title="Overheal wasted">Over</th><th title="Kills">K</th><th title="Times downed">D</th><th title="AP spent">AP</th></tr>${U.sort((a,b)=>(a.t>b.t?-1:1)||b.dealt-a.dealt).map(row).join('')}</table>`+
+      `<h3>Abilities</h3><table><tr><th>Ability</th><th>Uses</th><th>Hits</th><th>Damage</th><th>Avg/hit</th><th>Heal</th></tr>${A.sort((a,b)=>b.uses-a.uses||b.dmg-a.dmg).map(a=>`<tr><td>${abn(a.k)||a.k}</td><td>${a.uses||''}</td><td>${a.hits||''}</td><td>${a.dmg||''}</td><td>${a.hits?r1(a.dmg/a.hits):''}</td><td>${a.heal||''}</td></tr>`).join('')}</table>`+
+      `<div class="ln">Dmg/Taken count HP only. Abs = shield + intercepted. Over = wasted healing. K/D = kills/downs. AP = ability and move cost. Damage-over-time counts as taken, not dealt.</div>`;
+  }
+}
+const logText=()=>LOG.filter(lpVisible).map(e=>{const x=fmtEv(e);return(x.cat==='turn'?'\n':'  ')+x.t}).join('\n');
+function openLog(){LOGOPEN=true;$('logp').style.display='block';drawLog()}
+function closeLog(){LOGOPEN=false;$('logp').style.display='none'}
+function lpTab(t){LPTAB=t;drawLog()}
+function copyLog(){const t=logText();try{navigator.clipboard.writeText(t)}catch(e){const a=document.createElement('textarea');a.value=t;document.body.appendChild(a);a.select();try{document.execCommand('copy')}catch(_){}a.remove()}}
+function dlLog(kind){const blob=new Blob([kind==='json'?JSON.stringify(LOG,null,1):logText()],{type:kind==='json'?'application/json':'text/plain'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='combat-log.'+kind;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),500)}
+</script>
+
+
+
+
+
+</body></html>
