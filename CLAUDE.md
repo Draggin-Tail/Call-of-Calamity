@@ -6,7 +6,7 @@ A tactics game for phones, written in plain JavaScript with no build step.
 
 - `game/`: the playable build. Open `game/index.html`, or serve the folder.
   - `game/data/*.js` holds the rules and content. Each file adds to globals: `GAME_DATA`, `GAME_CAMPAIGN`, `GAME_SAVE`, `GAME_LOADOUT`, `GAME_TRIGGERS`.
-  - `game/data/campaign.js` is the largest file (world map, nodes, encounters, rules). Read the parts you need, not the whole file.
+  - The campaign (`GAME_CAMPAIGN`) is split across five files, loaded in this order: `regions.js` (race lands, territory outlines), `places.js` (every node), `roads_gen.js` (the road network), `encounters.js` (fights, choices, patrols, events, dungeons) and `campaign.js` (the rules; it loads last and publishes `GAME_CAMPAIGN`). Read only the file you need. A new campaign file must be added to `game/index.html` and to the list in `tests/real_ld.js`.
   - `game/shell.js` is the campaign UI. `game/story_screens.js` holds the story screens.
 - `tests/`: Node and Playwright tests. See `tests/README.md` for how to run them and the current baseline.
 
