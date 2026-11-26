@@ -14,7 +14,23 @@
   const G = () => window.GAME_DATA, S = () => window.GAME_SAVE, LO = () => window.GAME_LOADOUT;
   // ---- state helpers ----
   const nodeState = P.nodeState;  // defined in regions.js, shared with encounters.js
-  C.ownerOf = (st, id) => (st.world.nodes[id] && st.world.nodes[id].owner) || (C.NODES[id] && C.NODES[id].owner) || null;
+  // ---- ownership (design/node_ownership_and_land.md): every place has an owner. C.ownerOf is the one way to read it. ----
+  // The save holds what changed in play (Moot flips, sieges, the Kingmaker hold); otherwise C.defaultOwner gives who held it at the start.
+  // Owners are faction ids, 'player' (the Kingmaker hold), or the two non-faction holders below. 'outlaws' is a faction: raiders hold
+  // the place and its services are shut.
+  C.OWNERLESS = { neutral: { name: 'Unclaimed', color: null }, monsters: { name: 'Monsters', color: '#6b5a48' } };
+  const SETTLED = ['capital', 'castle', 'market', 'town', 'village', 'hamlet'];
+  C.defaultOwner = id => {
+    const n = C.NODES[id]; if (!n) return null;
+    if (n.owner) return n.owner;
+    if (n.dungeon) { const e = C.ENCOUNTERS['dg_' + n.dungeon + '_1'], f = e && e.enemyFaction; return !f || f === 'wild' ? 'monsters' : f; }   // whatever lives in it
+    if (n.area) { const a = C.AREAS[n.area] || {}; return a.owner || (SETTLED.includes(n.type) ? 'crown' : 'neutral'); }   // the Marches: Crown towns, open country
+    return (C.REGIONS[n.region] || {}).faction || 'neutral';
+  };
+  C.ownerOf = (st, id) => (st.world.nodes[id] && st.world.nodes[id].owner) || C.defaultOwner(id);
+  // The owner when it is a faction (standing, patrols, boards, meeting people), else null: unclaimed land, monster dens, the player's hold.
+  C.factionOwner = (st, id) => { const o = C.ownerOf(st, id); return o && G().factions[o] ? o : null; };
+  C.isOwnerId = o => !!(o && (G().factions[o] || C.OWNERLESS[o] || o === 'player'));
   C.isDiscovered = (st, id) => !!(st.world.nodes[id] && st.world.nodes[id].discovered);
   C.discover = (st, id) => { const n = C.NODES[id]; if (!n) return; if (n.hidden && !st.world.flags['reveal_' + id]) return; nodeState(st, id).discovered = true; };
 
@@ -41,7 +57,7 @@
     Object.keys(C.NODES[T.location].links).forEach(id => C.discover(st, id)); // you know the roads out of where you stand
     T.discovered.forEach(id => { const seen = { [T.location]: null }, q = [T.location]; while (q.length) { const x = q.shift(); if (x === id) break; Object.keys(C.NODES[x].links).forEach(y => { if (!(y in seen)) { seen[y] = x; q.push(y); } }); } // you know the way to places you have heard of
       for (let x = id; x && x !== T.location; x = seen[x]) C.discover(st, x); });
-    S().markMet(st, C.NODES[T.location].owner); st.world.flags.opening = T.opening; if (race !== 'human') st.world.flags.guide_none = 1;
+    S().markMet(st, C.factionOwner(st, T.location)); st.world.flags.opening = T.opening; if (race !== 'human') st.world.flags.guide_none = 1;
     return st;
   };
 
@@ -262,7 +278,7 @@
     const hid = Object.keys(C.NODES).filter(k => C.NODES[k].hidden && !st.world.flags['reveal_' + k] && !gated.has(k) && dist[k] !== undefined && dist[k] <= 3);
     const told = st.world.tvSeen || (st.world.tvSeen = {}), jobs = Object.entries(C.JOBS).filter(([k, j]) => !told['job_' + k] && !C.jobsOf(st)[k] && j.at !== id && C.isDiscovered(st, j.at) && (!j.after || C.jobDone(st, j.after)));
     const opts = []; if (hid.length) opts.push('place'); if (jobs.length) opts.push('job'); if (!opts.length) return null;
-    const who = tvPick(r, (C.TV_PEOPLE[C.NODES[id].region] || []).concat(C.TV_PEOPLE.any)), kind = tvPick(r, opts);
+    const who = tvPick(r, (C.TV_PEOPLE[C.areaOf(id)] || []).concat(C.TV_PEOPLE.any)), kind = tvPick(r, opts);
     if (kind === 'job') { const [k, j] = tvPick(r, jobs); told['job_' + k] = 1; return { kind: 'rumour', title: 'A rumour', lines: [{ who, text: j.giver === 'general' ? 'I hear folk at ' + C.NODES[j.at].name + ' need a hand with something. Honest work, modest pay.' : 'I hear ' + C.tvName(j.giver) + ' have work going at ' + C.NODES[j.at].name + '. Quiet work, the paying kind.' }], found: [] }; }
     const t = tvPick(r, hid), n = C.NODES[t]; C.reveal(st, t);
     const d = C.DUNGEONS[t], text = d ? n.name + '. ' + n.desc + ' Folk say it is level ' + d.rec + ' work, and no kinder.' : 'Have you heard of ' + n.name + '? ' + n.desc;
@@ -280,7 +296,7 @@
     for (let i = 0; i < pool.length; i++) for (let j = i + 1; j < pool.length; j++) { const a = pool[i], b = pool[j], rel = (S().getRelation(st, a, b) + S().getRelation(st, b, a)) / 2; if (rel <= -0.25) pairs.push({ a, b, rel, w: (-rel * 10 + (C.TV_PAIRS[a + '|' + b] || C.TV_PAIRS[b + '|' + a] ? 6 : 0) + [a, b].reduce((t, f) => t + (f === own ? 6 : 0) + (S().isMet(st, f) ? 4 : 0), 0)) / (1 + ((st.world.tvSeen || {})['p_' + a + '|' + b] || 0) * 1.5) }); }
     if (!pairs.length) return null;
     let tot = pairs.reduce((s, p) => s + p.w, 0), x = r() * tot, p = pairs[0]; for (const q of pairs) { x -= q.w; if (x <= 0) { p = q; break; } }
-    const reg = C.NODES[id].region, pe = C.TV_PEOPLE[reg] || [], s1 = tvPick(r, pe.concat(C.TV_PEOPLE.any)); let s2 = tvPick(r, C.TV_PEOPLE.any); if (s2 === s1) s2 = 'a stranger at the bar';
+    const reg = C.areaOf(id), pe = C.TV_PEOPLE[reg] || [], s1 = tvPick(r, pe.concat(C.TV_PEOPLE.any)); let s2 = tvPick(r, C.TV_PEOPLE.any); if (s2 === s1) s2 = 'a stranger at the bar';
     const sn = st.world.tvSeen || (st.world.tvSeen = {}); sn['p_' + p.a + '|' + p.b] = (sn['p_' + p.a + '|' + p.b] || 0) + 1;
     const hv = C.TV_PAIRS[p.a + '|' + p.b] || C.TV_PAIRS[p.b + '|' + p.a], cnt = sn['p_' + p.a + '|' + p.b], hand = hv && cnt <= hv.length ? hv[cnt - 1] : null, lines = [];
     if (hand) { hand.forEach(ex => ex.forEach(t => { if (t) lines.push({ who: lines.length % 2 ? s2 : s1, text: t }); })); }
@@ -300,7 +316,7 @@
   }
   function tvHint(st, id, r) {
     const ds = Object.keys(C.DUNGEONS).filter(d => C.isDiscovered(st, d) && !(() => { try { return C.dungeonStatus(st, d).cleared; } catch (e) { return false; } })());
-    const who = tvPick(r, (C.TV_PEOPLE[C.NODES[id].region] || []).concat(C.TV_PEOPLE.any));
+    const who = tvPick(r, (C.TV_PEOPLE[C.areaOf(id)] || []).concat(C.TV_PEOPLE.any));
     if (ds.length && r() < 0.5) { const d = C.DUNGEONS[tvPick(r, ds)]; return { kind: 'hint', title: 'A word of advice', lines: [{ who, text: d.name + '? Go in at level ' + d.rec + ' or not at all. ' + (d.why || '') }] }; }
     const sn = st.world.tvSeen || (st.world.tvSeen = {}); let fresh = C.TV_HINTS.filter((h, i) => !sn['h' + i]); if (!fresh.length) { C.TV_HINTS.forEach((h, i) => delete sn['h' + i]); fresh = C.TV_HINTS; } const h = tvPick(r, fresh); sn['h' + C.TV_HINTS.indexOf(h)] = 1;
     return { kind: 'hint', title: 'A word of advice', lines: [{ who, text: h }] };
@@ -576,7 +592,7 @@
   // whispers in the tavern: some are true, some are not
   function tvWhisper(st, id, r) {
     const d = dos(st), pool = Object.values(C.LORE).filter(e => e.kind === 'secret' && e.stage === 1 && !d.got[e.id]); if (!pool.length) return null;
-    const e = tvPick(r, pool), who = tvPick(r, (C.TV_PEOPLE[C.NODES[id].region] || []).concat(C.TV_PEOPLE.any)); C.learn(st, e.id, 'Whispered in a tavern');
+    const e = tvPick(r, pool), who = tvPick(r, (C.TV_PEOPLE[C.areaOf(id)] || []).concat(C.TV_PEOPLE.any)); C.learn(st, e.id, 'Whispered in a tavern');
     return { kind: 'whisper', title: 'A whisper', lines: [{ who: who + ', leaning in', text: e.text }], narr: tvPick(r, ['They look over their shoulder before they finish. You cannot tell whether they believe it themselves.', 'They say it low and quick, and are gone before you can ask where they heard it.', 'It may be true. It may be a story told for a free drink. Only checking will tell.']), fac: e.faction };
   }
   // whistleblowers: someone inside, unhappy, who will talk if you have already heard the rumour
@@ -638,7 +654,7 @@
     t = (t + 0x6D2B79F5) >>> 0; st.world.rng = t; let x = t; x = Math.imul(x ^ (x >>> 15), x | 1); x ^= x + Math.imul(x ^ (x >>> 7), x | 61); return ((x ^ (x >>> 14)) >>> 0) / 4294967296;
   }
   const pick = (st, arr) => arr[Math.floor(rnd(st) * arr.length)];
-  const nodeDanger = id => Math.max((C.REGIONS[C.NODES[id].region] || {}).danger || 0, C.NODES[id].danger || 0); // a named wild area can be nastier than its region
+  const nodeDanger = id => C.landDanger(id); // the land, the old human area, or a named wild area, whichever is nastiest
   const dangerOf = (a, b) => Math.max(nodeDanger(a), nodeDanger(b));
   C.routeRisk = function (path, from) {
     let a = from, d = 0, n = 0; path.forEach(b => { d += dangerOf(a, b) * C.travelCost(a, b); n += C.travelCost(a, b); a = b; });
@@ -650,7 +666,7 @@
   C.REGION_POOL = { crownlands: 'plains', free_marches: 'plains', river_cities: 'riverbank', voldun: 'ruins', elven_realms: 'forest', dwarven_holds: 'highland', iceflow: 'snow', orc_lands: 'volcanic', goblin_fens: 'marsh' };
   C.mapFor = function (st, region, to) {
     const M = G().maps; if (to && C.NODES[to] && C.NODES[to].type === 'zone' && M[to]) return to;
-    const tag = C.REGION_POOL[region], list = Object.keys(M).filter(k => M[k].pool === tag);
+    const tag = C.REGION_POOL[region] || (to && C.REGION_POOL[C.areaOf(to)]), list = Object.keys(M).filter(k => M[k].pool === tag);
     return list.length ? pick(st, list) : Object.keys(M)[0];
   };
   function wanderFight(st, region, kind, opts) {
@@ -675,7 +691,9 @@
     return ok.length ? pick(st, ok) : null;
   }
   // ---- hunted land, checkpoints, bounties ----
-  const hostileFac = (st, region) => { const f = (C.REGIONS[region] || {}).faction; return f && C.PATROLS[f] && S().standingTier(st, f).id === 'hostile' ? f : null; };
+  // patrols come from whoever holds the place you walk into (not the region): unclaimed land and monster dens have none
+  const patrolFac = (st, id) => { const f = C.factionOwner(st, id); return f && C.PATROLS[f] ? f : null; };
+  const hostileFac = (st, id) => { const f = patrolFac(st, id); return f && S().standingTier(st, f).id === 'hostile' ? f : null; };
   function huntState(st, f) { const h = st.world.hunt || (st.world.hunt = {}); let x = h[f] || (h[f] = { n: 0, day: st.world.day }); if (x.n && st.world.day - x.day > C.WANDER.huntForget) { x.n = 0; } return x; }
   function bountyMap(st) {                                   // the exposure scene leaves flags['bounty_<faction>'] = day; fold those in, and let old bounties lapse
     const w = st.world, b = w.bounty || (w.bounty = {});
@@ -703,10 +721,10 @@
   // Chance (0..1) that arriving in this place starts a meeting, for the map and the node sheet.
   C.zoneChance = function (id) { const n = C.NODES[id], W = C.WANDER; return n && n.type === 'zone' && n.danger > 0 ? Math.min(W.cap, W.zoneBase + W.perDanger * nodeDanger(id)) : 0; };
   C.rollWander = function (st, from, to, days) {
-    const W = C.WANDER, n = C.NODES[to], region = n.region, calm0 = st.world.calm || 0; let calm = calm0;
-    const hostile = hostileFac(st, region), bm = bountyMap(st), nb = Object.keys(bm).length;
-    // checkpoint: a border road stop in hostile land, at most once per few days
-    if (hostile && n.type === 'road' && W.checkpointDays && (C.NODES[from] || {}).region !== region) {   // only when entering the land: leaving it, or moving inside it, never stops you
+    const W = C.WANDER, n = C.NODES[to], region = C.areaOf(to), calm0 = st.world.calm || 0; let calm = calm0;   // region here is the area: foes, scenes and terrain were written per area
+    const hostile = hostileFac(st, to), bm = bountyMap(st), nb = Object.keys(bm).length;
+    // checkpoint: a road stop held by a hostile faction, at most once per few days
+    if (hostile && n.type === 'road' && W.checkpointDays && C.ownerOf(st, from) !== hostile) {   // only when stepping onto its ground: leaving it, or moving inside it, never stops you
       const pass = (st.world.pass || {})[hostile]; if (pass === undefined || st.world.day - pass > W.checkpointDays) {
         const toll = Math.round((W.tollBase + W.tollPerLevel * partyLevel(st)) * (C.costMult ? C.costMult(st) : 1));
         return setWander(st, { kind: 'checkpoint', region, from, to, day: st.world.day, faction: hostile, toll, text: 'A ' + C.PATROLS[hostile].name.toLowerCase() + ' holds the road. They know your face.' });
@@ -777,7 +795,7 @@
   }
 
   function makeWander(st, region, from, to) {
-    const W = C.WANDER, fac = (C.REGIONS[region] || {}).faction; let kinds = Object.entries(W.weights).filter(([k]) => k !== 'patrol' || (fac && C.PATROLS[fac]));
+    const W = C.WANDER, fac = patrolFac(st, to); let kinds = Object.entries(W.weights).filter(([k]) => k !== 'patrol' || (fac && C.PATROLS[fac]));
     let total = kinds.reduce((a, [, w]) => a + w, 0), r = rnd(st) * total, kind = kinds[kinds.length - 1][0];
     for (const [k, w] of kinds) { if (r < w) { kind = k; break; } r -= w; }
     const base = { kind, region, from, to, day: st.world.day };
@@ -819,7 +837,7 @@
     const wander = C.rollWander(st, from, to, days);
     S().advanceDay(st, days); st.world.location = to; nodeState(st, to).visited = true;
     C.discover(st, to);   // arriving names the place; the roads out of it stay unmarked until you take them or hear of them
-    S().markMet(st, C.ownerOf(st, to) || (C.REGIONS[C.NODES[to].region] || {}).faction);
+    { const f = C.factionOwner(st, to); if (f) S().markMet(st, f); }
     const revealed = autoReveal(st, to); C.lore(st, 'visit:' + to); C.loreSweep(st);
     const events = C.runEvents(st), sight = !wander && !events.length ? C.sight(st, from, to) : null; if (sight) events.push(sight);
     return { ok: true, days, from, events, wander, revealed };
@@ -833,13 +851,13 @@
 
   // ---- services at a node, by standing and owner ----
   // Who you can hire at a place: the race of its region. Only the races that are switched on can be hired.
-  C.REGION_RACE = { dwarven_holds: 'dwarf', elven_realms: 'wood_elf', crownlands: 'human', free_marches: 'human', river_cities: 'human', voldun: 'human' };
+  C.REGION_RACE = { dwarven_holds: 'dwarf', elven_realms: 'wood_elf', human: 'human' };
   C.recruitRace = id => { const n = C.NODES[id], r = n && C.REGION_RACE[n.region]; return r && G().races[r] && G().races[r].active ? r : null; };
   const PRICE = { hostile: null, neutral: 1, friendly: 0.9, allied: 0.8 };
   const isHall = n => n.type === 'capital' || !!n.seat; // seats of a faction: capitals and halls
   C.nodeServices = function (st, id) {
     const n = C.NODES[id]; if (!n) return null;
-    const owner = C.ownerOf(st, id), fac = n.faction || owner;
+    const owner = C.ownerOf(st, id), fac = C.factionOwner(st, id) || n.faction;
     const tier = fac && fac !== 'outlaws' ? S().standingTier(st, fac).id : 'neutral';
     const lost = owner === 'outlaws';
     const open = !lost && PRICE[tier] !== null && PRICE[tier] !== undefined;
@@ -1001,7 +1019,7 @@
       if (!n.pos || n.pos[0] < 0 || n.pos[0] > 1 || n.pos[1] < 0 || n.pos[1] > 1) p.push(id + ': bad position');
       for (const [to, d] of Object.entries(n.links)) { if (!C.NODES[to]) p.push(id + ' links to unknown ' + to); else if (C.NODES[to].links[id] !== d) p.push(id + '<->' + to + ' links are not symmetric'); }
       if (n.faction && !D.factions[n.faction]) p.push(id + ': unknown faction');
-      if (n.owner && !D.factions[n.owner]) p.push(id + ': unknown owner');
+      if (!C.isOwnerId(C.defaultOwner(id))) p.push(id + ': unknown owner ' + C.defaultOwner(id));
       if (n.encounter && !C.ENCOUNTERS[n.encounter]) p.push(id + ': unknown encounter');
       if (n.choice && !C.CHOICES[n.choice]) p.push(id + ': unknown choice');
       (n.shop || []).forEach(g => { if (!D.gear[g]) p.push(id + ': unknown shop item ' + g); else if (!D.gear[g].price) p.push(id + ': shop item without a price ' + g); });
@@ -1042,12 +1060,12 @@
     for (const [id, n] of Object.entries(C.NODES)) if (!C.REGIONS[n.region]) p.push(id + ': unknown region ' + n.region);
     C.EDGES.forEach(([a, b, d]) => { if (!C.NODES[a] || !C.NODES[b]) p.push('edge ' + a + '-' + b + ': unknown node'); if (!(d >= 1 && d <= 5)) p.push('edge ' + a + '-' + b + ': bad days'); });
     const sets = C.FOE_SETS.concat(C.MONSTER_SETS).map(x => [x.id, x]).concat(Object.entries(C.PATROLS));
-    sets.forEach(([id, x]) => { (x.enemies || []).forEach(u => unit('foe ' + id, u)); if (!x.enemies || x.enemies.length < 1 || x.enemies.length > 3) p.push('foe ' + id + ': needs 1-3 enemies'); if (x.faction && x.faction !== 'outlaws' && x.faction !== 'wild' && !D.factions[x.faction]) p.push('foe ' + id + ': unknown faction'); (x.regions || []).forEach(r => { if (!C.REGIONS[r]) p.push('foe ' + id + ': unknown region ' + r); }); (x.zones || []).forEach(z => { if (!C.NODES[z] || C.NODES[z].type !== 'zone') p.push('foe ' + id + ': unknown zone ' + z); }); });
+    sets.forEach(([id, x]) => { (x.enemies || []).forEach(u => unit('foe ' + id, u)); if (!x.enemies || x.enemies.length < 1 || x.enemies.length > 3) p.push('foe ' + id + ': needs 1-3 enemies'); if (x.faction && x.faction !== 'outlaws' && x.faction !== 'wild' && !D.factions[x.faction]) p.push('foe ' + id + ': unknown faction'); (x.regions || []).forEach(r => { if (!C.REGIONS[r] && !C.AREAS[r]) p.push('foe ' + id + ': unknown region ' + r); }); (x.zones || []).forEach(z => { if (!C.NODES[z] || C.NODES[z].type !== 'zone') p.push('foe ' + id + ': unknown zone ' + z); }); });
     for (const f of Object.keys(C.PATROLS)) if (!D.factions[f]) p.push('patrol ' + f + ': unknown faction');
     for (const [id, d] of Object.entries(C.DUNGEONS)) { const n = C.NODES[id]; if (!n) { p.push('dungeon ' + id + ': no node'); continue; } if (!C.NODES[d.parent] || !n.links[d.parent]) p.push('dungeon ' + id + ': not linked to its parent'); if (Object.keys(n.links).length !== 1) p.push('dungeon ' + id + ': should be a leaf');
       if (!d.floors.length || !d.floors[d.floors.length - 1].boss) p.push('dungeon ' + id + ': last floor must be a boss'); if (d.faction && !D.factions[d.faction]) p.push('dungeon ' + id + ': unknown faction'); if (d.hidden && !d.reveal) p.push('dungeon ' + id + ': hidden needs a reveal rule'); }
     for (const [id, n] of Object.entries(C.NODES)) if (n.type === 'zone' && !(n.danger >= 0 && n.danger <= 3)) p.push(id + ': zone needs danger 0-3');
-    for (const [id, c] of Object.entries(C.CHOICES)) if (c.road) { (c.regions || []).forEach(r => { if (!C.REGIONS[r]) p.push(id + ': unknown region ' + r); }); if (!c.options.some(o => !o.gold || o.gold >= 0)) p.push(id + ': every option costs gold, so a broke party is stuck'); }
+    for (const [id, c] of Object.entries(C.CHOICES)) if (c.road) { (c.regions || []).forEach(r => { if (!C.REGIONS[r] && !C.AREAS[r]) p.push(id + ': unknown region ' + r); }); if (!c.options.some(o => !o.gold || o.gold >= 0)) p.push(id + ': every option costs gold, so a broke party is stuck'); }
     // every node reachable from every start
     for (const [r, t] of Object.entries(C.STARTS)) { const seen = new Set([t.location]), q = [t.location]; while (q.length) { const x = q.pop(); for (const y of Object.keys(C.NODES[x].links)) if (!seen.has(y)) { seen.add(y); q.push(y); } } if (seen.size !== Object.keys(C.NODES).length) p.push('start ' + r + ': not every node is reachable'); }
     return p;

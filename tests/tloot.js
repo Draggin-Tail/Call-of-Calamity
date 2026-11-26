@@ -18,13 +18,13 @@ const shops = Object.entries(C.NODES).filter(([k, n]) => n.shop);
   const rare = ['claws', 'wand_fire', 'wand_arcane', 'staff_cold', 'staff_storm', 'siphon_band']; const everywhere = rare.filter(i => shops.filter(([k, n]) => n.shop.includes(i)).length > 4);
   ok('the specialty items stay specialty (not in more than 4 shops)', !everywhere.length, everywhere.join()); }
 { let fav = 0, fill = 0, rand = 0, cnt = 0;
-  shops.forEach(([k, n]) => { const f = new Set((L.favoured[n.region] || '').split(' ').filter(Boolean)); const added = n.shop.filter(i => !C0.NODES[k].shop.includes(i) && !(L.specialty[k] || []).includes(i)); fill += added.length; fav += added.filter(i => f.has(i)).length; rand += f.size / 47; cnt++; });
+  shops.forEach(([k, n]) => { const f = new Set((L.favoured[(n.area || n.region)] || '').split(' ').filter(Boolean)); const added = n.shop.filter(i => !C0.NODES[k].shop.includes(i) && !(L.specialty[k] || []).includes(i)); fill += added.length; fav += added.filter(i => f.has(i)).length; rand += f.size / 47; cnt++; });
   ok('favoured items fill well over their chance share (' + Math.round(100 * fav / fill) + '% against ' + Math.round(100 * rand / cnt) + '%), but not all', fav / fill > 1.6 * rand / cnt && fav / fill < 0.8); }
-{ const caster = i => /staff|wand|spellbook|tome|relic|robe|hood|pendant|mana_ring/.test(i), syn = shops.filter(([k, n]) => n.region === 'voldun'), all = shops.filter(([k, n]) => n.region !== 'voldun');
+{ const caster = i => /staff|wand|spellbook|tome|relic|robe|hood|pendant|mana_ring/.test(i), syn = shops.filter(([k, n]) => (n.area || n.region) === 'voldun'), all = shops.filter(([k, n]) => (n.area || n.region) !== 'voldun');
   const share = a => a.reduce((s, [k, n]) => s + n.shop.filter(caster).length, 0) / a.reduce((s, [k, n]) => s + n.shop.length, 0);
   ok('Vol\'Dun shops lean to casters (' + Math.round(100 * share(syn)) + '% against ' + Math.round(100 * share(all)) + '% elsewhere) and still sell other gear', share(syn) > 0.5 && share(syn) > 1.5 * share(all) && syn.every(([k, n]) => n.shop.filter(i => !caster(i)).length >= 1) && syn.reduce((a, [k, n]) => a + n.shop.filter(i => !caster(i)).length, 0) / syn.length >= 2.5); }
-{ const dw = shops.filter(([k, n]) => n.region === 'dwarven_holds'), heavy = i => ['maul', 'greatsword', 'halberd', 'crossbow', 'tower_shield', 'plate_armor', 'plate_helm'].includes(i);
-  ok('every region has its own lean (a favoured item in every shop of the region)', shops.every(([k, n]) => !L.favoured[n.region] || n.shop.some(i => L.favoured[n.region].split(' ').includes(i)))); }
+{ const dw = shops.filter(([k, n]) => (n.area || n.region) === 'dwarven_holds'), heavy = i => ['maul', 'greatsword', 'halberd', 'crossbow', 'tower_shield', 'plate_armor', 'plate_helm'].includes(i);
+  ok('every region has its own lean (a favoured item in every shop of the region)', shops.every(([k, n]) => !L.favoured[(n.area || n.region)] || n.shop.some(i => L.favoured[(n.area || n.region)].split(' ').includes(i)))); }
 { const st = C.newGame({ race: 'human' }); st.roster.forEach(u => u.level = 9); st.inventory.gold = 9999;
   ok('shops still tier their stock and sell (buy works, stock all priced)', shops.every(([k, n]) => { st.world.location = k; const sv = C.nodeServices(st, k); return !sv.shop || (sv.shop.stock.length >= 5 && sv.shop.stock.every(i => G[i] && G[i].price)); }));
   ok('data still validates', C.validate().length === 0 && C.validateQuests().length === 0 && C.validateWork().length === 0 && C.validateCast().length === 0);

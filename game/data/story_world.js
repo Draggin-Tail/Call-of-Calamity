@@ -208,7 +208,7 @@
   };
   // seen in the wrong place (once a day each): at the halls of a faction opposed to your true one (true faction doubts), or at your true faction's halls (cover suspects)
   function seenCheck(st, at) {
-    const n = C.NODES[at], own = C.ownerOf(st, at); if (!n || !own || !['capital', 'hall', 'castle'].includes(n.type)) return; const sn = sec(st).seen;
+    const n = C.NODES[at], own = C.factionOwner(st, at); if (!n || !own || !['capital', 'hall', 'castle'].includes(n.type)) return; const sn = sec(st).seen;
     secretRanks(st).filter(r => S.rivalry(r.faction, own, st) === 'opposed').forEach(r => { const k = r.faction + '|' + day(st); if (!sn[k]) { sn[k] = 1; S.addSuspicion(st, r.faction, 'seen'); } });
     if (secretRanks(st).some(r => r.faction === own)) coverRanks(st).filter(r => S.rivalry(r.faction, own, st) !== 'open').forEach(r => { const k = 'c|' + r.faction + '|' + day(st); if (!sn[k]) { sn[k] = 1; addCover(st, r.faction, Z().gain.seen || 8); } });
   }
@@ -307,7 +307,7 @@
   C.AFTER_MOOT = AFTER;
   if (C.TV_GOSSIP) Object.entries(AFTER).forEach(([k, a]) => C.TV_GOSSIP.push({ id: 'realm_' + k, if: st => !!st.world.realm && st.world.realm.outcome === k, lines: a.talk }));
   { const nb1 = C.noticeBoard; if (nb1) C.noticeBoard = function (st, id) { const out = nb1.apply(this, arguments); const rl = st.world.realm; if (!out || !rl || !AFTER[rl.outcome]) return out;
-      const n = C.NODES[id]; if (!n || !['crownlands', 'free_marches', 'river_cities', 'voldun'].includes(n.region)) return out;
+      const n = C.NODES[id]; if (!n || n.region !== 'human') return out;
       if (out[0] && /^Nothing but/.test(out[0])) return [AFTER[rl.outcome].board]; out.splice(1, 0, AFTER[rl.outcome].board); return out.slice(0, 5); }; }
   const B7 = (id, label, go, cond) => ({ id, label, go, if: cond });
   [{ id: 'banner_pardon', who: 'old_standard', at: 'crown_keep', trip: st => jobOn(st, 'old_standards_price') && !fl(st).job_pardon,

@@ -11,7 +11,7 @@
     const ID = 'the_sandring';
 
     // ---- the place ----
-    C.NODES[ID] = { name: 'The Sandring', region: 'crownlands', type: 'market', owner: null, pos: [0.522, 0.570], links: {},
+    C.NODES[ID] = { name: 'The Sandring', region: 'human', area: 'crownlands', type: 'market', owner: 'neutral', pos: [0.522, 0.570], links: {},
       desc: 'A walled ring of raked sand where the Kingsway meets the road south. Nobody owns it. The Crown, the Syndicate and the Synod each sponsor a team, and none of them will let the others run the gate, so a Sandmaster keeps the peace and takes the fee.',
       shop: ['iron_sword', 'halberd', 'katana', 'round_shield', 'chain_hauberk'] };
     if (C.MAP_POS) C.MAP_POS[ID] = [0.522, 0.570];

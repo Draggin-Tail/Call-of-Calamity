@@ -4,8 +4,8 @@ const {chromium}=require('playwright');let fails=0;const ok=(n,c)=>{console.log(
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:390,height:844}});const errs=[];p.on('pageerror',e=>errs.push(e.message));
 await p.goto(process.env.GAME_URL||'http://localhost:8766/index.html');await p.waitForSelector('#shell.on');
 await p.evaluate(()=>{const C=GAME_CAMPAIGN,s=C.newGame({race:'human'});s.world.flags.guide_off=1;Object.keys(C.NODES).forEach(id=>{C.discover(s,id);if(C.NODES[id].type==='road')s.world.flags['gate_'+id]=1});s.world.rbNext=1e9;Object.assign(C.WANDER,{base:0,zoneBase:0,perDanger:0});C.EVENTS.length=0;GAME_SHELL._set(s);GAME_SHELL.render()});
-await p.waitForTimeout(300);let t=await p.textContent('.mhd');ok('the map opens on the party\'s territory',/Crownlands/.test(t));
-const img=await p.evaluate(()=>getComputedStyle(document.querySelector('.sh-map>div')).backgroundImage);ok('the region shows its own picture',/regions\/crownlands\.jpg/.test(img));
+await p.waitForTimeout(300);let t=await p.textContent('.mhd');ok('the map opens on the party\'s land (the human land is one region now)',/Verdant Central Plains/.test(t));
+const img=await p.evaluate(()=>getComputedStyle(document.querySelector('.sh-map>div')).backgroundImage);ok('the region shows its own picture',/regions\/human\.jpg/.test(img));
 ok('every territory has a picture file',await p.evaluate(async()=>{for(const t of Object.values(GAME_CAMPAIGN.TERRITORIES)){const r=await fetch(t.img);if(!r.ok)return false}return (await fetch('art/world.jpg')).ok}));
 await p.click('text=◂ World');await p.waitForTimeout(300);t=await p.textContent('.mhd');ok('World shows the whole realm',/The Realm/.test(t));
 const L=await p.evaluate(()=>GAME_CAMPAIGN.TERRITORIES.elven_realms.label);await p.evaluate(x=>{const b=document.querySelector('.sh-map'),i=b.firstChild;b.scrollLeft=x*i.offsetWidth-150},L[0]);
@@ -26,4 +26,6 @@ await p.click('button[aria-label="Map key"]');await p.waitForTimeout(300);
 const key=await p.evaluate(()=>{const rows=[...document.querySelectorAll('.mkey .n[class*="t-"]')].slice(0,10);return {n:rows.length,looks:new Set(rows.map(r=>{const c=getComputedStyle(r);return c.width+c.borderRadius+c.backgroundColor+c.borderStyle})).size}});
 ok('the map key shows all ten kinds of place',key.n===10);ok('each kind of place looks different',key.looks===10);
 ok('no place uses an old type',await p.evaluate(()=>!Object.values(GAME_CAMPAIGN.NODES).some(n=>['hall','battle','choice','contested'].includes(n.type))));
+{const f=await p.evaluate(()=>{const a=GAME_SHELL._ownerField().builds;GAME_SHELL.render();GAME_SHELL.render();const b=GAME_SHELL._ownerField().builds;const s=GAME_SHELL.state();(s.world.nodes.thornfield=s.world.nodes.thornfield||{}).owner='synod';GAME_SHELL.render();return [a,b,GAME_SHELL._ownerField().builds,!!document.querySelector('.ofield img')]});
+ok('owner colours are drawn, kept across redraws, and redrawn only when an owner changes ('+f.slice(0,3)+')',f[3]&&f[0]>=1&&f[1]===f[0]&&f[2]===f[0]+1);}
 ok('no page errors',errs.length===0);if(errs.length)console.log(errs);console.log('fails='+fails);await b.close();process.exit(fails?1:0)})();

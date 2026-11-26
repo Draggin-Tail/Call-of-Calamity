@@ -26,12 +26,13 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 
 `tload.js` starts its own server, so stop `serve.js` first. `GAME_URL` overrides the page address.
 
-## Baseline (game build of 2026-11-23)
+## Baseline (game build of 2026-11-23, plus node ownership phase 1)
 
 | Test | Kind | Result |
 |---|---|---|
 | t83 uniques | node | pass |
 | t84 spell weapon share | node | pass |
+| t85 node ownership (phase 1) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |
@@ -47,5 +48,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | tparty_ui | browser | 2 fail: the outnumbered warning in the briefing |
 
 The failing checks look like tests that are older than the game build. They have not been changed.
+
+With `ARENA=1`, `C.validate()` lists 30 arena fights with unknown maps: the arena maps are not in the loader list. This was so before phase 1.
 
 Not copied yet from the Project: t10 to t82 and the sims (smoke, bal, simrun, trapsim, shapesim, shot, shotsim, ai_vs, ai_usage, unused, story_serve).

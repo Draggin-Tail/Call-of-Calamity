@@ -31,7 +31,7 @@
   // ---- the day-timed events become tripwires ----
   { const T = {
       marches_warning: st => !!fl(st).knighted || ['crown', 'syndicate', 'synod', 'broken_banner'].some(f => rankOf(st, f) >= 2),
-      marches_attack: st => !!fl(st).marches_warned && !fl(st).marches_defended && day(st) > (fl(st).marches_warned_day || 0) && C.NODES[st.world.location] && C.NODES[st.world.location].region === 'free_marches',
+      marches_attack: st => !!fl(st).marches_warned && !fl(st).marches_defended && day(st) > (fl(st).marches_warned_day || 0) && C.NODES[st.world.location] && C.areaOf(st.world.location) === 'free_marches',
       human_split: st => C.knows(st, 's_hand_e') || rankOf(st, 'syndicate') >= 3,
       synod_crackdown: st => C.knows(st, 's_hoard_e') || rankOf(st, 'synod') >= 3 };
     (C.EVENTS || []).forEach(e => { if (T[e.id]) e.trip = T[e.id]; });
@@ -59,7 +59,7 @@
     const dist = { [from]: 0 }, q = [from], out = [];
     while (q.length) { const x = q.shift(); if (dist[x] >= hops) continue; Object.keys((C.NODES[x] || {}).links || {}).forEach(y => { if (dist[y] === undefined) { dist[y] = dist[x] + 1; q.push(y); } }); }
     Object.keys(dist).forEach(id => { const n = C.NODES[id]; if (id !== from && n && !n.hidden && types.includes(n.type) && okOwner(id)) out.push(id); });
-    if (!out.length) Object.keys(C.NODES).forEach(id => { const n = C.NODES[id]; if (id !== from && !n.hidden && types.includes(n.type) && okOwner(id) && (owners || n.region === (C.NODES[from] || {}).region)) out.push(id); });
+    if (!out.length) Object.keys(C.NODES).forEach(id => { const n = C.NODES[id]; if (id !== from && !n.hidden && types.includes(n.type) && okOwner(id) && (owners || C.areaOf(id) === C.areaOf(from))) out.push(id); });
     return out.sort();
   }
   const OUTLAWS = [[{ primary: 'squire', name: 'Deserter' }, { primary: 'scout', name: 'Hedge Archer' }, { primary: 'rogue', name: 'Cutthroat' }], [{ primary: 'warrior', name: 'Brigand Chief' }, { primary: 'archer', name: 'Brigand Bowman' }, { primary: 'rogue', name: 'Brigand Knife' }]];
@@ -104,7 +104,7 @@
   };
   C.MAX_CONTRACTS = 3;
   C.contractBoard = function (st, at) {
-    const own = C.ownerOf(st, at); if (!isBoard(st, at, own) || (own !== 'hearthwatch' && (!S.standingTier || S.standingTier(st, own).id === 'hostile'))) return [];
+    const own = C.factionOwner(st, at); if (!own || !isBoard(st, at, own) || (own !== 'hearthwatch' && (!S.standingTier || S.standingTier(st, own).id === 'hostile'))) return [];
     const per = Math.floor(day(st) / 4), kinds = Object.entries(C.CONTRACT_KINDS).filter(([, k]) => k.faction === own && workRank(st, own) >= k.minRank).map(([id]) => id);
     const taken = new Set(ctr(st).list.filter(c => c.board === at + '|' + per).map(c => c.slot)), out = [];
     for (let slot = 0; slot < 3 && kinds.length; slot++) {
