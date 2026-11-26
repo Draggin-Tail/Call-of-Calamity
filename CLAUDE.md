@@ -17,7 +17,8 @@ A tactics game for phones, written in plain JavaScript with no build step.
   - Start with `design/dev_notes.md` for gotchas and which tests cover what. Its paths are written for the repo.
   - To change a doc: `project_read` it in full, edit a local copy (a folder listed in `.git/info/exclude`, never committed), then `project_write` with `local_path`. A write to an existing path is refused without that read.
   - When a phase of a design doc is built, update that doc's status line and its knock-on checklist, and record any decisions made while building.
-- Code work needs a session that can reach both the repo and the Project. A plain Project chat can't reach the repo, so it is for design talk only.
+- Coding can happen in any session in the Project, including chats started from the Project, as long as the session attaches this repo first (add `Draggin-Tail/Call-of-Calamity` with the add-repo tool, then clone it). Check for the repo before touching code.
+- If a session can't reach the repo, it must not edit or publish the Project's old code copies. It can still work on design docs, or write the code change as a plan for the next session that has the repo.
 
 ## Git and pull requests
 
