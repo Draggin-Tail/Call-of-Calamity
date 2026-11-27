@@ -18,7 +18,7 @@
       war: -0.6, peace: -0.4, truceDays: 20, ally: 0.5, allyBreak: 0.3,
       rate: 0.01,                         // share of the gap to the resting point closed each day
       border: -0.03, borderCap: -0.15,    // per road between their places
-      sharedEnemy: 0.15, allyWarm: 0.1,
+      sharedEnemy: 0.5, foe: -0.35, allyWarm: 0.1,
       weariness: 0.005, wearinessCap: 0.35, // per day at war
       grudge: -0.3, grudgeDays: 60, flipShift: -0.1,
       incidentEvery: [7, 13],
@@ -73,7 +73,8 @@
       const r = RS(st), k = pk(a, b), M = C.MOTIVES; bd = bd || borders(st);
       let t = C.idealAffinity(a, b) + ((M[a].bias || {})[b] || 0) + ((M[b].bias || {})[a] || 0);
       if (a !== 'hearthwatch' && b !== 'hearthwatch') t += Math.max(R.borderCap, R.border * (bd[k] || 0));
-      const ea = C.relEnemies(st, a), eb = C.relEnemies(st, b); t += R.sharedEnemy * ea.filter(x => eb.includes(x) && x !== a && x !== b).length;
+      // a common foe warms a pair: fighting the same enemy counts in full, both merely disliking one counts at half
+      for (const g of R.factions) { if (g === a || g === b) continue; if (atWar(st, a, g) && atWar(st, b, g)) t += R.sharedEnemy; else if (rel(st, a, g) < R.foe && rel(st, b, g) < R.foe) t += R.sharedEnemy / 2; }
       if (allyOf(st, a) === b) t += R.allyWarm;
       const w = r.wars[k]; if (w) t += Math.min(R.wearinessCap, R.weariness * (day(st) - w.since) * ((M[a].weary || 1) + (M[b].weary || 1)) / 2);
       const g = r.grudge[k]; if (g) { const left = 1 - (day(st) - g.day) / R.grudgeDays; if (left > 0) t += g.v * left; else delete r.grudge[k]; }
