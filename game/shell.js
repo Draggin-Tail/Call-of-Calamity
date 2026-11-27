@@ -607,7 +607,7 @@ body.campaign #top .skirm{display:none}
     if (sv.open && (sv.shop || n.recruit) && (sv.rival === 'uneasy' || sv.rival === 'opposed') && S.sworn(ST)) out.push(h('div', { class: 'dim', style: 'margin:0 2px 8px', text: 'They know you serve the ' + fname(S.sworn(ST)) + '. ' + (sv.rival === 'opposed' ? 'Their prices are steep for you, and their recruiters will not deal with you.' : 'Their prices are a little steeper for you.') }));
     if (sv.shop) out.push(btn('Shop', () => shopSheet(id), 'full'), h('div', { style: 'height:8px' }));
     if (sv.recruit) out.push(btn('Recruit (' + S.recruitCost(ST) + ' g)', () => recruitSheet(id), 'full'), h('div', { style: 'height:8px' }));
-    if (n.owner === 'hearthwatch') out.push(h('div', { class: 'card' }, h('b', { text: 'Hearthwatch sanctuary' }), h('div', { class: 'dim', text: 'A bed, a fire and no questions. Your wounds are tended and old trails go cold. Takes a day.' }), h('div', { style: 'height:6px' }), btn('Rest here', () => { S.advanceDay(ST, 1); S.sanctuary(ST); S.changeGoodwill(ST, 1, 'rested at a chapel'); toast('You rest. The road feels a little further behind you.'); autosave(); render(); }, 'pri full')));
+    if (C.sanctuaryAt ? C.sanctuaryAt(ST, id) : n.owner === 'hearthwatch') out.push(h('div', { class: 'card' }, h('b', { text: n.refuge ? 'Hearthwatch refuge' : 'Hearthwatch sanctuary' }), h('div', { class: 'dim', text: 'A bed, a fire and no questions. Your wounds are tended and old trails go cold. Takes a day.' }), h('div', { style: 'height:6px' }), btn('Rest here', () => { S.advanceDay(ST, 1); S.sanctuary(ST); S.changeGoodwill(ST, 1, 'rested at a chapel'); toast('You rest. The road feels a little further behind you.'); autosave(); render(); }, 'pri full')));
     return out;
   }
   // ---------- the Sandring (data/arena.js) ----------
@@ -1084,7 +1084,29 @@ body.campaign #top .skirm{display:none}
       opts.map(o => h('div', { class: 'row', style: 'margin-top:6px' }, h('div', { class: 'grow', text: 'The ' + fname(o.faction) + (o.wait ? ' (heard you recently)' : '') }),
         o.peace ? btn('For peace', () => { const r = C.relArgue(ST, o.faction, 'peace'); toast(r.ok ? r.text : r.reason, !r.ok); autosave(); render(); }, 'sm', !!o.wait) : null,
         o.ally ? btn('For alliance', () => { const r = C.relArgue(ST, o.faction, 'ally'); toast(r.ok ? r.text : r.reason, !r.ok); autosave(); render(); }, 'sm', !!o.wait) : null))));
+    if (C.leadOk) out.push(ordersBlock());
     return out.length ? [h('div', { class: 'sh-h', text: 'The realm' }), out] : null;
+  }
+  // Phase 4d: ordering an attack (rank 3) and moving against the Hearthwatch (rank 4), at a hall or the capital. Words only.
+  const STAGES = { 1: 'a single fight', 2: 'a siege in two stages', 3: 'a siege in three stages', 4: 'a siege in four stages, ending at a last stand' };
+  const CHANCE = { good: 'good odds', even: 'even odds', poor: 'poor odds' };
+  function ordersBlock() {
+    const L = C.leadOk(ST), out = [];
+    if (L.ok) { const opts = C.leadOptions(ST).slice(0, 8);
+      out.push(h('div', { class: 'card' }, h('b', { text: 'Order an attack' }), h('div', { class: 'dim', text: 'As a senior officer you can send the ' + fname(L.f) + ' against a place it can reach. The army gathers for a week. Be there to fight, or the day goes as it goes.' }),
+        opts.length ? opts.map(o => h('div', { class: 'row', style: 'margin-top:6px' }, h('div', { class: 'grow' }, h('div', { text: C.NODES[o.target].name + ', held by the ' + fname(o.on) }), h('div', { class: 'dim', style: 'font-size:12px', text: 'From ' + C.NODES[o.from].name + ': ' + STAGES[o.stages] + ', ' + CHANCE[o.chance] })),
+          btn('Order it', () => { const r = C.leadAttack(ST, o.target); toast(r.ok ? r.text : r.reason, !r.ok); autosave(); render(); }, 'sm')))
+          : h('div', { class: 'dim', style: 'margin-top:6px', text: 'No enemy place is within marching reach of your faction just now.' }))); }
+    else if (L.busy) out.push(h('div', { class: 'card' }, h('b', { text: 'Order an attack' }), h('div', { class: 'dim', text: 'Your last order is still under way. The council will hear another when it is settled.' })));
+    const M = C.hearthMotionOk ? C.hearthMotionOk(ST) : { ok: false };
+    if (M.ok) out.push(h('div', { class: 'card' }, h('b', { text: 'Move against the Hearthwatch' }), h('div', { class: 'dim', text: 'The Hearthwatch never makes war, and no one makes war on it. You could put it to the council. It would mean war at once' + (M.allied ? ', and the end of your alliance' : '') + '.' }),
+      h('div', { style: 'height:6px' }), btn('Put it to the council', () => sheet('Move against the Hearthwatch', () => {
+        const hurt = C.hearthMotionCost(ST);
+        return [h('p', { text: 'If you ask, the council will vote for war on the Hearthwatch. The chapels would be fair game for your orders, and the Hearthstone Priory last of all.' }),
+          h('p', { class: 'dim', text: 'Mother Agathe will not forgive it: you would lose all your goodwill with the Hearthwatch.' + (hurt.length ? ' Those who value mercy will think much less of you: the ' + hurt.map(fname).join(' and the ') + '.' : '') + ' If the Priory falls, the Hearthwatch is gone for good.' }),
+          btn('Ask for war', () => { const r = C.hearthMotion(ST); closeSheet(); autosave(); render(); toast(r.ok ? r.text : r.reason, !r.ok); }, 'full bad'), h('div', { style: 'height:6px' }), btn('Not now', closeSheet, 'full')];
+      }), 'full')));
+    return out.length ? out : null;
   }
   const KIND_LABEL = { ideal: 'Ideals', strength: 'Strengths', weakness: 'Weaknesses', figure: 'Important figures', view: 'How others see them', secret: 'Secrets' };
   function dossierBlock(f) {

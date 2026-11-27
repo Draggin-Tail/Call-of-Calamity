@@ -93,6 +93,8 @@
       const r = RS(st), k = pk(a, b); if (!r.wars[k]) return; delete r.wars[k]; r.truce[k] = day(st) + pairLine(st, a, b, 'truceDays'); setRival(st, a, b, 'uneasy');
       news(st, 'The ' + fname(a) + ' and the ' + fname(b) + ' have made peace. A truce holds for now.', 'peace');
     }
+    C.relDeclareWar = (st, by, on) => declareWar(st, by, on);   // 4d: the player's motion against the Hearthwatch
+    C.relBreakAlly = (st, a, b) => breakAlly(st, a, b);
     function makeAlly(st, a, b) {
       const r = RS(st); r.allies[a] = b; r.allies[b] = a; setRival(st, a, b, 'open');
       news(st, 'The ' + fname(a) + ' and the ' + fname(b) + ' have sworn an alliance.', 'ally');
