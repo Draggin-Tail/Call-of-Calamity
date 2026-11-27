@@ -36,6 +36,7 @@ A tactics game for phones, written in plain JavaScript with no build step.
 - In progress: `design/node_ownership_and_land.md`. Phases 1 and 2 are built. Phase 3 is split into 3a (relations), 3b (supply), 3c (AI attacks) and 3d (sieges); 3a is built in `game/data/relations.js`. Each step waits for the user. Phase 4 waits for the user.
 - Decisions recorded in a design doc are agreed. Don't reopen them.
 - Don't decide anything listed under "Open questions" in a design doc. Ask.
+- Ask the user for decisions with the question tool (multiple choice, recommended option first), not in plain text.
 - If the code and a design doc disagree, tell the user before changing either.
 - Keep old saves loading. Add a migration in `GAME_SAVE.repair` when the save shape changes.
 - Run the tests before and after a change. A test that fails on the baseline is reported, not silently edited.
