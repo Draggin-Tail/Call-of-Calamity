@@ -32,7 +32,8 @@
      (the outer defences, the hold-out); castles 3 (the walls, the gate, the keep); capitals 4 (the walls, the gate, the keep, the last
      stand against the faction's leader). Each stage is its own roll, a week after the last; the defenders lose men with each stage they
      lose, and a stage they win breaks the siege. The player can step in at any stage, and a won fight decides that stage.
-   - A capital can be besieged only when its faction holds no other place, anywhere. Taking it wipes the faction out: its wars, alliances,
+   - A capital can be besieged only when its faction holds no other place in its own land; hidden places and places abroad don't count, and
+     pass to the taker when the capital falls. Taking it wipes the faction out: its wars, alliances,
      talks and attacks end, it drops out of relations, and a player sworn to it loses the rank. C.capitalGear is the hook for the
      capital's gear (none yet). */
 (function () {
@@ -119,7 +120,10 @@
 
     // ---- sieges (3d) ----
     const isCap = id => { const n = C.NODES[id]; return !!n && (n.type === 'capital' || !!n.capital); };
-    const holdsOther = (st, f, id) => Object.keys(C.NODES).some(y => y !== id && C.ownerOf(st, y) === f);
+    // places that count for the capital rule: not hidden, and in the capital's own land (decided after 3d: hidden places and land abroad,
+    // which no army can reach, don't keep a capital safe; they pass to whoever takes it)
+    const outOfReach = (f, y) => { const c = capOf(f); return !!C.NODES[y].hidden || !!c && C.NODES[y].region !== C.NODES[c].region; };
+    const holdsOther = (st, f, id) => Object.keys(C.NODES).some(y => y !== id && C.ownerOf(st, y) === f && !outOfReach(f, y));
     C.fallen = (st, f) => !!((st.world.fallen || {})[f]);
     C.siegeStages = id => { const n = C.NODES[id]; return !n ? 1 : isCap(id) ? A.siege.stages.capital : (A.siege.stages[n.type] || A.siege.other); };
     C.stageName = (a) => (A.siege.names[a.stages || 1] || [])[a.stage || 0] || null;
@@ -279,6 +283,7 @@
     C.capitalGear = function (st, f, by, helped) { return null; };   // hook: the capital's unique gear (decided: built later)
     function wipeOut(st, f, by, helped, at) {
       const w = st.world; (w.fallen = w.fallen || {})[f] = { day: day(st), by, helped: !!helped };
+      for (const y of Object.keys(C.NODES)) if (C.ownerOf(st, y) === f) { (w.nodes[y] = w.nodes[y] || {}).owner = by; const ss = C.supplyState(st); delete ss.iso[y]; delete ss.cut[y]; }   // hidden places and land abroad go to the taker
       const rs = C.relState(st), r = AS(st);
       for (const k of Object.keys(rs.wars)) if (k.split('|').includes(f)) delete rs.wars[k];
       for (const k of Object.keys(rs.truce)) if (k.split('|').includes(f)) delete rs.truce[k];

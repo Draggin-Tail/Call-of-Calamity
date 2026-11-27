@@ -57,8 +57,14 @@ ok('roads and other small places fall in one stage', C.siegeStages(Object.keys(C
   ok('a capital is no target while its faction holds anything else', !C.attackTargetable(st, cap));
   Object.keys(C.NODES).forEach(id => { if (C.ownerOf(st, id) === 'broken_banner' && id !== cap) own(st, id, 'crown'); });
   ok('once it holds only its capital, the capital can be besieged', C.attackTargetable(st, cap));
-  const hid = Object.keys(C.NODES).find(id => C.NODES[id].hidden && C.ownerOf(st, id) === 'crown'); if (hid) { own(st, hid, 'broken_banner');
-    ok('a hidden place still counts as holding something', !C.attackTargetable(st, cap)); }
+  const hid = Object.keys(C.NODES).find(id => C.NODES[id].hidden && C.ownerOf(st, id) === 'crown'), abroad = 'greywater_landing'; own(st, hid, 'broken_banner'); own(st, abroad, 'broken_banner');
+  ok('a hidden place or one abroad does not keep a capital safe', C.attackTargetable(st, cap));
+  const a = siege(st, 'crown', 'broken_banner', cap, Object.keys(C.NODES).find(id => C.ownerOf(st, id) === 'crown' && !C.NODES[id].hidden)); a.stage = 3; C.attackSettle(st, a, 'attack');
+  ok('...and they pass to the taker when the capital falls', C.fallen(st, 'broken_banner') && C.ownerOf(st, hid) === 'crown' && C.ownerOf(st, abroad) === 'crown');
+  { const s2 = fresh(); const cS = capOf('syndicate'); Object.keys(C.NODES).forEach(id => { if (C.ownerOf(s2, id) === 'syndicate' && id !== cS && C.NODES[id].region === C.NODES[cS].region) own(s2, id, 'crown'); });
+    ok('so the Syndicate can fall though it keeps its posts in orc land', C.attackTargetable(s2, cS)); }
+  { const s3 = fresh(); const cR = capOf('crown'); Object.keys(C.NODES).forEach(id => { if (C.ownerOf(s3, id) === 'crown' && id !== cR && !C.NODES[id].hidden) own(s3, id, 'synod'); });
+    ok('and the Crown though it keeps a hidden place', C.attackTargetable(s3, cR)); }
   ok('the Hearthwatch is never a target', !Object.keys(C.NODES).some(id => C.ownerOf(st, id) === 'hearthwatch' && C.attackTargetable(st, id))); }
 
 // ---- wipe-out ----
