@@ -115,6 +115,7 @@
     const s = C.MOOT.seats[seat], f = fl(st), m = M(st), stand = C.mootStanding(st);
     let p = (seat === 'syndicate' && f.crane_hand ? s.cranePrefs : s.prefs).filter(c => stand.includes(c));
     if (seat === 'lords' && (f.exposed_succession || m.testimony.includes('succession'))) p = p.filter(c => c !== 'regency');
+    if (seat === 'lords' && stand.includes('ledger') && stand.includes('ilvane')) p = ['osric'].concat(p.filter(c => c !== 'osric'));   // both new claimants standing: the Lords back one of their own
     if (seat === 'lords' && handExposed(st)) { const i = p.indexOf('osric'); if (i >= 0 && i < p.length - 1) { p.splice(i, 1); p.splice(i + 1, 0, 'osric'); } }
     return p;
   }
@@ -124,20 +125,40 @@
     if (seat === 'synod' && hoardLaid(st)) return true;
     return false;
   }
-  // Pure: the current state of the vote. Canvassing moves a seat one step toward your claimant (if it lies further down its list); pressure takes it outright.
-  C.mootTally = function (st) {
-    const m = M(st), seats = [], counts = {}; let total = 0; const stand = C.mootStanding(st);
+  // Each seat's lean before the count: how it votes and its order of choices (first = its vote; later ones are used if that claimant drops out).
+  // Canvassing moves a seat one step toward your claimant (if it lies further down its list); pressure takes it outright. Wrapped by faction_climax.js.
+  C.mootSeatVotes = function (st) {
+    const m = M(st), out = [], stand = C.mootStanding(st);
     for (const [id, s] of Object.entries(C.MOOT.seats)) {
       if (s.seatedOnly && !m.seated.banner) continue;
-      total += s.votes; const cv = m.canvass[id], prefs = seatPrefs(st, id); let vote = null, how = 'free';
-      if (cv && cv.how === 'pressure' && stand.includes(cv.for)) { vote = cv.for; how = 'pressured'; }
-      else if (abstains(st, id)) how = 'abstain';
-      else { vote = prefs[0] || null; if (!vote) how = 'abstain'; else if (cv && prefs.indexOf(cv.for) > 0) { vote = prefs[1]; how = 'swayed'; } }
-      if (vote) counts[vote] = (counts[vote] || 0) + s.votes;
-      seats.push({ seat: id, name: s.name, faction: s.faction, votes: s.votes, vote, how });
+      const cv = m.canvass[id], prefs = seatPrefs(st, id); let list = prefs, how = 'free';
+      if (cv && cv.how === 'pressure' && stand.includes(cv.for)) { list = [cv.for].concat(prefs.filter(c => c !== cv.for)); how = 'pressured'; }
+      else if (abstains(st, id)) { list = []; how = 'abstain'; }
+      else if (!prefs.length) how = 'abstain';
+      else if (cv && prefs.indexOf(cv.for) > 0) { list = [prefs[1], prefs[0]].concat(prefs.slice(2)); how = 'swayed'; }
+      out.push({ seat: id, name: s.name, faction: s.faction, votes: s.votes, how, list });
     }
-    const need = Math.floor(total / 2) + 1, top = Object.entries(counts).sort((a, b) => b[1] - a[1]);
-    return { seats, counts, total, need, winner: top.length && top[0][1] >= need ? top[0][0] : null, standing: stand };
+    return out;
+  };
+  // Pure: the count. There is no Broken Moot (retired): if nobody has a majority, the claimant with the fewest votes drops out and
+  // those seats turn to their next choice, round by round. Ties for fewest: whoever the Lords like least drops out.
+  // seats[].vote is each seat's first-round vote (its lean); seats[].final is where its votes ended up. counts are the final round's.
+  C.mootTally = function (st) {
+    const stand = C.mootStanding(st), seats = C.mootSeatVotes(st), total = seats.reduce((n, s) => n + s.votes, 0), need = Math.floor(total / 2) + 1;
+    const lordsOrder = seatPrefs(st, 'lords').concat(stand.filter(c => !seatPrefs(st, 'lords').includes(c)));
+    const rank = c => { const i = lordsOrder.indexOf(c); return i < 0 ? 99 : i; };
+    const out = new Set(), rounds = [], pick = s => s.list.find(c => !out.has(c)) || null;
+    let counts = {}, winner = null;
+    for (;;) {
+      counts = {}; seats.forEach(s => { const v = pick(s); if (v) counts[v] = (counts[v] || 0) + s.votes; });
+      const top = Object.entries(counts).sort((a, b) => b[1] - a[1] || rank(a[0]) - rank(b[0])), r = { counts: Object.assign({}, counts), out: null };
+      rounds.push(r);
+      if (!top.length) { winner = lordsOrder[0] || stand[0] || null; break; }   // nobody votes at all: the Lords' choice stands
+      if (top[0][1] >= need || top.length === 1) { winner = top[0][0]; break; }
+      const low = top[top.length - 1][0]; out.add(low); r.out = low;
+    }
+    seats.forEach((s, i) => { const first = s.list[0] || null; s.vote = first; s.final = pick(s); delete s.list; });
+    return { seats, counts, total, need, winner, standing: stand, rounds, firstCounts: rounds[0].counts };
   };
 
   // ---- calling the Moot (no clock: any of these, whenever it happens) ----
@@ -240,7 +261,7 @@
     if (t.winner && t.winner !== 'osric' && (t.counts.osric || 0) >= C.MOOT.hallBacking && !f.armoury_burned) {
       m.hall = { pending: true, winner: t.winner }; return { ok: true, tally: t, hall: true, changes };
     }
-    const fin = finish(st, t.winner || 'broken'); return Object.assign({ ok: true, tally: t, hall: false }, fin, { changes: changes.concat(fin.changes) });
+    const fin = finish(st, t.winner); return Object.assign({ ok: true, tally: t, hall: false }, fin, { changes: changes.concat(fin.changes) });
   };
   // The Hall of Oaths: Osric's men try to take the hall. side: defend | coup (only if you declared for him). won: result of the fight.
   C.mootHall = function (st, side, won) {
@@ -262,7 +283,7 @@
       else if (r) { const p = S.promote(st, b, { force: true }); if (!p.ok) changes.push(...S.changeStanding(st, b, 150, { reason: 'the Kingmaker', ripple: false })); else out.promoted = p.rank; }
       else changes.push(...S.changeStanding(st, b, 150, { reason: 'the Kingmaker', ripple: false }));
     } else if (outcome !== 'broken') {
-      const backers = new Set((m.tally ? m.tally.seats : []).filter(s => s.vote === outcome).map(s => s.faction));
+      const backers = new Set((m.tally ? m.tally.seats : []).filter(s => (s.final !== undefined ? s.final : s.vote) === outcome).map(s => s.faction));
       backers.forEach(fac => { if (fac === 'hearthwatch') S.changeGoodwill(st, -10, 'backed the loser'); else changes.push(...S.changeStanding(st, fac, -C.MOOT.loserCost, { reason: 'you stood against them at the Moot', ripple: false })); });
     }
     return out;

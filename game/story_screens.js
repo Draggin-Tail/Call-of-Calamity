@@ -332,7 +332,8 @@
       out.push(h('div', { class: 'card' }, h('div', { text: 'You have declared for ' + claimName(m.declared) + '. The hall goes quiet. Then Lord Marshal Voss stands, and the seats rise one by one.' }), gap(),
         btn('Count the votes', () => { const r = C.mootResolve(st); if (!r.ok) return toast(r.reason, true);
           if (!r.hall && !r.text && C.AFTER_MOOT && C.AFTER_MOOT[r.outcome] && C.AFTER_MOOT[r.outcome].board) r.text = C.AFTER_MOOT[r.outcome].board;
-          const lines = [].concat(r.kingmaker ? ['You are the Kingmaker.'] : [], r.promoted ? ['You are promoted.'] : [], r.office ? [r.office === 'lords_hand' ? 'Harrow keeps his promise: you are the Lord\'s Hand.' : 'Harrow keeps his promise: a stipend from the Crown.'] : [], r.outlawed ? ['The Crown has outlawed you.'] : [], (r.suspicion || []).map(f => fname(f) + ' noticed how you voted.'));
+          const runoff = ((r.tally && r.tally.rounds) || []).filter(x => x.out).map(x => 'No one has a majority. ' + claimName(x.out) + ' drops out, and those seats turn to their next choice.');
+          const lines = runoff.concat(r.kingmaker ? ['You are the Kingmaker.'] : [], r.promoted ? ['You are promoted.'] : [], r.office ? [r.office === 'lords_hand' ? 'Harrow keeps his promise: you are the Lord\'s Hand.' : 'Harrow keeps his promise: a stipend from the Crown.'] : [], r.outlawed ? ['The Crown has outlawed you.'] : [], (r.suspicion || []).map(f => fname(f) + ' noticed how you voted.'));
           did(r, r.hall ? 'The count is taken' : r.outcome === 'broken' ? 'No majority' : claimName(r.outcome) + ' takes the crown', lines.concat(r.hall ? ['The doors at the back of the hall are barred from the inside.'] : [])); }, 'pri full')));
       return out;
     }

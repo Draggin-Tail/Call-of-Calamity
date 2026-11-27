@@ -228,14 +228,13 @@
       if (s && s.rank >= 4) r.push('debts'); if (y && y.rank >= 4 && fl(st).synod_tithe !== 'truth') r.push('ward'); if (gwTier(st) === 'trusted' && fl(st).abbey_held) r.push('people'); return r; }; }
   { const mc0 = C.mootCall; C.mootCall = function (st, by) { if (['debts', 'people'].includes(by) && st.world.location !== 'crown_keep') return { ok: false, reason: 'Bring it to Crown Keep' }; return mc0.apply(this, arguments); }; }
   // The Long Ledger's seat votes as you do; the Sleeper's truth leaves the Synod with nothing to say.
-  { const mt0 = C.mootTally; C.mootTally = function (st) {
-      const t = mt0.apply(this, arguments), m = C.moot(st), f = fl(st); let changed = false;
-      for (const s of t.seats) {
-        if (s.seat === 'syndicate' && f.long_ledger && !f.exposed_hidden_hand && s.how !== 'pressured') { const v = m.declared || m.backing; if (v && t.standing.includes(v)) { s.vote = v; s.how = 'ledger'; changed = true; } }
-        if (s.seat === 'synod' && f.sleeper_truth && s.how !== 'pressured') { s.vote = null; s.how = 'abstain'; changed = true; }
+  { const sv0 = C.mootSeatVotes; C.mootSeatVotes = function (st) {
+      const seats = sv0.apply(this, arguments), m = C.moot(st), f = fl(st), stand = C.mootStanding(st);
+      for (const s of seats) {
+        if (s.seat === 'syndicate' && f.long_ledger && !f.exposed_hidden_hand && s.how !== 'pressured') { const v = m.declared || m.backing; if (v && stand.includes(v)) { s.list = [v].concat(s.list.filter(c => c !== v)); s.how = 'ledger'; } }
+        if (s.seat === 'synod' && f.sleeper_truth && s.how !== 'pressured') { s.list = []; s.how = 'abstain'; }
       }
-      if (changed) { const counts = {}; t.seats.forEach(s => { if (s.vote) counts[s.vote] = (counts[s.vote] || 0) + s.votes; }); const top = Object.entries(counts).sort((a, b) => b[1] - a[1]); t.counts = counts; t.winner = top.length && top[0][1] >= t.need ? top[0][0] : null; }
-      return t; }; }
+      return seats; }; }
 
   C.validateClimax = function () {
     const p = [], cls = D.classes;
