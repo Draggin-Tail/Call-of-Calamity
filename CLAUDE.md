@@ -10,13 +10,30 @@ A tactics game for phones, written in plain JavaScript with no build step.
   - `game/shell.js` is the campaign UI. `game/story_screens.js` holds the story screens.
 - `tests/`: Node and Playwright tests. See `tests/README.md` for how to run them and the current baseline.
 
-## Design docs
+## Where things live
 
-Design docs live in the claude.ai Project "Tactics Game" (`design/*.md`), not in this repo. The Project also holds older copies of game code. Those copies are stale; this repo is the source of truth for code.
+- **Code: this repo.** It is the only source of truth for game code and tests. Older homes are stale and must not be edited or published to: the code copies in the claude.ai Project (`game/`, `tests/`, `tools/`) and the old "Call of Calamity" artifact.
+- **Design docs: the claude.ai Project "Tactics Game"** (`design/*.md`). They are not in this repo, and must not be copied into it. The user cannot open Project files (they can only delete them), so every doc change is made by Claude.
+  - Start with `design/dev_notes.md` for gotchas and which tests cover what. Its paths are written for the repo.
+  - To change a doc: `project_read` it in full, edit a local copy (a folder listed in `.git/info/exclude`, never committed), then `project_write` with `local_path`. A write to an existing path is refused without that read.
+  - When a phase of a design doc is built, update that doc's status line and its knock-on checklist, and record any decisions made while building.
+- Coding can happen in any session in the Project, including chats started from the Project, as long as the session attaches this repo first (add `Draggin-Tail/Call-of-Calamity` with the add-repo tool, then clone it). Check for the repo before touching code.
+- If a session can't reach the repo, it must not edit or publish the Project's old code copies. It can still work on design docs, or write the code change as a plan for the next session that has the repo.
+
+## Git and pull requests
+
+- Work on a branch, never on `main`. One PR per phase or task.
+- Push with `git -c push.negotiate=true push -u origin <branch>`.
+- `gh pr create` fails here (no GraphQL access). Use the REST API instead:
+  `gh api repos/Draggin-Tail/Call-of-Calamity/pulls -f title='...' -f head=<branch> -f base=main -F body=@body.md`
+- Merge only when the user says so:
+  `gh api -X PUT repos/Draggin-Tail/Call-of-Calamity/pulls/<n>/merge -f merge_method=merge`
+- End each session's report with the PR link and what the user should review.
 
 ## Working rules
 
 - Big changes go in phases. Stop after each phase for review, and don't start the next one until told.
+- In progress: `design/node_ownership_and_land.md`. Phase 1 is built. Phases 2 to 4 wait for the user.
 - Decisions recorded in a design doc are agreed. Don't reopen them.
 - Don't decide anything listed under "Open questions" in a design doc. Ask.
 - If the code and a design doc disagree, tell the user before changing either.
