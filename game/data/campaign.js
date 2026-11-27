@@ -675,7 +675,7 @@
     if (kind === 'patrol') { const p = C.PATROLS[opts.faction]; name = p.name; faction = opts.faction; enemies = p.enemies; }
     else if (kind === 'hunters') { name = opts.set.name; faction = 'outlaws'; enemies = opts.set.enemies; }
     else { const fitM = C.MONSTER_SETS.filter(x => lv >= x.minLv && lv <= x.maxLv && (x.zones || []).includes(opts.to)), zoneM = fitM.length && rnd(st) < 0.6, roam = !fitM.length && lv >= 3 && rnd(st) < 0.05;
-      const fit = zoneM ? fitM : C.FOE_SETS.filter(x => lv >= x.minLv && lv <= x.maxLv && (!x.regions || x.regions.includes(region))); const set = pick(st, roam ? C.MONSTER_SETS.filter(x => lv >= x.minLv && lv <= x.maxLv) : fit.length ? fit : C.FOE_SETS.slice(0, 1)); name = set.name; faction = set.faction; enemies = set.enemies; }
+      const fit = zoneM ? fitM : C.FOE_SETS.filter(x => lv >= x.minLv && lv <= x.maxLv && (!x.regions || x.regions.includes(region)) && (!C.foeOk || C.foeOk(st, x, opts.to))); const set = pick(st, roam ? C.MONSTER_SETS.filter(x => lv >= x.minLv && lv <= x.maxLv) : fit.length ? fit : C.FOE_SETS.slice(0, 1)); name = set.name; faction = set.faction; enemies = set.enemies; }
     const roll = rnd(st), objective = roll < 0.25 ? { type: 'survive', turns: 4 } : roll < 0.5 ? { type: 'leader', leader: 0 } : null;
     return { name: 'Ambush: ' + name, map: C.mapFor(st, region, opts.to), rec: lv, enemyFaction: faction, enemies: enemies.map(e => Object.assign({}, e)), objective, once: false, wander: true, swap: rnd(st) < 0.5,
       reward: { xp: Math.round((40 + 14 * lv) * 0.6), gold: 12 + 5 * lv + Math.floor(rnd(st) * 10) } };
@@ -737,7 +737,7 @@
       if (nb && W.bountyBase && rnd(st) < Math.min(W.bountyCap, W.bountyBase * nb)) { st.world.calm = 0; return hunterFight(st, region, from, to); }
       if (hostile && W.huntBase) { const hs = huntState(st, hostile); if (rnd(st) < Math.min(W.huntCap, W.huntBase + W.huntStep * hs.n)) { st.world.calm = 0; return patrolFight(st, hostile, region, from, to); } continue; }
       if (calm < W.cooldown) { calm++; continue; }
-      const zone = n.type === 'zone' && n.danger > 0, p = zone ? Math.min(W.cap, W.zoneBase + W.perDanger * nodeDanger(to) + W.calmBonus * (calm - W.cooldown)) : W.base;
+      const zone = n.type === 'zone' && n.danger > 0, p = (zone ? Math.min(W.cap, W.zoneBase + W.perDanger * nodeDanger(to) + W.calmBonus * (calm - W.cooldown)) : W.base) * fightAdj(st, to);
       if (!(p > 0) || rnd(st) >= p) { calm++; continue; }
       st.world.calm = 0; return makeWander(st, region, from, to);
     }
@@ -794,8 +794,13 @@
     return out;
   }
 
+  // Phase 4b: a land's patrols can make road fights rarer or likelier (C.fightMult, policy.js). Only the fight's share of the roll moves;
+  // traders, scenes and patrols keep their chance.
+  const fightM = (st, to) => C.fightMult ? C.fightMult(st, to) : 1;
+  function wanderKinds(st, to) { const fac = patrolFac(st, to), m = fightM(st, to); return Object.entries(C.WANDER.weights).filter(([k]) => k !== 'patrol' || (fac && C.PATROLS[fac])).map(([k, w]) => [k, k === 'fight' ? w * m : w]); }
+  function fightAdj(st, to) { const m = fightM(st, to); if (m === 1) return 1; const ks = wanderKinds(st, to), f = ks.find(([k]) => k === 'fight'); if (!f) return 1; const T = ks.reduce((a, [, w]) => a + w, 0); return T / (T - f[1] + f[1] / m); }
   function makeWander(st, region, from, to) {
-    const W = C.WANDER, fac = patrolFac(st, to); let kinds = Object.entries(W.weights).filter(([k]) => k !== 'patrol' || (fac && C.PATROLS[fac]));
+    const W = C.WANDER, fac = patrolFac(st, to); let kinds = wanderKinds(st, to);
     let total = kinds.reduce((a, [, w]) => a + w, 0), r = rnd(st) * total, kind = kinds[kinds.length - 1][0];
     for (const [k, w] of kinds) { if (r < w) { kind = k; break; } r -= w; }
     const base = { kind, region, from, to, day: st.world.day };

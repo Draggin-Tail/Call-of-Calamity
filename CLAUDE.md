@@ -33,7 +33,7 @@ A tactics game for phones, written in plain JavaScript with no build step.
 ## Working rules
 
 - Big changes go in phases. Stop after each phase for review, and don't start the next one until told.
-- In progress: `design/node_ownership_and_land.md`. Phases 1 and 2 are built. Phase 3 is split into 3a (relations), 3b (supply), 3c (AI attacks) and 3d (sieges); 3a is built in `game/data/relations.js`, 3b in `game/data/supply.js`, 3c in `game/data/attacks.js` (with its anti-snowball rules: overextension, rallying at home, suing for terms), and 3d (sieges, wiping a faction out) in the same file. Phase 4 (human unification) is split into 4a to 4d; 4a (the unification routine and the new faction template) is built in `game/data/unification.js`. Each step waits for the user.
+- In progress: `design/node_ownership_and_land.md`. Phases 1 and 2 are built. Phase 3 is split into 3a (relations), 3b (supply), 3c (AI attacks) and 3d (sieges); 3a is built in `game/data/relations.js`, 3b in `game/data/supply.js`, 3c in `game/data/attacks.js` (with its anti-snowball rules: overextension, rallying at home, suing for terms), and 3d (sieges, wiping a faction out) in the same file. Phase 4 (human unification) is split into 4a to 4d; 4a (the unification routine and the new faction template) is built in `game/data/unification.js`. 4b (the policy dials: taxes, patrols, magic law, war posture) is built in `game/data/policy.js`. Each step waits for the user.
 - Decisions recorded in a design doc are agreed. Don't reopen them.
 - Don't decide anything listed under "Open questions" in a design doc. Ask.
 - Ask the user for decisions with the question tool (multiple choice, recommended option first), not in plain text.
