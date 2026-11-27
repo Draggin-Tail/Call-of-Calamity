@@ -144,7 +144,7 @@
     ];
     function incident(st, bd) {
       const r = RS(st), pool = [];
-      C.INCIDENTS.forEach(I => (I.pick(st, bd) || []).forEach(p => pool.push([I, p])));
+      C.INCIDENTS.forEach(I => (I.pick(st, bd) || []).forEach(p => { if (!(C.fallen && (C.fallen(st, p[0]) || C.fallen(st, p[1])))) pool.push([I, p]); }));
       if (!pool.length) return null; const [I, [a, b]] = pool[Math.floor(rnd(st) * pool.length)];
       shift(st, a, b, I.d); news(st, I.text(a, b), 'incident'); return I.id;
     }
@@ -153,9 +153,10 @@
     C.relTick = function (st) {
       const r = RS(st), bd = borders(st);
       if (r.pending && day(st) - r.pending.day >= R.summonsDays) decline(st, true);
-      for (const [a, b] of pairs()) { const v = rel(st, a, b), t = C.relTarget(st, a, b, bd); S.setRelation(st, a, b, v + R.rate * (t - v), { both: true }); }
+      const live = ([a, b]) => !(C.fallen && (C.fallen(st, a) || C.fallen(st, b)));   // 3d: a faction wiped out drops out of relations
+      for (const [a, b] of pairs().filter(live)) { const v = rel(st, a, b), t = C.relTarget(st, a, b, bd); S.setRelation(st, a, b, v + R.rate * (t - v), { both: true }); }
       if (day(st) >= r.next) { incident(st, bd); r.next = day(st) + R.incidentEvery[0] + Math.floor(rnd(st) * (R.incidentEvery[1] - R.incidentEvery[0] + 1)); }
-      for (const [a, b] of pairs()) checkPair(st, a, b);
+      for (const [a, b] of pairs().filter(live)) checkPair(st, a, b);
     };
     { const ad0 = S.advanceDay; S.advanceDay = function (st, n) {
         const r = st && st.world && st.factions ? RS(st) : null, out = ad0.apply(this, arguments); if (!r) return out;   // state first, so a new save ticks its first day too
@@ -202,7 +203,7 @@
     C.relArgueOptions = function (st) {
       const f = sworn(st), r = S.getRank && f ? S.getRank(st, f) : null; if (!f || !R.factions.includes(f) || !r || r.rank < R.argueRank || !isHall(st, st.world.location, f)) return [];
       const rs = RS(st);
-      return R.factions.filter(g => g !== f).map(g => {
+      return R.factions.filter(g => g !== f && !(C.fallen && C.fallen(st, g))).map(g => {
         const war = atWar(st, f, g), ally = allyOf(st, f) === g, wait = rs.argued[g] && rs.argued[g] > day(st);
         return { faction: g, peace: rel(st, f, g) < 0 || war, ally: !war && !ally, wait: wait ? rs.argued[g] - day(st) : 0, fit: C.relFit(st, g) };
       });
@@ -242,7 +243,8 @@
       return { wars: Object.entries(r.wars).map(([k, w]) => ({ a: w.by, b: k.split('|').find(x => x !== w.by), since: w.since })),
         allies: Object.entries(r.allies).filter(([a, b]) => a < b).map(([a, b]) => ({ a, b })),
         truces: Object.entries(r.truce).filter(([, d]) => d > day(st)).map(([k, d]) => ({ a: k.split('|')[0], b: k.split('|')[1], left: d - day(st) })),
-        pairs: pairs().map(([a, b]) => ({ a, b, mood: C.relMood(rel(st, a, b)), status: r.wars[pk(a, b)] ? 'war' : r.allies[a] === b ? 'allied' : (r.truce[pk(a, b)] || 0) > day(st) ? 'truce' : null })),
+        fallen: Object.keys(st.world.fallen || {}),
+        pairs: pairs().filter(([a, b]) => !(C.fallen && (C.fallen(st, a) || C.fallen(st, b)))).map(([a, b]) => ({ a, b, mood: C.relMood(rel(st, a, b)), status: r.wars[pk(a, b)] ? 'war' : r.allies[a] === b ? 'allied' : (r.truce[pk(a, b)] || 0) > day(st) ? 'truce' : null })),
         pending: r.pending, news: r.news.slice().reverse() };
     };
     C.validateRelations = function () {

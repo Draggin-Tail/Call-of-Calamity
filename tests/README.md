@@ -38,6 +38,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t88 relations between factions: drift, wars, alliances, the council, levers, ideals (phase 3a) | node | pass |
 | t89 supply and garrisons: supply paths, isolation stages, defection, regrowth (phase 3b) | node | pass |
 | t90 AI attacks: marching, the muster and margin, war weariness, the defender's answer, redeployment, warning, cooldown, settling, armies moving in, stepping in, overextension, rallying at home, suing for terms (phase 3c) | node | pass |
+| t91 sieges: stages by place type, a roll per stage, stepping in at a stage, the last stand, the capital rule, wiping a faction out (phase 3d) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |
@@ -55,6 +56,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t88ui the realm on the Factions tab, speaking in council, the council scene (phase 3a) | browser | pass |
 | t89ui the garrison and a cut-off line on the place sheet (phase 3b) | browser | pass |
 | t90ui the contested ring, the threat card, stepping in for either side (phase 3c) | browser | pass |
+| t91ui a siege's stages on the place sheet, the last stand's briefing (phase 3d) | browser | pass |
 
 The failing checks look like tests that are older than the game build. They have not been changed.
 

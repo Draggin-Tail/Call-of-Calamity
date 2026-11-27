@@ -27,7 +27,15 @@
        at 1.5x their garrison, and they regrow twice as fast.
      - Suing for terms: a faction that, in the last 60 days, lost more places to a foe than it took from it, and whose places lost (less
        those taken back) plus attacks failed on that foe come to 3 or more, asks that foe for terms. Neither side starts a new attack on the other while they talk; the relation warms
-       0.02 a day until peace. Talks that bring no peace in 60 days fail, and the loser can't ask that foe again for 30 days. */
+       0.02 a day until peace. Talks that bring no peace in 60 days fail, and the loser can't ask that foe again for 30 days.
+   - Sieges (Phase 3d): a place falls in stages by its type: hamlets, roads and other small places 1; villages, markets and towns 2
+     (the outer defences, the hold-out); castles 3 (the walls, the gate, the keep); capitals 4 (the walls, the gate, the keep, the last
+     stand against the faction's leader). Each stage is its own roll, a week after the last; the defenders lose men with each stage they
+     lose, and a stage they win breaks the siege. The player can step in at any stage, and a won fight decides that stage.
+   - A capital can be besieged only when its faction holds no other place in its own land; hidden places and places abroad don't count, and
+     pass to the taker when the capital falls. Taking it wipes the faction out: its wars, alliances,
+     talks and attacks end, it drops out of relations, and a player sworn to it loses the rank. C.capitalGear is the hook for the
+     capital's gear (none yet). */
 (function () {
   function go() {
     const C = window.GAME_CAMPAIGN, S = window.GAME_SAVE;
@@ -45,6 +53,9 @@
       newHold: { days: 60, share: 0.5, slow: 2 },                 // overextension
       rally: { below: 0.6, reach: 3, defend: 1.5, fast: 0.5 },     // losers rally at home
       sue: { days: 60, need: 3, warm: 0.02, talks: 60, again: 30 }, // suing for terms
+      siege: { stages: { hamlet: 1, village: 2, market: 2, town: 2, castle: 3, capital: 4 }, other: 1, every: 7,
+        names: { 1: [null], 2: ['the outer defences', 'the hold-out'], 3: ['the walls', 'the gate', 'the keep'], 4: ['the walls', 'the gate', 'the keep', 'the last stand'] } },
+      leaders: { crown: 'Lord Marshal Voss', syndicate: 'Factor Crane', synod: 'Archon Ilvane', broken_banner: 'Captain Old Standard' },
       value: { castle: 4, town: 3, market: 3, village: 2, hamlet: 1.5 }, other: 1,
       squads: {
         crown: { name: 'Crown soldiers', enemies: [{ primary: 'warrior', name: 'Crown Guard' }, { primary: 'archer', name: 'Crown Bowman' }, { primary: 'squire', name: 'Crown Recruit' }] },
@@ -107,7 +118,18 @@
       if (n) C.setGarrison(st, into, C.garrison(st, into) + n); return n;
     }
 
-    const targetable = (st, id) => { const n = C.NODES[id]; return !!n && !n.hidden && n.type !== 'capital' && !n.capital && C.ownerOf(st, id) !== 'hearthwatch'; };
+    // ---- sieges (3d) ----
+    const isCap = id => { const n = C.NODES[id]; return !!n && (n.type === 'capital' || !!n.capital); };
+    // places that count for the capital rule: not hidden, and in the capital's own land (decided after 3d: hidden places and land abroad,
+    // which no army can reach, don't keep a capital safe; they pass to whoever takes it)
+    const outOfReach = (f, y) => { const c = capOf(f); return !!C.NODES[y].hidden || !!c && C.NODES[y].region !== C.NODES[c].region; };
+    const holdsOther = (st, f, id) => Object.keys(C.NODES).some(y => y !== id && C.ownerOf(st, y) === f && !outOfReach(f, y));
+    C.fallen = (st, f) => !!((st.world.fallen || {})[f]);
+    C.siegeStages = id => { const n = C.NODES[id]; return !n ? 1 : isCap(id) ? A.siege.stages.capital : (A.siege.stages[n.type] || A.siege.other); };
+    C.stageName = (a) => (A.siege.names[a.stages || 1] || [])[a.stage || 0] || null;
+    // a capital only once its faction holds nothing else (hidden places and land abroad count)
+    const targetable = (st, id) => { const n = C.NODES[id], o = C.ownerOf(st, id); return !!n && !n.hidden && o !== 'hearthwatch' && (!isCap(id) || !holdsOther(st, o, id)); };
+    C.attackTargetable = targetable;
     // every place f could attack today, best first: { target, on, from, dist, force (with the muster), garrison, odds, score }
     C.attackOptions = function (st, f, cut, only) {
       cut = cut || new Set(C.supplyCut(st)); const foes = C.relEnemies(st, f).filter(g => g !== 'hearthwatch' && (!only || g === only) && !C.talking(st, f, g)), M = C.MOTIVES[f] || {};
@@ -136,10 +158,10 @@
     function launch(st, f, o, counter) {
       const r = AS(st), cut = new Set(C.supplyCut(st)), bz = busy(st); bz.add(o.target);
       const n = muster(st, f, o.from, bz, cut);
-      const a = { n: ++r.seq, by: f, on: o.on, target: o.target, from: o.from, day: day(st), lands: day(st) + A.warn, counter: !!counter };
+      const a = { n: ++r.seq, by: f, on: o.on, target: o.target, from: o.from, day: day(st), lands: day(st) + A.warn, counter: !!counter, stage: 0, stages: C.siegeStages(o.target) };
       r.list.push(a); if (!counter) r.last[f] = day(st);
       C.relNews(st, counter ? 'The ' + fname(f) + ' answers by striking at ' + nm(o.target) + ', marching from ' + nm(o.from) + '.'
-        : 'The ' + fname(f) + ' is ' + (n ? 'gathering men at ' : 'massing at ') + nm(o.from) + ' to take ' + nm(o.target) + ' from the ' + fname(o.on) + '.', 'attack');
+        : 'The ' + fname(f) + ' is ' + (n ? 'gathering men at ' : 'massing at ') + nm(o.from) + ' to ' + (a.stages > 1 ? 'lay siege to ' : 'take ') + nm(o.target) + ' from the ' + fname(o.on) + '.', 'attack');
       if (!counter) respond(st, a);
       return a;
     }
@@ -241,12 +263,42 @@
       if (side) won = side === 'attack';
       else { if (C.ownerOf(st, a.from) !== a.by) return callOff(st, a);
         const F = C.garrison(st, a.from), gar = C.defendStrength(st, a.target); won = rnd(st) < F / (F + gar); }
+      const stages = a.stages || 1, stage = a.stage || 0, sn = C.stageName(a);
+      if (won && stage < stages - 1) {   // a stage of a siege: the defenders lose men, and the next stage comes a week later
+        bleed(st, a.from); const g = C.garrison(st, a.target), lose = Math.ceil(g / (stages - stage)); if (g > 1) C.setGarrison(st, a.target, Math.max(1, g - lose));
+        a.stage = stage + 1; a.lands = day(st) + A.siege.every;
+        C.relNews(st, 'The ' + by + ' has taken ' + sn + ' at ' + T + (side ? ', with your help' : '') + '. ' + cap1(C.stageName(a)) + ' is next.', 'attack');
+        return { won: true, taken: false, stage: stage, stages, stageName: sn, side: side || null };
+      }
       drop(st, a); bleed(st, a.from);
-      if (won) { take(st, a); C.relNews(st, T + ' has fallen to the ' + by + (side ? ', with your help.' : '.'), 'attack'); }
-      else { bleed(st, a.target); (r.fails[a.by] = r.fails[a.by] || []).push(day(st)); ledger(st, 'failed', a.by, a.on); C.relNews(st, 'The ' + on + ' beat off the ' + by + ' at ' + T + (side ? ', with your help.' : '.'), 'attack'); }
-      return { won, side: side || null };
+      let fell = null;
+      if (won) { const wasCap = isCap(a.target); take(st, a); C.relNews(st, T + ' has fallen to the ' + by + (side ? ', with your help.' : '.'), 'attack');
+        if (wasCap && !holdsOther(st, a.on, null)) fell = wipeOut(st, a.on, a.by, side === 'attack', a.target); }
+      else { bleed(st, a.target); (r.fails[a.by] = r.fails[a.by] || []).push(day(st)); ledger(st, 'failed', a.by, a.on); C.relNews(st, 'The ' + on + ' beat off the ' + by + ' at ' + T + (stages > 1 && sn ? ' (' + sn + ')' : '') + (side ? ', with your help.' : '.'), 'attack'); }
+      return { won, taken: !!won, stage, stages, stageName: sn, side: side || null, fell };
     }
     C.attackSettle = settle;
+    const cap1 = t => t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
+    // a faction loses its capital and its last place: it is gone
+    C.capitalGear = function (st, f, by, helped) { return null; };   // hook: the capital's unique gear (decided: built later)
+    function wipeOut(st, f, by, helped, at) {
+      const w = st.world; (w.fallen = w.fallen || {})[f] = { day: day(st), by, helped: !!helped };
+      for (const y of Object.keys(C.NODES)) if (C.ownerOf(st, y) === f) { (w.nodes[y] = w.nodes[y] || {}).owner = by; const ss = C.supplyState(st); delete ss.iso[y]; delete ss.cut[y]; }   // hidden places and land abroad go to the taker
+      const rs = C.relState(st), r = AS(st);
+      for (const k of Object.keys(rs.wars)) if (k.split('|').includes(f)) delete rs.wars[k];
+      for (const k of Object.keys(rs.truce)) if (k.split('|').includes(f)) delete rs.truce[k];
+      if (rs.allies[f]) { delete rs.allies[rs.allies[f]]; delete rs.allies[f]; }
+      for (const g of Object.keys(rs.allies)) if (rs.allies[g] === f) delete rs.allies[g];
+      if (rs.pending && (rs.pending.faction === f || rs.pending.with === f)) rs.pending = null;
+      r.list = r.list.filter(x => x.by !== f && x.on !== f);
+      if (r.talks) for (const k of Object.keys(r.talks)) if (k.split('|').includes(f)) delete r.talks[k];
+      if (r.grab && (r.grab.by === f || r.grab.on === f)) r.grab = null;
+      let rank = false; if (S.sworn && S.sworn(st) === f) { delete st.factions.ranks[f]; rank = true; }
+      C.relNews(st, 'The ' + fname(f) + ' is no more. ' + nm(at) + ' flies the colours of the ' + fname(by) + '.', 'fallen');
+      const gear = C.capitalGear(st, f, by, helped);
+      return { faction: f, by, rank, gear: gear || null };
+    }
+    C.wipeOut = wipeOut;
     // how a war is going for f against g, over the last 60 days
     C.warTally = (st, f, g) => { const r = AS(st), t = { lost: 0, failed: 0, took: 0 }; r.ledger = (r.ledger || []).filter(e => day(st) - e.d < A.sue.days);
       for (const e of r.ledger) { if (e.k === 'took' && e.by === g && e.on === f) t.lost++; else if (e.k === 'failed' && e.by === f && e.on === g) t.failed++; else if (e.k === 'took' && e.by === f && e.on === g) t.took++; }
@@ -303,18 +355,28 @@
       const reward = { xp: Math.round((40 + 14 * lv) * 0.8), gold: 15 + 6 * lv }, opt = {
         hold: { id: 'hold', label: 'Help hold ' + T + ' for the ' + fname(a.on), enemyFaction: a.by, enemies: sq(a.by).enemies.map(e => Object.assign({}, e)), standing: { [a.on]: A.standing, [a.by]: -A.standing }, reward },
         attack: { id: 'attack', label: 'Join the ' + fname(a.by) + '\'s attack on ' + T, enemyFaction: a.on, enemies: sq(a.on).enemies.map(e => Object.assign({}, e)), standing: { [a.by]: A.standing, [a.on]: -A.standing }, reward } };
-      C.ENCOUNTERS[k] = { name: 'The fight for ' + T, map: a.map, rec: lv, attack: a.n, once: false, options: sides.map(s => opt[s]), reward };
+      const sn = C.stageName(a), last = (a.stages || 1) === 4 && (a.stage || 0) === 3 && isCap(id);
+      if (last) {   // the last stand: the faction's leader and guards
+        const L = { primary: 'warlord', name: A.leaders[a.on] || 'The Lord of ' + T };
+        opt.attack.enemies = [L].concat(sq(a.on).enemies.map(e => Object.assign({}, e))); opt.attack.objective = { type: 'leader', leader: 0 };
+        opt.attack.label = 'Join the ' + fname(a.by) + ' against ' + L.name + '\'s last stand'; opt.hold.label = 'Stand with ' + L.name + ' and hold ' + T;
+        reward.xp = Math.round(reward.xp * 1.5); reward.gold = Math.round(reward.gold * 1.5);
+      }
+      C.ENCOUNTERS[k] = { name: 'The fight for ' + T + (sn ? ': ' + sn : ''), map: a.map, rec: lv + (last ? 2 : 0), attack: a.n, once: false, options: sides.map(s => opt[s]), reward };
       return k;
     };
     { const ae0 = C.applyEncounterResult; C.applyEncounterResult = function (st, encId0, optionId, res) {
         const out = ae0.apply(this, arguments), m = /^atk_(\d+)$/.exec(encId0 || '');
-        if (m && out && res && res.won && !res.draw) { const a = AS(st).list.find(x => x.n === +m[1]); if (a) out.attack = Object.assign(settle(st, a, optionId === 'attack' ? 'attack' : 'hold'), { target: a.target, by: a.by, on: a.on }); }
+        if (m && out && res && res.won && !res.draw) { const a = AS(st).list.find(x => x.n === +m[1]); if (a) out.attack = Object.assign(settle(st, a, optionId === 'attack' ? 'attack' : 'hold'), { target: a.target, by: a.by, on: a.on }); }   // .taken, .stage, .fell (3d)
         return out; }; }
+
+    // a faction that is gone takes no one in (3d)
+    { const cj0 = S.canJoin; S.canJoin = function (st, f) { if (C.fallen(st, f)) return { ok: false, reason: 'The ' + fname(f) + ' is no more' }; return cj0.apply(this, arguments); }; }
 
     // ---- for the screens ----
     { const ns0 = C.nodeServices; C.nodeServices = function (st, id) {
         const sv = ns0.apply(this, arguments); if (!sv) return sv; const a = C.attackOn(st, id);
-        if (a) sv.attack = { by: a.by, on: a.on, from: a.from, days: Math.max(0, a.lands - day(st)), sides: C.attackSides(st, id) };
+        if (a) sv.attack = { by: a.by, on: a.on, from: a.from, days: Math.max(0, a.lands - day(st)), sides: C.attackSides(st, id), stage: a.stage || 0, stages: a.stages || 1, stageName: C.stageName(a), done: (A.siege.names[a.stages || 1] || []).slice(0, a.stage || 0) };
         return sv; }; }
     C.validateAttacks = function () { const p = []; WAR().forEach(f => { if (!A.squads[f]) p.push('attacks: no squad for ' + f); (A.squads[f] || { enemies: [] }).enemies.forEach(u => { if (!D.classes[u.primary]) p.push('attacks: unknown class ' + u.primary); }); }); return p; };
     return true;
