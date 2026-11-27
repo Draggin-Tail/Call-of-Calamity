@@ -11,6 +11,7 @@
      They heal and shelter you like the chapels did, whatever you have done.
    - Capital gear: when a capital falls, its piece goes to you if you fought at its last stand (on either side) or ordered the attack.
      The items are in uniques.js (the plotters' leaders' pieces are first clears of their strongholds).
+   A wiped-out faction's old capital becomes an ordinary place (three stages, like a castle): C.fallenCapitalSync, run on every sync.
    State: st.world.conquest ({ hearth: { day, by, faction } } once you moved against it; fell: { day, by }). Attacks carry `led` and `lastFought`. */
 (function () {
   function go() {
@@ -44,7 +45,13 @@
     C.NODES[PRIORY].hearthSeat = true;
     C.hearthFallen = st => !!(C.fallen && C.fallen(st, HW));
     C.hearthSync = function (st) { const n = C.NODES[PRIORY]; if (st && C.hearthFallen(st)) { n.capital = null; n.formerCapital = true; } else { n.capital = HW; delete n.formerCapital; } };
-    { const us0 = C.unionSync; C.unionSync = function (st) { const r = us0.apply(this, arguments); C.hearthSync(st); return r; }; }
+    // a faction wiped out leaves an ordinary place behind (decided with the user in 4d): its old capital loses the mark, so whoever holds
+    // it now can lose it like any castle. The union handles the absorbed factions; this handles the fallen. Global data, synced per save.
+    C.fallenCapitalSync = function (st) {
+      const fl = (st && st.world.fallen) || {};
+      Object.keys(C.NODES).forEach(id => { const n = C.NODES[id], f = n.capital; if (f && fl[f] && !n.stronghold) { n.capital = null; n.formerCapital = true; } });
+    };
+    { const us0 = C.unionSync; C.unionSync = function (st) { const r = us0.apply(this, arguments); C.hearthSync(st); C.fallenCapitalSync(st); return r; }; }
     C.hearthSync(null);
 
     // ---- the refuges: hidden until the Hearthwatch falls ----
@@ -135,6 +142,7 @@
 
     // ---- the Hearthwatch falls ----
     C.afterFall = function (st, f, by, at) {
+      C.fallenCapitalSync(st);
       if (f !== HW) return null;
       C.hearthSync(st); CS(st).fell = { day: day(st), by };
       const names = [];

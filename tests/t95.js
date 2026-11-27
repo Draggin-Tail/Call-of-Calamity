@@ -119,6 +119,11 @@ const priory = () => { const st = fresh(); rank(st, 'crown', 4); st.world.locati
   ok('the Banner down to its capital: you can order the siege of Outlaw\'s Rest', !!o);
   const a = C.leadAttack(st, 'outlaws_rest').attack; a.stage = 3; const r = C.attackSettle(st, a, 'attack');
   ok('it falls, the Banner is gone, and the Outlaw\'s Rest Bell is yours', r.fell && r.fell.faction === 'broken_banner' && st.inventory.items.outlaws_bell === 1);
+  ok('its old capital is an ordinary place now: three stages, open to attack while the Crown holds others', !C.NODES.outlaws_rest.capital && C.siegeStages('outlaws_rest') === 3 && C.attackTargetable(st, 'outlaws_rest'));
+  const st2 = fresh();
+  ok('another save still has the Banner\'s capital', C.NODES.outlaws_rest.capital === 'broken_banner' && C.siegeStages('outlaws_rest') === 4);
+  S.repair(st);
+  ok('loading the save where it fell clears it again', !C.NODES.outlaws_rest.capital);
 }
 
 // ---- the plotters' leaders ----
