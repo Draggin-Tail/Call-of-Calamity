@@ -275,7 +275,7 @@
   function tvJobGated() { const s = new Set(); Object.values(C.JOBS).forEach(j => ((j.reward || {}).reveal || []).forEach(d => s.add(d))); return s; }
   function tvRumour(st, id, r) {
     const dist = tvDist(id), gated = tvJobGated(), out = [];
-    const hid = Object.keys(C.NODES).filter(k => C.NODES[k].hidden && !st.world.flags['reveal_' + k] && !gated.has(k) && dist[k] !== undefined && dist[k] <= 3);
+    const hid = Object.keys(C.NODES).filter(k => C.NODES[k].hidden && !st.world.flags['reveal_' + k] && !gated.has(k) && !(C.rumourSkip && C.rumourSkip(st, k)) && dist[k] !== undefined && dist[k] <= 3);
     const told = st.world.tvSeen || (st.world.tvSeen = {}), jobs = Object.entries(C.JOBS).filter(([k, j]) => !told['job_' + k] && !C.jobsOf(st)[k] && j.at !== id && C.isDiscovered(st, j.at) && (!j.after || C.jobDone(st, j.after)));
     const opts = []; if (hid.length) opts.push('place'); if (jobs.length) opts.push('job'); if (!opts.length) return null;
     const who = tvPick(r, (C.TV_PEOPLE[C.areaOf(id)] || []).concat(C.TV_PEOPLE.any)), kind = tvPick(r, opts);

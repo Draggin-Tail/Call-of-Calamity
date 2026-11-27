@@ -26,7 +26,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 
 `tload.js` starts its own server, so stop `serve.js` first. `GAME_URL` overrides the page address.
 
-## Baseline (game build of 2026-11-23, plus node ownership phases 1 to 4b)
+## Baseline (game build of 2026-11-23, plus node ownership phases 1 to 4c)
 
 | Test | Kind | Result |
 |---|---|---|
@@ -41,6 +41,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t91 sieges: stages by place type, a roll per stage, stepping in at a stage, the last stand, the capital rule, wiping a faction out (phase 3d) | node | pass |
 | t92 human unification: the Moot's coronation, war victories (alone, with an ally, with the Hearthwatch), flavours, places and capitals, standing carried over, ranks ending, the hand-over, closed quest chains, old saves (phase 4a) | node | pass |
 | t93 the realm's policy dials: taxes on its shops, patrols and road fights, the toll posts, magic law on apprentices, hedge-mages and the boards, war posture; the boards' hand-over to the realm's land (phase 4b) | node | pass |
+| t94 the realm's plotters: cells, finding (rumours, the realm's contract, informers) and clearing them, the reveals, the clock, the rising, the stronghold (shown, foiled, crushed), old saves, sync; the core and flavoured beats (phase 4c) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |
@@ -61,6 +62,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t91ui a siege's stages on the place sheet, the last stand's briefing (phase 3d) | browser | pass |
 | t92ui the opening scene and the oath, the realm's colour on the map, the Factions tab after the union (phase 4a) | browser | pass |
 | t93ui the dials in words on the Factions tab, recruit prices per class on the Recruit sheet (phase 4b) | browser | pass |
+| t94ui the Plotters lines on the Factions tab, a cell's scene at its place and its fight (phase 4c) | browser | pass |
 
 The failing checks look like tests that are older than the game build. They have not been changed.
 

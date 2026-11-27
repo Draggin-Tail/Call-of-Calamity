@@ -3,7 +3,8 @@
 const w=require('./real_ld.js')();const C=w.GAME_CAMPAIGN,D=w.GAME_DATA;let fails=0;const ok=(n,c)=>{console.log((c?'PASS ':'FAIL ')+n);if(!c)fails++};
 const nb=(x,y)=>(y&1?[[1,0],[-1,0],[0,-1],[1,-1],[0,1],[1,1]]:[[1,0],[-1,0],[0,-1],[-1,-1],[0,1],[-1,1]]).map(([a,b])=>[x+a,y+b]);
 let bad=[],n=0,nAsym=0,seenSig=new Set();
-for(const [did,d] of Object.entries(C.DUNGEONS))d.floors.forEach((f,i)=>{const id='dgm_'+did+'_'+(i+1),m=D.maps[id];n++;if(!m){bad.push(id+' missing');return}
+// the plotters' strongholds (phase 4c, plots.js) borrow other dungeons' floors until the map tools draw their own; they are checked in t94
+for(const [did,d] of Object.entries(C.DUNGEONS).filter(([,d])=>!d.plot))d.floors.forEach((f,i)=>{const id='dgm_'+did+'_'+(i+1),m=D.maps[id];n++;if(!m){bad.push(id+' missing');return}
  const H=m.heights.length,W=m.heights[0].length,V=(m.voids||[]),WL=Object.keys(m.props||{}).filter(k=>m.props[k]==='h').map(k=>k.split(',').map(Number)),R=new Set(m.rocks.concat(V,WL).map(r=>r+''));const e=C.ENCOUNTERS['dg_'+did+'_'+(i+1)];
  if(e.map!==id)bad.push(id+' not used');
  if(W<10||W>14||H<10||H>14)bad.push(id+' size');if(m.heights.some((r,y)=>r.some((v,x)=>v>(WL.some(w=>w[0]===x&&w[1]===y)?10:8))))bad.push(id+' height');
