@@ -40,7 +40,7 @@
     const fname = f => (D.factions[f] ? D.factions[f].name : f === 'player' ? 'You' : f);
     const node = id => (C.NODES[id] ? C.NODES[id].name : id);
     const cname = id => (D.classes && D.classes[id] ? D.classes[id].name : id);
-    const WHO = { voss: 'Lord Marshal Voss', crane: 'Factor Crane', ilvane: 'Archon Ilvane', agathe: 'Mother Agathe', old_standard: 'Captain Old Standard', osric: 'Lord Osric', corisande: 'Lady Corisande', thorne: 'Inquisitor-Captain Thorne', harrow: 'Steward Harrow', wil: 'Wil Fenn', brielle: 'Brielle Hale', hask: 'Hask' };
+    const WHO = { voss: 'Lord Marshal Voss', crane: 'Factor Crane', ilvane: 'Archon Ilvane', agathe: 'Mother Agathe', old_standard: 'Captain Old Standard', osric: 'Lord Osric', corisande: 'Lady Corisande', thorne: 'Inquisitor-Captain Thorne', harrow: 'Steward Harrow', wil: 'Wil Fenn', brielle: 'Brielle Hale', hask: 'Hask', council: 'The council' };
     const who = id => WHO[id] || (id ? String(id).replace(/_/g, ' ').replace(/(^| )./g, c => c.toUpperCase()) : '');
     const claimName = c => (c === 'broken' ? 'No one (a broken Moot)' : C.MOOT.claimants[c] ? C.MOOT.claimants[c].name : c);
     const save = () => { try { S.saveSlot('auto', ST()); } catch (e) { /* storage may be blocked */ } };

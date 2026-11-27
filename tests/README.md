@@ -35,6 +35,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t85 node ownership (phase 1) | node | pass |
 | t86 one faction at a time, rival markups, Banner capital (phase 2) | node | pass |
 | t87 the two new Moot claimants (the Long Ledger, Archon Ilvane) | node | pass |
+| t88 relations between factions: drift, wars, alliances, the council, levers, ideals (phase 3a) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |
@@ -49,6 +50,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | tmap | browser | pass |
 | tparty_ui | browser | 2 fail: the outnumbered warning in the briefing |
 | t86ui phase 2 screens | browser | pass |
+| t88ui the realm on the Factions tab, speaking in council, the council scene (phase 3a) | browser | pass |
 
 The failing checks look like tests that are older than the game build. They have not been changed.
 
