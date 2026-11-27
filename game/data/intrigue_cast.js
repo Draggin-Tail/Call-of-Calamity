@@ -262,7 +262,6 @@
     else if (how === 'favour') text = FAVOUR[who](st);
     else return { ok: false, reason: C.mootKnown && !C.mootKnown(st) ? 'There is nothing to pressure them for yet' : 'Pressure is used at the Moot, through canvassing' };
     st.world.leverage[id].spent = how;
-    const r = S.getRank(st, FAC[who]); if (r && r.secret) S.addSuspicion(st, FAC[who], 'leverage', { amount: 15 });
     return { ok: true, how, text };
   };
   { const ns0 = C.nodeServices; C.nodeServices = function (st, id) { const sv = ns0.apply(this, arguments); if (sv && sv.shop && fl(st).crane_discount && C.ownerOf(st, id) === 'syndicate') sv.shop.priceMult = Math.round(sv.shop.priceMult * 0.9 * 100) / 100; return sv; }; }

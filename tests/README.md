@@ -26,13 +26,14 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 
 `tload.js` starts its own server, so stop `serve.js` first. `GAME_URL` overrides the page address.
 
-## Baseline (game build of 2026-11-23, plus node ownership phase 1)
+## Baseline (game build of 2026-11-23, plus node ownership phases 1 and 2)
 
 | Test | Kind | Result |
 |---|---|---|
 | t83 uniques | node | pass |
 | t84 spell weapon share | node | pass |
 | t85 node ownership (phase 1) | node | pass |
+| t86 one faction at a time, rival markups, Banner capital (phase 2) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |
@@ -46,6 +47,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | tload | browser | pass |
 | tmap | browser | pass |
 | tparty_ui | browser | 2 fail: the outnumbered warning in the briefing |
+| t86ui phase 2 screens | browser | pass |
 
 The failing checks look like tests that are older than the game build. They have not been changed.
 

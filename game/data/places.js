@@ -150,7 +150,7 @@
     ['rootbridge', 'Rootbridge', 'free_marches', 'hamlet', 0.46, 0.33, 'A bridge made from one fallen tree and a great deal of rope.'],
     ['foxhallow', 'Foxhallow', 'free_marches', 'hamlet', 0.355, 0.5, 'A burrow-village under a hillside. Visitors duck.'],
     ['sentinel_ring', 'Sentinel Ring', 'free_marches', 'poi', 0.485, 0.42, 'Seven standing stones, each carved with a watching eye.', { choice: 'sentinel_ring' }],
-    ['outlaws_rest', "Outlaw's Rest", 'free_marches', 'poi', 0.41, 0.5, 'A hollow oak with a smoke hole. The tracks around it are fresh.', { choice: 'outlaws_rest' }],
+    ['outlaws_rest', "Outlaw's Rest", 'free_marches', 'capital', 0.41, 0.5, 'A hollow oak with a smoke hole. The tracks around it are fresh.', { choice: 'outlaws_rest', capital: 'broken_banner' }],   // the Banner's capital (node ownership phase 2)
     ['glasswood_spires', 'Glasswood Spires', 'free_marches', 'poi', 0.325, 0.47, 'Tall, pale trees along the western shore that ring like glass in the wind.', { choice: 'glasswood_spires' }],
     // ---- Dwarven Holds: the northern mountains ----
     ['kettle_stair', 'Kettle Stair', 'dwarven_holds', 'hamlet', 0.455, 0.15, 'A rest stop with a kettle that has never been cold.'],

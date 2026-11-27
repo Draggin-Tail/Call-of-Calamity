@@ -861,10 +861,11 @@
     const tier = fac && fac !== 'outlaws' ? S().standingTier(st, fac).id : 'neutral';
     const lost = owner === 'outlaws';
     const open = !lost && PRICE[tier] !== null && PRICE[tier] !== undefined;
+    const rival = S().rivalStance ? S().rivalStance(st, fac) : { rating: 'open', priceMult: 1, recruit: true };   // a rival of the faction you serve marks you up; Opposed recruiters refuse you
     return {
-      owner, tier, open,
-      shop: n.shop && open ? (() => { const rs = C.rotateStock(st, id, n.shop.concat(n.shopFriendly && (tier === 'friendly' || tier === 'allied') ? n.shopFriendly : [])), ev = C.placeEvent(st, id), cal = C.calendar(st.world.day); return { stock: rs.stock, priceMult: Math.round(PRICE[tier] * C.shopMult(st, id) * 100) / 100, notes: rs.notes, event: ev && ev.mult !== 1 ? ev.name : null, festival: cal.festival && ['town', 'market', 'capital'].includes(n.type) ? cal.festival : null }; })() : null,
-      recruit: n.recruit && open && C.recruitRace(id) ? { classes: S().entryClasses(), race: C.recruitRace(id) } : null,   // open unless Hostile (or besieged); the recruit's race is the region's
+      owner, tier, open, rival: rival.rating,
+      shop: n.shop && open ? (() => { const rs = C.rotateStock(st, id, n.shop.concat(n.shopFriendly && (tier === 'friendly' || tier === 'allied') ? n.shopFriendly : [])), ev = C.placeEvent(st, id), cal = C.calendar(st.world.day); return { stock: rs.stock, priceMult: Math.round(PRICE[tier] * C.shopMult(st, id) * rival.priceMult * 100) / 100, notes: rs.notes, event: ev && ev.mult !== 1 ? ev.name : null, festival: cal.festival && ['town', 'market', 'capital'].includes(n.type) ? cal.festival : null }; })() : null,
+      recruit: n.recruit && open && rival.recruit && C.recruitRace(id) ? { classes: S().entryClasses(), race: C.recruitRace(id) } : null,   // open unless Hostile (or besieged); the recruit's race is the region's
       join: isHall(n) && n.faction && !lost ? { faction: n.faction, can: S().tierIndex(tier) >= S().tierIndex(S().RULES.joinMinTier) } : null,
       encounter: encounterAvailable(st, id), choice: n.choice && !st.world.flags['choice_' + n.choice] && !(C.CHOICES[n.choice] && C.CHOICES[n.choice].job && !C.jobActive(st, C.CHOICES[n.choice].job)) ? n.choice : null,
       jobOffers: C.jobOffers(st, id), jobReports: C.jobReports(st, id),

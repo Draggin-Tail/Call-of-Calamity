@@ -256,7 +256,7 @@
   // ===== 5. The try-out gates the invitation; rank 2 waits for the fourth quest =====
   const gated = (st, f) => f !== HW && FQ[f] && rankOf(st, f) === 1 && (inducted(st, f) || !!fl(st)['induct_due_' + f]) && !qDone(st, f);
   { const cj0 = S.canJoin; S.canJoin = function (st, f, opts) { const r = cj0.apply(this, arguments); opts = opts || {};
-      if ((r.ok || r.needsSecret) && FQ[f] && !opts.force && !opts.outcast && !fl(st)['tryout_' + f]) return { ok: false, tryout: true, reason: 'They want to see your work first: ' + J[FQ[f].tryout].name };
+      if ((r.ok || r.leaves) && FQ[f] && !opts.force && !opts.outcast && !fl(st)['tryout_' + f]) return { ok: false, tryout: true, reason: 'They want to see your work first: ' + J[FQ[f].tryout].name };
       return r; }; }
   { const pr0 = S.promote; S.promote = function (st, f, opts) { if (!(opts && opts.force) && gated(st, f)) return { ok: false, reason: 'Finish your first orders first' }; return pr0.apply(this, arguments); }; }
   { const iv0 = S.invitations; S.invitations = function (st) { return iv0.apply(this, arguments).filter(o => !(o.kind === 'promote' && gated(st, o.faction))); }; }
@@ -294,23 +294,23 @@
 
   // ===== 5b. Offers are made in person =====
   // A rank is offered by someone at a place, never by a menu: joining at the place where you reported your try-out (the contact),
-  // a promotion at the faction's hall (at the contact if your rank is secret). The offer waits there until you answer it.
+  // a promotion at the faction's hall. The offer waits there until you answer it.
   const place = id => (C.NODES[id] ? C.NODES[id].name : id);
-  C.offerPlace = function (st, o) { const F = FQ[o.faction]; if (!F) return null; if (o.kind === 'join') return J[F.tryout].at; const r = S.getRank(st, o.faction); return r && r.secret ? F.contact : F.hall; };
+  C.offerPlace = function (st, o) { const F = FQ[o.faction]; if (!F) return null; if (o.kind === 'join') return J[F.tryout].at; return F.hall; };
   C.OFFER_WHO = { crown: ['the sergeant', 'Captain Harte'], syndicate: ['the clerk', 'Agent Marsh'], synod: ['the clerk', 'Warden Vell'], broken_banner: ['Sergeant Rook', 'Sergeant Rook'] };
   C.offers = st => (S.invitations(st) || []).filter(o => FQ[o.faction]).map(o => Object.assign({ at: C.offerPlace(st, o), who: (C.OFFER_WHO[o.faction] || [])[o.kind === 'join' ? 0 : 1] || null }, o));
   C.offersHere = (st, at) => C.offers(st).filter(o => o.at === (at || st.world.location));
   C.acceptOffer = function (st, f) {
     const o = C.offers(st).find(x => x.faction === f); if (!o) return { ok: false, reason: 'Nothing is on offer' };
     if (o.at !== st.world.location) return { ok: false, reason: 'Give your answer in person, at ' + place(o.at) };
-    const r = o.kind === 'join' ? S.joinRank(st, f, { secret: !!o.needsSecret }) : S.promote(st, f);
+    const r = o.kind === 'join' ? S.joinRank(st, f, { leave: true }) : S.promote(st, f);   // taking a place elsewhere means leaving your faction
     return r && r.ok ? Object.assign({ kind: o.kind, title: o.title }, r) : r;
   };
   // What each faction wants from you next, for the Journal and the Factions tab. Quests you have taken are listed as quests, not here.
   C.factionNext = function (st) {
     const out = [];
-    C.offers(st).forEach(o => out.push({ faction: o.faction, kind: 'offer', at: o.at, title: o.title, secret: !!o.needsSecret,
-      text: (o.kind === 'join' ? 'They offer you a place: ' : 'They offer you a promotion: ') + o.title + (o.needsSecret ? ' (in secret)' : '') + '. Answer in person at ' + place(o.at) + '.' }));
+    C.offers(st).forEach(o => out.push({ faction: o.faction, kind: 'offer', at: o.at, title: o.title, leaves: o.leaves || null,
+      text: (o.kind === 'join' ? 'They offer you a place: ' : 'They offer you a promotion: ') + o.title + (o.leaves ? ' (you would leave the ' + ((window.GAME_DATA.factions[o.leaves] || {}).name || o.leaves) + ')' : '') + '. Answer in person at ' + place(o.at) + '.' }));
     Object.keys(FQ).forEach(f => {
       if (out.some(x => x.faction === f)) return; const F = FQ[f], j = J[F.tryout];
       if (inductDue(st, f)) { out.push({ faction: f, kind: 'induct', at: F.hall, text: 'Your induction is waiting at ' + place(F.hall) + '.' }); return; }

@@ -1,7 +1,7 @@
 /* Story screens: the scene sheet for everything the human story rules (data/intrigue*.js, faction_work.js, faction_climax.js, story_world.js) ask of the player.
    Loaded by data/factions.js after the rule files; needs no edit to index.html or shell.js. It sits beside the campaign shell:
    - no button of its own: the shell's Journal tab (bottom bar) lists what needs you, your contracts beside your jobs, leads, leverage and the Moot;
-     a place's sheet on the map shows its contract board and anything you can do there (your hold, lying low); the Factions tab shows how the realm sees you;
+     a place's sheet on the map shows its contract board and anything you can do there (your hold); the Factions tab shows how the realm sees you;
    - a sheet opens by itself when a scene, a story fight or news is waiting and the shell has nothing else up, and to show what an action did;
    - story fights (scene fights use the road-fight slot) run through the same battle page and report back through C.applyEncounterResult;
    - on Brielle's road, a "hide her" button is added to the shell's road-fight sheet.
@@ -144,7 +144,6 @@
     function waiting(st) {
       const out = [], m = C.mootState(st), hd = st.world.hold;
       if (sceneFight(st)) out.push('fight:' + sceneFight(st).enc.name + ':' + st.world.day);
-      const sc = C.secretScene(st); if (sc) out.push('secret:' + sc.kind + ':' + sc.faction);
       const mv = C.moveBeat(st); if (mv) out.push('move:' + mv.id);
       const cs = C.contractScene(st); if (cs) out.push('contract:' + cs.contract);
       if (primerDue(st)) out.push('moot_primer');
@@ -186,7 +185,6 @@
     function urgentCards(st) {
       const out = [], hd = st.world.hold, at = here();
       const f = sceneFight(st); if (f) out.push(fightCard(st, f));
-      const sc = C.secretScene(st); if (sc) out.push(secretCard(st, sc));
       const mv = C.moveBeat(st); if (mv) out.push(moveCard(mv));
       const cs = C.contractScene(st); if (cs) out.push(contractSceneCard(cs));
       if (primerDue(st) && !f && !mv && !cs) out.push(mootPrimerCard(st));
@@ -205,7 +203,7 @@
           btn('The side door', () => { const r = C.retakeHoldFight(st, 'door'); if (!r.ok) return toast(r.reason, true); save(); draw(); }, 'full pri', !sneak), why(sneak ? '' : 'Needs a rogue or scout in the party, or the Hearthwatch\'s trust.')));
       }
       const offers = C.holdOffers(st); if (offers.length) out.push(h('div', { class: 'card urg' }, h('div', { class: 'who', text: 'The Kingmaker\'s reward' }), h('div', { text: 'The new ruler offers you a hold of your own. Pick one.' }), gap(8),
-        offers.map(o => [btn(o.name, () => did(C.grantHold(st, o.id), 'A hold of your own', ['It sells at a discount, keeps a stash, and hides you while you lie low.']), 'full'), gap()])));
+        offers.map(o => [btn(o.name, () => did(C.grantHold(st, o.id), 'A hold of your own', ['It sells at a discount and keeps a stash.']), 'full'), gap()])));
       if (news.length) out.push(h('div', { class: 'card' }, h('div', { class: 'who', text: 'Word reaches you' }), news.map(n => h('div', { style: 'margin:6px 0' }, n.title ? h('b', { text: n.title }) : null, h('div', { text: n.text }))), gap(), btn('Got it', () => { news.length = 0; draw(); }, 'sm')));
       return out;
     }
@@ -223,7 +221,6 @@
 
       const hs = C.holdServices(st, at); if (hs) out.push(holdCard(st, hs));
       if (hd && hd.safe && Object.keys(hd.safe).length && C.ownerOf(st, at) === 'hearthwatch') out.push(h('div', { class: 'card' }, h('b', { text: 'Kept for you' }), h('div', { class: 'dim', text: 'The Hearthwatch saved what was in your hold\'s stash.' }), gap(), btn('Collect it', () => did(C.claimSafe(st), 'Collected'), 'pri full')));
-      if (C.ownerOf(st, at) === 'hearthwatch' && (S.listRanks(st) || []).some(r => r.secret)) out.push(h('div', { class: 'card' }, h('b', { text: 'Lie low' }), h('div', { class: 'dim', text: 'Two quiet days in a Hearthwatch house. Both sides of a double life lose the scent a little.' }), gap(), btn('Lie low (2 days)', () => did(C.lieLow(st, 2), 'Two quiet days', ['Suspicion cools on both sides.']), 'full')));
       return out;
     }
     function moveCard(mv) {
@@ -234,17 +231,9 @@
       return h('div', { class: 'card urg' }, h('div', { class: 'who', text: 'Contract: ' + cs.name }), h('div', { style: 'margin:4px 0;white-space:pre-line', text: cs.setup }), gap(8),
         cs.options.map(o => [btn(o.label, () => did(C.contractChoose(ST(), o.id), cs.name), 'full', !o.ok), !o.ok ? why('Not enough gold.') : o.hint ? h('div', { class: 'dim', style: 'font-size:12px;margin:3px 4px 8px;font-style:italic', text: o.hint }) : gap()]));
     }
-    function secretCard(st, sc) {
-      const F = fname(sc.faction), title = sc.kind === 'test' ? F : sc.side === 'cover' ? F + ': they know' : F + ': found out';
-      return h('div', { class: 'card foe' }, h('div', { class: 'who', text: title }), h('div', { style: 'margin:4px 0;white-space:pre-line', text: sc.setup }),
-        h('div', { class: 'dim', text: sc.kind === 'test' ? '' : sc.side === 'cover' ? 'If they unmask you, your true allegiance is out in the open.' : 'If this goes badly you lose your secret rank.' }), gap(8),
-        sc.options.filter(o => o.ok || o.id !== 'see').map(o => [btn(o.label, () => { const r = C.secretChoose(ST(), o.id); if (!r.ok) return toast(r.reason, true); if (r.fight) { save(); return draw(); }
-          did(r, r.kept === false ? 'Unmasked' : r.passed === false ? 'You failed them' : sc.kind === 'test' ? 'Test passed' : 'You got away with it', [].concat(r.revealed ? ['You are known now as ' + fname(r.revealed) + '.'] : [], r.bounty ? ['They have put a price on you.'] : [])); }, 'full', !o.ok), o.ok && o.hint ? h('div', { class: 'dim', style: 'font-size:12px;margin:3px 4px 8px;font-style:italic', text: o.hint }) : why(o.ok ? '' : o.why)]));
-    }
     function holdCard(st, hs) {
       const inv = st.inventory.items || {}, stash = hs.stash || {}, iname = g => (D.gear && D.gear[g] ? D.gear[g].name : g);
       return h('div', { class: 'card' }, h('b', { text: C.holdName(st, here()) || 'Your hold' }), h('div', { class: 'dim', text: 'Its shop sells at ' + Math.round(100 - C.MOOT.holdShopMult * 100) + '% off. Recruits come from ' + fname(hs.recruitFrom) + '.' }), gap(),
-        btn('Lie low here (3 days)', () => did(C.holdLieLow(st, 3), 'Three quiet days', ['Secret suspicion cools.']), 'full'),
         h('details', { style: 'margin-top:8px' }, h('summary', { class: 'dim', text: 'Stash (' + Object.values(stash).reduce((a, b) => a + b, 0) + ' kept here)' }),
           Object.keys(stash).map(g => h('div', { class: 'row', style: 'margin:4px 0' }, h('span', { class: 'grow', text: iname(g) + (stash[g] > 1 ? ' ×' + stash[g] : '') }), btn('Take', () => { const r = C.holdStash(st, g, 'out'); if (r.ok) { save(); draw(); } }, 'sm'))),
           Object.keys(inv).map(g => h('div', { class: 'row', style: 'margin:4px 0' }, h('span', { class: 'grow dim', text: iname(g) + (inv[g] > 1 ? ' ×' + inv[g] : '') }), btn('Store', () => { const r = C.holdStash(st, g, 'in'); if (r.ok) { save(); draw(); } }, 'sm')))));
@@ -265,7 +254,7 @@
     function shellOn(on) { const s = document.getElementById('shell'); if (s) s.classList.toggle('on', on); document.body.classList.toggle('campaign', on || !!window.__campaignBattle); }
     function runFight() {
       const st = ST(); C.activeWander(st); const w = st.world.wander, info = C.encounterBuilds('wander', null), builds = S.partyBuilds(st);
-      takeSnap(); const tag = { hall: w.enc.hall, holdSiege: !!w.enc.holdSiege, holdRetake: !!w.enc.holdRetake, badPaper: !!w.enc.badPaper, exposure: w.enc.exposure, name: w.enc.name };
+      takeSnap(); const tag = { hall: w.enc.hall, holdSiege: !!w.enc.holdSiege, holdRetake: !!w.enc.holdRetake, badPaper: !!w.enc.badPaper, name: w.enc.name };
       open = false; sheetEl.classList.remove('on');
       window.__campaignBattle = true; shellOn(false);
       const top = document.querySelector('#top span');
@@ -282,7 +271,6 @@
       if (tag.holdSiege) text = won ? 'The walls hold. ' + node(st.world.hold.node) + ' is still yours.' : 'The walls fall. Your hold is lost, though the Hearthwatch saved your stash.';
       if (tag.holdRetake) text = won ? 'Your banner goes back up over ' + node(st.world.hold.node) + '.' : 'They hold the gate. You can try again.';
       if (tag.badPaper) text = won ? 'The notes burn. Dov Quill will file this under "settled".' : 'The guards drive you out. The notes are still there.';
-      if (tag.exposure && r.exposure) { const x = r.exposure; text = x.kept ? 'You fight your way clear. They will not say it to your face again, for now.' : 'You get out alive, but it is over: you have lost your place with ' + fname(tag.exposure) + '.'; if (x.revealed) lines.push('You are known now as ' + fname(x.revealed) + '.'); if (x.bounty) lines.push('They have put a price on you.'); }
       (r.drops || []).forEach(i => { const g = window.GAME_DATA.gear[i]; lines.push('Found: ' + (g ? g.name : i)); }); if (r.purse) lines.push('Found: ' + r.purse + ' gold in a dead foe\'s purse');
       lines.push(...changes({ changes: aw.standingChanges }), ...diffLines({ changes: aw.standingChanges, gold: (aw.gold || 0) }));
       flash = { title: won ? 'Victory' : 'Defeat', text, lines }; openSheet('now');
@@ -328,7 +316,7 @@
         C.canvassOptions(st, id).map(o => Object.assign({}, o, { why: o.id === 'pressure' ? 'You have nothing on them yet.' : o.id === 'bargain' ? 'They want a favour first. Ask at their hall.' : o.why })).map(o => [btn(o.label + (o.id === 'pressure' && o.ok ? (o.proof ? ' (spend proof)' : ' (spend leverage)') : ''), () => {
           const r = C.canvass(st, id, o.id, claimant); if (!r.ok) return toast(r.reason, true);
           r.text = r.text || (o.id === 'pressure' ? s.name + ' give you their vote for ' + claimName(claimant) + '. They will not forgive how you got it.' : s.name + (o.id === 'bargain' ? ' remember the favour and move a step toward ' : ' hear you out and move a step toward ') + claimName(claimant) + '.') + ' This seat is settled now; the others are still open.';
-          did(r, s.name + ': ' + o.label, [].concat(r.suspicion ? ['Your secret rank grows uneasy.'] : [], o.id === 'pressure' ? ['They will not forget it.'] : []));
+          did(r, s.name + ': ' + o.label, [].concat(o.id === 'pressure' ? ['They will not forget it.'] : []));
         }, 'full' + (o.id === 'bargain' ? ' pri' : ''), !o.ok), why(o.ok ? '' : o.why)]));
     }
     function sittingCards(st, m) {
@@ -337,7 +325,7 @@
         const tes = C.mootTestimonyOptions(st);
         if (tes.length) out.push(h('div', { class: 'sh-h', text: 'Lay proof before the Moot' }), tes.map(o => { const X = C.SECRETS[o.sid] || {}, L = C.LORE && X.proof && C.LORE[X.proof]; return h('div', { class: 'card' }, h('b', { text: X.name || o.sid }), L && L.text ? h('div', { class: 'dim', text: L.text }) : null, gap(),
           btn('Testify', () => { const r = C.mootTestify(st, o.sid); if (!r.ok) return toast(r.reason, true); did(r, 'The hall goes quiet'); }, 'full', !o.ok), why(o.ok ? '' : 'Wil will not let you. Not yet.')); }));
-        out.push(h('div', { class: 'sh-h', text: 'Declare' }), h('div', { class: 'dim', text: 'Say it out loud, in front of everyone: whom do you stand for? If you wear a secret colour, its seat will notice if you stand against it.' }), gap(),
+        out.push(h('div', { class: 'sh-h', text: 'Declare' }), h('div', { class: 'dim', text: 'Say it out loud, in front of everyone: whom do you stand for?' }), gap(),
           stand.map(c => [btn('Declare for ' + claimName(c), () => did(C.mootDeclare(st, c), 'You declare for ' + claimName(c), ['Now the seats vote.']), 'full'), gap()]));
         return out;
       }
@@ -441,22 +429,12 @@
     // ---------- You ----------
     function meter(v, color) { return h('div', { class: 'meter' }, h('i', { style: 'width:' + Math.max(0, Math.min(100, v)) + '%;background:' + color })); }
     function youTab(st) {
-      const out = [], rp = C.reputation(st), ranks = S.listRanks(st) || [], secret = ranks.filter(r => r.secret), pub = ranks.filter(r => !r.secret), hd = st.world.hold;
+      const out = [], rp = C.reputation(st), hd = st.world.hold;
       const side = (v, lo, hi) => v <= -3 ? lo : v >= 3 ? hi : 'Neither';
       out.push(h('div', { class: 'sh-h', text: 'How the realm sees you' }), h('div', { class: 'card' },
         h('div', { class: 'row' }, h('span', { class: 'grow', text: 'Mercy' }), h('b', { text: rp.mercyTier.name || side(rp.mercy, 'Hard', 'Kind') })), meter(50 + rp.mercy * 4, 'var(--ok)'),
         h('div', { class: 'row' }, h('span', { class: 'grow', text: 'Honesty' }), h('b', { text: rp.honestyTier.name || side(rp.honesty, 'Sly', 'Honest') })), meter(50 + rp.honesty * 4, 'var(--gold)'),
         h('div', { class: 'dim', style: 'font-size:12px', text: 'Built from what you do. What you do in public counts in full; what you do in private counts for a third.' })));
-      if (secret.length) {
-        out.push(h('div', { class: 'sh-h', text: 'Your double life' }));
-        secret.forEach(r => { const v = S.suspicion(st, r.faction); out.push(h('div', { class: 'card' }, h('div', { class: 'row' }, h('b', { class: 'grow', text: r.title + ' of ' + fname(r.faction) }), h('span', { class: 'shchip', text: 'secret' })),
-          h('div', { class: 'dim', text: 'Do they think you have gone native? ' + v + ' of 100' }), meter(v, 'var(--foe)'))); });
-        pub.filter(r => r.faction !== 'hearthwatch').forEach(r => { const v = C.coverSuspicion(st, r.faction); out.push(h('div', { class: 'card' }, h('div', { class: 'row' }, h('b', { class: 'grow', text: r.title + ' of ' + fname(r.faction) }), h('span', { class: 'shchip', text: 'your cover' })),
-          h('div', { class: 'dim', text: 'Do they suspect a spy? ' + v + ' of 100' }), meter(v, 'var(--foe)'))); });
-        const ideals = Object.entries(C.IDEALS).filter(([f]) => ranks.some(r => r.faction === f) && C.dossier && C.dossier(st, f).some(e => e.kind === 'ideal')).map(([f, I]) => fname(f) + (I.honesty > 0 ? ' value honesty: lies make them doubt you.' : I.mercy > 0 ? ' value mercy: cruelty makes them doubt you.' : ' scorn mercy: kindness makes them doubt you.'));
-        if (ideals.length) out.push(h('div', { class: 'card' }, h('b', { text: 'What they believe' }), ideals.map(t => h('div', { class: 'dim', text: t }))));
-        out.push(h('div', { class: 'dim', style: 'font-size:12px;margin:2px 2px 8px', text: 'Hurting a faction, being seen at the other side\'s halls, and going against a faction\'s beliefs all feed these. Lying low at a Hearthwatch house cools both.' }));
-      }
       if (hd) out.push(h('div', { class: 'sh-h', text: 'Your hold' }));
       if (hd) out.push(h('div', { class: 'card' }, h('b', { text: node(hd.node) }), h('div', { class: 'dim', text: hd.lost ? 'Lost to ' + fname(hd.takenBy) + '. Go back and take it.' : hd.siege ? 'Under siege by ' + fname(hd.siege.by) + '.' : 'Given by ' + fname(hd.backer) + ' on day ' + hd.granted + '.' })));
       return out;
@@ -464,8 +442,7 @@
 
     // ---------- news from the road ----------
     { const tr = C.travel; C.travel = function (st) { const r = tr.apply(this, arguments);
-        if (r && r.ok) { if (r.moot && r.moot.ok) news.push({ title: r.moot.by === 'second' ? 'The Moot is called again' : 'The Moot is called', text: r.moot.text });
-          if (r.secret && r.secret.kind === 'hint') news.push({ title: fname(r.secret.faction), text: r.secret.text }); }
+        if (r && r.ok) { if (r.moot && r.moot.ok) news.push({ title: r.moot.by === 'second' ? 'The Moot is called again' : 'The Moot is called', text: r.moot.text }); }
         return r; }; }
     { const up = C.useProof; C.useProof = function () { const r = up.apply(this, arguments); if (r && r.ok && r.moot && r.moot.ok) news.push({ title: 'The Moot is called', text: r.moot.text }); return r; }; }
 

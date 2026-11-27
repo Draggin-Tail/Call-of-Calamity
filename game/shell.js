@@ -592,6 +592,7 @@ body.campaign #top .skirm{display:none}
       h('div', { style: 'height:6px' }), btn('Report them to ' + fname(inf.faction), () => informantAct(id, inf.id, 'report'), 'full bad'))));
     if (here) C.npcAt(ST, id).forEach(np => out.push(h('div', { class: 'card' }, h('b', { text: np.name }), h('div', { class: 'dim', style: 'margin:2px 0 6px', text: 'You see ' + np.desc + (np.met ? ' (you have met)' : '') + '.' }), btn(np.talkedToday ? 'You spoke today' : 'Talk', () => npcTalk(id, np.id), 'full', np.talkedToday))));
     { const nb = C.noticeBoard(ST, id); if (nb) out.push(h('details', { class: 'card' }, h('summary', { text: 'Notice board' }), nb.map(t => h('div', { class: 'dim', style: 'margin:4px 0', text: '• ' + t })))); }
+    if (sv.open && (sv.shop || n.recruit) && (sv.rival === 'uneasy' || sv.rival === 'opposed') && S.sworn(ST)) out.push(h('div', { class: 'dim', style: 'margin:0 2px 8px', text: 'They know you serve the ' + fname(S.sworn(ST)) + '. ' + (sv.rival === 'opposed' ? 'Their prices are steep for you, and their recruiters will not deal with you.' : 'Their prices are a little steeper for you.') }));
     if (sv.shop) out.push(btn('Shop', () => shopSheet(id), 'full'), h('div', { style: 'height:8px' }));
     if (sv.recruit) out.push(btn('Recruit (' + S.recruitCost(ST) + ' g)', () => recruitSheet(id), 'full'), h('div', { style: 'height:8px' }));
     if (sv.join) {
@@ -989,33 +990,30 @@ body.campaign #top .skirm{display:none}
   }
 
   // ---------- factions ----------
-  // ---------- ranks, offers, whispers ----------
+  // ---------- ranks and offers ----------
   const RK = () => S.RANK;
   const attention = () => false;   // the Factions tab is status only; anything to act on shows in the Journal
-  const WHISPER = [null, '{f}: a clerk looks at your papers a little longer than usual.', '{f}: an unsigned note: "Someone is asking about you." A contact has stopped answering.', '{f}: they are watching you. Something is being set up to see which side you really stand on.', '{f}: you are cornered. They know, or are about to.'];
   function acceptOffer(o) {
-    const r = C.acceptOffer ? C.acceptOffer(ST, o.faction) : (o.kind === 'join' ? S.joinRank(ST, o.faction, { secret: !!o.needsSecret }) : S.promote(ST, o.faction));
+    const r = C.acceptOffer ? C.acceptOffer(ST, o.faction) : (o.kind === 'join' ? S.joinRank(ST, o.faction, { leave: true }) : S.promote(ST, o.faction));
     if (!r.ok) { toast(r.reason, true); return; }
     const next = C.rankHint && C.rankHint(ST, o.faction);
     autosave(); render();
     sheet(o.kind === 'join' ? 'You are one of them' : 'Promoted', () => [h('div', { class: 'card', style: 'border-color:' + D.factions[o.faction].color }, h('b', { style: 'color:' + D.factions[o.faction].color, text: S.getRank(ST, o.faction).title + ' of ' + fname(o.faction) }),
-      h('div', { class: 'dim', text: S.getRank(ST, o.faction).secret ? 'A secret rank. Keep it quiet: the Factions tab shows how close anyone is to guessing.' : 'A public rank.' })),
+      r.left ? h('div', { class: 'dim', text: 'You have left the ' + fname(r.left) + '. If you ever go back, you start again at the bottom.' }) : null),
       next ? h('div', { class: 'gold', style: 'margin:6px 0', text: next }) : null, h('div', { style: 'height:6px' }), btn('Continue', () => { closeSheet(); render(); if (SS()) SS().tick(); }, 'pri full')]);
   }
   // an offer, made by someone at this place
   function placeOfferCard(o) {
     const F = D.factions[o.faction];
     return h('div', { class: 'card', style: 'border-color:' + F.color }, h('div', { class: 'row' }, h('b', { class: 'grow', style: 'color:' + F.color, text: o.kind === 'join' ? F.name + ' offer you a place' : F.name + ' offer you a promotion' }), h('span', { class: 'shchip', text: o.title })),
-      h('div', { class: 'dim', style: 'margin:4px 0', text: (o.who ? o.who[0].toUpperCase() + o.who.slice(1) + ' waits for your answer. ' : '') + (o.needsSecret ? 'It would be a secret rank: you already serve their enemies in public.' : o.kind === 'join' ? 'Rank 1 of 4. Membership opens their orders, their deeper secrets and better work.' : 'More trust, harder orders.') }),
-      h('div', { class: 'row' }, btn(o.needsSecret ? 'Accept in secret' : 'Accept', () => acceptOffer(o), 'pri grow'), btn('Not now', () => { toast('The offer stands. Come back when you are ready.'); closeSheet(); }, 'grow')));
+      h('div', { class: 'dim', style: 'margin:4px 0', text: (o.who ? o.who[0].toUpperCase() + o.who.slice(1) + ' waits for your answer. ' : '') + (o.leaves ? 'Saying yes means leaving the ' + fname(o.leaves) + ': you serve one faction at a time, and leaving costs you their regard.' : o.kind === 'join' ? 'Rank 1 of 4. Membership opens their orders, their deeper secrets and better work.' : 'More trust, harder orders.') }),
+      h('div', { class: 'row' }, btn(o.leaves ? 'Leave and accept' : 'Accept', () => acceptOffer(o), 'pri grow'), btn('Not now', () => { toast('The offer stands. Come back when you are ready.'); closeSheet(); }, 'grow')));
   }
   function rankCard(r) {
-    const f = r.faction, F = D.factions[f], tier = S.suspicionTier(ST, f);
-    return h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { style: 'color:' + F.color, text: r.title }), h('div', { class: 'dim', text: F.name + ' · rank ' + r.rank + ' of 4 · ' + (r.secret ? 'secret' : 'public') + (r.dormant ? ' · dormant' : '') })),
-      h('div', { class: 'row' }, btn(r.dormant ? 'Wake' : 'Lie low', () => { S.setDormant(ST, f, !r.dormant); autosave(); render(); }, 'sm'), btn('Leave', () => { const x = S.leaveRank(ST, f); toast('You left the ' + fname(f)); autosave(); render(); }, 'sm bad'))),
-      r.secret && tier ? h('div', { class: 'dim', style: 'margin-top:6px', text: WHISPER[tier].replace('{f}', F.name) }) : null,
-      C.rankHint && C.rankHint(ST, f) ? h('div', { class: 'gold', style: 'margin-top:6px;font-size:13px', text: C.rankHint(ST, f) }) : null,
-      S.testDue(ST, f) || tier >= 4 ? h('div', { class: 'badc', style: 'margin-top:6px;font-size:13px', text: tier >= 4 ? 'They know. It will come to a head on your next journey.' : 'They mean to test you. It will happen on your next journey.' }) : null);
+    const f = r.faction, F = D.factions[f];
+    return h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { style: 'color:' + F.color, text: r.title }), h('div', { class: 'dim', text: F.name + ' · rank ' + r.rank + ' of 4' + (r.dormant ? ' · stepped back' : '') })),
+      h('div', { class: 'row' }, btn(r.dormant ? 'Return' : 'Step back', () => { S.setDormant(ST, f, !r.dormant); autosave(); render(); }, 'sm'), btn('Leave', () => { const x = S.leaveRank(ST, f); toast('You left the ' + fname(f)); autosave(); render(); }, 'sm bad'))),
+      C.rankHint && C.rankHint(ST, f) ? h('div', { class: 'gold', style: 'margin-top:6px;font-size:13px', text: C.rankHint(ST, f) }) : null);
   }
   function hearthCard() {
     const t = S.goodwillTier(ST), v = S.getGoodwill(ST), F = D.factions.hearthwatch, pct = Math.round(100 * (v - 15) / 85);
@@ -1045,7 +1043,7 @@ body.campaign #top .skirm{display:none}
     main.appendChild(h('div', { class: 'pad' },
       C.proofs(ST).length ? [h('div', { class: 'sh-h', text: 'Proof you carry' }), proofCards()] : null,
       C.bounties(ST).length ? [h('div', { class: 'sh-h', text: 'Wanted' }), C.bounties(ST).map(b => h('div', { class: 'card badc' }, h('b', { text: fname(b.faction) + ' have put a price on you' }), h('div', { class: 'dim', text: 'Hunters can find you anywhere. It lapses in ' + b.daysLeft + ' days, or settle it at a Syndicate place or a Hearthwatch chapel.' })))] : null,
-      ranks.length ? [h('div', { class: 'sh-h', text: 'Your ranks (' + ranks.length + ' of ' + RK().maxRanks + ')' }), ranks.map(rankCard)] : null,
+      ranks.length ? [h('div', { class: 'sh-h', text: 'Your rank' }), ranks.map(rankCard)] : null,
       noticed.length ? [h('div', { class: 'sh-h', text: 'Noticed' }), noticed.map(f => h('div', { class: 'dim', text: fname(f) + ': they have noticed you. Keep helping them and someone will ask you to prove yourself.' }))] : null,
       hearthCard(),
       h('div', { class: 'card' }, h('b', { text: 'Allegiance: ' + (al ? fname(al) : 'None (free)') }), h('div', { class: 'dim', text: al ? 'You can leave at any hall, at a reputation cost.' : 'Swear an oath at a faction hall once they are Friendly (250).' })),
@@ -1055,7 +1053,7 @@ body.campaign #top .skirm{display:none}
           h('div', { class: 'bar', style: 'margin-top:6px' }, h('i', { style: 'width:' + pct + '%;background:' + F.color })));
       }),
       SS() ? SS().you(ST) : null,
-      h('div', { class: 'sh-h', text: 'Recent changes' }), ST.factions.history.filter(x => S.isMet(ST, x.faction) || x.faction === 'hearthwatch').slice(-8).reverse().map(x => h('div', { class: 'dim', text: 'Day ' + x.day + ' · ' + fname(x.faction) + ' ' + (x.delta > 0 ? '+' : '') + x.delta + ' · ' + x.reason })), ST.factions.history.length ? null : h('div', { class: 'dim', text: 'Nothing yet.' })));
+      h('div', { class: 'sh-h', text: 'Recent changes' }), ST.factions.history.filter(x => S.isMet(ST, x.faction) || x.faction === 'hearthwatch').slice(-8).reverse().map(x => h('div', { class: 'dim', text: 'Day ' + x.day + ' · ' + fname(x.faction) + (x.delta ? ' ' + (x.delta > 0 ? '+' : '') + x.delta : '') + ' · ' + x.reason })), ST.factions.history.length ? null : h('div', { class: 'dim', text: 'Nothing yet.' })));
   }
   const KIND_LABEL = { ideal: 'Ideals', strength: 'Strengths', weakness: 'Weaknesses', figure: 'Important figures', view: 'How others see them', secret: 'Secrets' };
   function dossierBlock(f) {
