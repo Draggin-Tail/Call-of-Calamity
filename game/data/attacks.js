@@ -73,7 +73,7 @@
       if (day(st) - d < A.newHold.days && C.ownerOf(st, id) === r.heldBy[id]) return true; delete r.held[id]; delete r.heldBy[id]; return false; };
     C.capShare = (st, id) => C.newlyTaken(st, id) ? A.newHold.share : 1;
     // losers rally at home
-    const capOf = f => Object.keys(C.NODES).find(id => C.NODES[id].type === 'capital' && C.NODES[id].capital === f);
+    const capOf = f => Object.keys(C.NODES).find(id => (C.NODES[id].type === 'capital' || C.NODES[id].stronghold) && C.NODES[id].capital === f);   // 4c: a risen plotter's stronghold
     const homeDist = {};
     const nearHome = (f, id) => { if (!(f in homeDist)) { const c = capOf(f), d = {}; if (c) { d[c] = 0; const q = [c];
         while (q.length) { const x = q.shift(); if (d[x] >= A.rally.reach) continue; for (const y of C.supplyNeighbours(x)) if (!(y in d)) { d[y] = d[x] + 1; q.push(y); } } }

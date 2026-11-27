@@ -26,7 +26,8 @@
     const NS = (st, id) => st.world.nodes[id] || (st.world.nodes[id] = {});
     const SS = st => st.world.supply || (st.world.supply = { iso: {}, day: day(st), regrow: {}, shrink: {}, cut: {} });
     C.supplyState = SS;
-    const capitals = () => { const o = {}; Object.keys(C.NODES).forEach(id => { const n = C.NODES[id]; if (n.type === 'capital' && n.capital) o[n.capital] = id; }); return o; };
+    // 4c: a risen plotter's stronghold counts as its capital
+    const capitals = () => { const o = {}; Object.keys(C.NODES).forEach(id => { const n = C.NODES[id]; if ((n.type === 'capital' || n.stronghold) && n.capital) o[n.capital] = id; }); return o; };
     let ADJ = null;
     const adj = () => { if (ADJ) return ADJ; ADJ = {}; const add = (a, b) => { (ADJ[a] = ADJ[a] || new Set()).add(b); (ADJ[b] = ADJ[b] || new Set()).add(a); };
       (C.EDGES || []).forEach(([a, b]) => add(a, b)); Object.keys(C.NODES).forEach(a => Object.keys(C.NODES[a].links || {}).forEach(b => { if (C.NODES[b]) add(a, b); })); return ADJ; };
