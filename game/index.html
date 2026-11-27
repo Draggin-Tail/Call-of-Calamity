@@ -10,6 +10,24 @@
     box.style.display='block';box.textContent='Something went wrong. Screenshot this and send it to Claude (tap to hide):\n\n'+lines.join('\n\n');
   }
   window.__dbgShow=show;
+  // Trail: records which game functions are running, saved on every step, so a full freeze can be read after a reload.
+  var KEY='dbgTrail',open={},seq=0,ev=[],cnt={};
+  function save(){try{localStorage.setItem(KEY,JSON.stringify({t:Date.now(),open:Object.keys(open).map(function(k){return open[k]}),ev:ev.slice(-14),cnt:cnt,turn:(typeof active!=='undefined'&&active?active.n+' ('+active.team+')':'')}))}catch(_){}}
+  function note(s){ev.push(s);if(ev.length>40)ev.shift();save()}
+  try{var old=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(old&&old.open&&old.open.length)setTimeout(function(){show('LAST TIME the game stopped inside: '+old.open.join(' > ')+'\nturn: '+old.turn+'\nlast steps: '+old.ev.join(', ')+'\ncalls: '+JSON.stringify(old.cnt))},1500);
+    localStorage.removeItem(KEY)}catch(_){}
+  window.addEventListener('load',function(){
+    var watch='ai aiStep aiConfused moveTo moveTriggers render drawBoard focusActive boardBase queue act resolveAct resolveActM nextTurn endTurn checkEnd renderCards unitCard hurt applyFx onDeath trapCheck hzEnter hzTurn fleeMove flank pushPath forcedMove startCast resolveCast summon guard noteAbility finishBattle beginBattle advance'.split(' ');
+    var hot='reach targets inRange extent pickTile drawProp portraitHTML predict'.split(' ');
+    watch.forEach(function(n){var f=window[n];if(typeof f!=='function')return;window[n]=function(){var id=++seq;open[id]=n;note('>'+n);var r;
+      try{r=f.apply(this,arguments)}catch(e){delete open[id];note('!'+n);throw e}
+      if(r&&typeof r.then==='function'){r.then(function(){delete open[id];note('<'+n)},function(){delete open[id];note('!'+n)})}else{delete open[id];note('<'+n)}
+      return r}});
+    hot.forEach(function(n){var f=window[n];if(typeof f!=='function')return;window[n]=function(){cnt[n]=(cnt[n]||0)+1;if(cnt[n]%500===0)save();return f.apply(this,arguments)}});
+    var tag=document.createElement('div');tag.textContent='debug 3';tag.style.cssText='position:fixed;z-index:99998;left:4px;bottom:calc(2px + env(safe-area-inset-bottom));font:10px monospace;color:#7cc480;pointer-events:none;opacity:.8';document.body.appendChild(tag);
+    var beat=0;setInterval(function(){tag.textContent='debug 3 · '+(++beat)},1000);
+  });
   window.addEventListener('error',function(e){show((e.message||'error')+'\n  at '+(e.filename||'').split('/').pop()+':'+e.lineno+':'+e.colno+(e.error&&e.error.stack?'\n'+String(e.error.stack).split('\n').slice(0,5).join('\n'):''))});
   window.addEventListener('unhandledrejection',function(e){var r=e.reason;show('Unhandled: '+(r&&r.message||r)+(r&&r.stack?'\n'+String(r.stack).split('\n').slice(0,5).join('\n'):''))});
   var ce=console.error;console.error=function(){try{var a=[].slice.call(arguments).map(function(x){return x&&x.stack?x.message+'\n'+String(x.stack).split('\n').slice(0,5).join('\n'):String(x)});show('console.error: '+a.join(' '))}catch(_){}return ce.apply(console,arguments)};
@@ -19,7 +37,7 @@
     if(typeof active==='undefined'||!active||typeof over==='undefined'||over||typeof PL!=='undefined'&&PL)return;
     var ai=typeof isAI==='function'&&isAI(active),key=(active.n||'')+'|'+(typeof TURN!=='undefined'?TURN:'')+'|'+(typeof spent!=='undefined'?spent:'');
     if(key!==last){last=key;since=Date.now();return}
-    if(ai&&Date.now()-since>12000){since=Date.now()+60000;show('Enemy turn stuck: '+active.n+' ('+active.team+'), busy='+(typeof busy!=='undefined'?busy:'?')+', turn '+(typeof TURN!=='undefined'?TURN:'?')+', points spent '+(typeof spent!=='undefined'?spent:'?')+', screen '+innerWidth+'x'+innerHeight+', '+navigator.userAgent)}
+    if(ai&&Date.now()-since>12000){since=Date.now()+60000;show('Enemy turn stuck: '+active.n+' ('+active.team+'), busy='+(typeof busy!=='undefined'?busy:'?')+', turn '+(typeof TURN!=='undefined'?TURN:'?')+', points spent '+(typeof spent!=='undefined'?spent:'?')+', running: '+Object.keys(open).map(function(k){return open[k]}).join(' > ')+', last: '+ev.slice(-8).join(' ')+', screen '+innerWidth+'x'+innerHeight+', '+navigator.userAgent)}
   }catch(_){}},2000);
 })();</script></head><body>
 <title>Call of Calamity</title>
