@@ -88,9 +88,9 @@
       for (const id of Object.keys(s.iso)) if (!cut.has(id)) { if (s.cut[id]) { delete s.cut[id]; C.relNews(st, C.NODES[id].name + ' is back in touch with the ' + fname(C.ownerOf(st, id)) + '.', 'supply'); } s.iso[id] -= P.drain; if (s.iso[id] <= 0) delete s.iso[id]; }
       // regrowth: one man every 10 days, while supplied; a garrison above its base (an army that moved in, 3c) drains back a man every 10 days, supplied or not
       // a faction's men never exceed the sum of its places' base garrisons (3c): men mustered elsewhere are moved, not made, so regrowth only refills that total
-      const men = {}, cap = {}; for (const id of Object.keys(C.NODES)) { const f = C.ownerOf(st, id); if (!WAR().includes(f)) continue; men[f] = (men[f] || 0) + C.garrison(st, id); cap[f] = (cap[f] || 0) + C.garrisonBase(id); }
+      const men = {}, cap = {}; for (const id of Object.keys(C.NODES)) { const f = C.ownerOf(st, id); if (!WAR().includes(f)) continue; men[f] = (men[f] || 0) + C.garrison(st, id); cap[f] = (cap[f] || 0) + C.garrisonBase(id) * (C.capShare ? C.capShare(st, id) : 1); }
       for (const id of Object.keys(st.world.nodes)) { const g = st.world.nodes[id].garrison; if (typeof g !== 'number') continue; const over = g > C.garrisonBase(id), f = C.ownerOf(st, id); if (cut.has(id) && !over) continue;
-        s.regrow[id] = (s.regrow[id] || 0) + 1; if (s.regrow[id] < P.regrowEvery) continue;
+        s.regrow[id] = (s.regrow[id] || 0) + 1; if (s.regrow[id] < (over || !C.regrowFactor ? 1 : C.regrowFactor(st, id)) * P.regrowEvery) continue;   // 3c: new holdings slower, a rallying home faster
         if (!over && men[f] != null && men[f] >= cap[f]) continue;   // full strength already: wait until men are lost
         s.regrow[id] = 0; C.setGarrison(st, id, g + (over ? -1 : 1)); if (men[f] != null) men[f] += over ? -1 : 1; }
       for (const id of Object.keys(s.regrow)) if (typeof (st.world.nodes[id] || {}).garrison !== 'number') delete s.regrow[id];

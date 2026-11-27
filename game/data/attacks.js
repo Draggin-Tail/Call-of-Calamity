@@ -20,7 +20,14 @@
      (one it could take by the margin), on a way that passes only its own, unclaimed and beast ground and the holder's places. Its relation with the
      holder sours each day until it declares war; it attacks only the prize and the holder's places on the way to it, and once it holds the prize,
      it asks for terms (the relation warms each day until peace). If the place stops being weak, changes hands or the war ends first, it lets go.
-     Between grabs it waits 60 days. */
+     Between grabs it waits 60 days.
+   - Against snowballing (decided after the 1,200-day runs):
+     - Overextension: for 60 days after a place is taken, it counts at half its base toward its new owner's men, and regrows half as fast.
+     - Losers rally at home: a faction that holds under 60% of the places it started with defends the places within 3 roads of its capital
+       at 1.5x their garrison, and they regrow twice as fast.
+     - Suing for terms: a faction that, in the last 60 days, lost more places to a foe than it took from it, and whose places lost (less
+       those taken back) plus attacks failed on that foe come to 3 or more, asks that foe for terms. Neither side starts a new attack on the other while they talk; the relation warms
+       0.02 a day until peace. Talks that bring no peace in 60 days fail, and the loser can't ask that foe again for 30 days. */
 (function () {
   function go() {
     const C = window.GAME_CAMPAIGN, S = window.GAME_SAVE;
@@ -35,6 +42,9 @@
       redeployEvery: 7, frontCap: 2,  // weekly redeployment; a front is fed up to 1.5x the strongest enemy within reach, never past 2x its base
       standing: 10,
       grab: { by: 'syndicate', types: ['market', 'town'], reach: 6, sour: 0.01, terms: 0.02, rest: 60 },
+      newHold: { days: 60, share: 0.5, slow: 2 },                 // overextension
+      rally: { below: 0.6, reach: 3, defend: 1.5, fast: 0.5 },     // losers rally at home
+      sue: { days: 60, need: 3, warm: 0.02, talks: 60, again: 30 }, // suing for terms
       value: { castle: 4, town: 3, market: 3, village: 2, hamlet: 1.5 }, other: 1,
       squads: {
         crown: { name: 'Crown soldiers', enemies: [{ primary: 'warrior', name: 'Crown Guard' }, { primary: 'archer', name: 'Crown Bowman' }, { primary: 'squire', name: 'Crown Recruit' }] },
@@ -46,6 +56,27 @@
     const day = st => st.world.day, fname = f => (D.factions[f] && D.factions[f].name) || f, nm = id => C.NODES[id].name;
     const WAR = () => C.REL.factions.filter(f => f !== 'hearthwatch');
     const AS = C.attackState = st => st.world.atk || (st.world.atk = { list: [], last: {}, fails: {}, seq: 0 });
+    // ---- against snowballing ----
+    // overextension: a place taken in the last 60 days, still held by its taker
+    C.newlyTaken = (st, id) => { const r = st.world.atk, d = r && r.held && r.held[id]; if (d == null) return false;
+      if (day(st) - d < A.newHold.days && C.ownerOf(st, id) === r.heldBy[id]) return true; delete r.held[id]; delete r.heldBy[id]; return false; };
+    C.capShare = (st, id) => C.newlyTaken(st, id) ? A.newHold.share : 1;
+    // losers rally at home
+    const capOf = f => Object.keys(C.NODES).find(id => C.NODES[id].type === 'capital' && C.NODES[id].capital === f);
+    const homeDist = {};
+    const nearHome = (f, id) => { if (!(f in homeDist)) { const c = capOf(f), d = {}; if (c) { d[c] = 0; const q = [c];
+        while (q.length) { const x = q.shift(); if (d[x] >= A.rally.reach) continue; for (const y of C.supplyNeighbours(x)) if (!(y in d)) { d[y] = d[x] + 1; q.push(y); } } }
+      homeDist[f] = d; } return id in homeDist[f]; };
+    const startCount = {};
+    C.rallying = (st, f) => { if (!WAR().includes(f)) return false; if (!(f in startCount)) startCount[f] = Object.keys(C.NODES).filter(id => C.defaultOwner(id) === f).length;
+      let n = 0; for (const id of Object.keys(C.NODES)) if (C.ownerOf(st, id) === f) n++; return !!startCount[f] && n < A.rally.below * startCount[f]; };
+    C.homeRally = (st, id) => { const f = C.ownerOf(st, id); return C.rallying(st, f) && nearHome(f, id); };
+    C.defendStrength = (st, id) => C.garrison(st, id) * (C.homeRally(st, id) ? A.rally.defend : 1);
+    C.regrowFactor = (st, id) => (C.newlyTaken(st, id) ? A.newHold.slow : 1) * (C.homeRally(st, id) ? A.rally.fast : 1);
+    // suing for terms: a ledger of places taken and attacks failed
+    const pk0 = (a, b) => [a, b].sort().join('|');
+    const ledger = (st, kind, by, on) => { const r = AS(st); (r.ledger = r.ledger || []).push({ d: day(st), k: kind, by, on }); };
+    C.talking = (st, a, b) => (AS(st).talks || {})[pk0(a, b)] || null;
     const rnd = st => { const r = AS(st); r.seed = ((r.seed >>> 0) || ((st.world.rng >>> 0) ^ 0x5bd1e995) || 4242); r.seed = (Math.imul(r.seed ^ (r.seed >>> 15), 2246822519) + 0x6D2B79F5) >>> 0; return r.seed / 4294967296; };
     const encId = a => 'atk_' + a.n;
 
@@ -79,7 +110,7 @@
     const targetable = (st, id) => { const n = C.NODES[id]; return !!n && !n.hidden && n.type !== 'capital' && !n.capital && C.ownerOf(st, id) !== 'hearthwatch'; };
     // every place f could attack today, best first: { target, on, from, dist, force (with the muster), garrison, odds, score }
     C.attackOptions = function (st, f, cut, only) {
-      cut = cut || new Set(C.supplyCut(st)); const foes = C.relEnemies(st, f).filter(g => g !== 'hearthwatch' && (!only || g === only)), M = C.MOTIVES[f] || {};
+      cut = cut || new Set(C.supplyCut(st)); const foes = C.relEnemies(st, f).filter(g => g !== 'hearthwatch' && (!only || g === only) && !C.talking(st, f, g)), M = C.MOTIVES[f] || {};
       if (!foes.length) return [];
       const bz = busy(st), mg = C.attackMargin(st, f), best = {};
       for (const L of Object.keys(C.NODES)) {
@@ -93,7 +124,7 @@
       }
       const out = [];
       for (const o of Object.values(best)) {
-        o.garrison = C.garrison(st, o.target); if (o.force < mg * o.garrison) continue;
+        o.garrison = C.defendStrength(st, o.target); if (o.force < mg * o.garrison) continue;
         const n = C.NODES[o.target]; o.odds = o.force / (o.force + o.garrison);
         o.score = (A.value[n.type] || A.other) + (C.defaultOwner(o.target) === f ? 2 : 0) + ((M.foes || []).includes(o.on) ? 1 : 0)
           + (f === 'syndicate' && (n.type === 'market' || n.type === 'town') ? 1 : 0) + o.odds - 0.3 * (o.dist - 1);
@@ -115,7 +146,7 @@
     // the defender's answer: call in men to hold the place, or, if that would not be enough, strike back elsewhere
     function respond(st, a) {
       const D0 = a.on; if (!WAR().includes(D0)) return;
-      const cut = new Set(C.supplyCut(st)), bz = busy(st), F = C.garrison(st, a.from), G = C.garrison(st, a.target) + pool(st, D0, a.target, bz, cut);
+      const cut = new Set(C.supplyCut(st)), bz = busy(st), F = C.garrison(st, a.from), G = (C.homeRally(st, a.target) ? A.rally.defend : 1) * (C.garrison(st, a.target) + pool(st, D0, a.target, bz, cut));
       const mine = AS(st).list.filter(x => x.by === D0).length;
       if (F / (F + G) > A.counterOdds && mine < A.maxActive) { const o = C.attackOptions(st, D0, cut, a.by); if (o.length) { a.answer = 'counter'; launch(st, D0, o[0], true); return; } }
       const n = muster(st, D0, a.target, bz, cut); a.answer = 'hold';
@@ -168,7 +199,7 @@
           // the army that could open the way: the biggest one gathered within marching reach of the first of X's places on it
           const way = [...grabWay(st, { by: G, on: X, target: T })], first = way.filter(y => d[y] === Math.min(...way.map(z => d[z])));
           let F = 0; for (const L of Object.keys(army)) { const R = C.marchReach(st, G, L); if (first.some(y => y in R)) F = Math.max(F, army[L]); }
-          const gar = C.garrison(st, T); if (F < C.attackMargin(st, G) * gar) continue;
+          const gar = C.defendStrength(st, T); if (F < C.attackMargin(st, G) * gar) continue;
           out.push({ target: T, on: X, dist: d[T], force: F, garrison: gar, score: (A.value[n.type] || A.other) + F / (F + gar) - 0.3 * d[T] }); }
       }
       return out.sort((a, b) => b.score - a.score || (a.target < b.target ? -1 : 1));
@@ -199,6 +230,7 @@
       const s = C.supplyState(st); delete s.iso[id]; delete s.cut[id];
       const f0 = C.garrison(st, a.from), mv = Math.max(1, Math.ceil(f0 / 2)); C.setGarrison(st, id, mv); C.setGarrison(st, a.from, Math.max(1, f0 - mv));   // the army moves in, and may sit above the base until it drains back
       if (C.relFlip) C.relFlip(st, a.by, a.on);
+      const r = AS(st); (r.held = r.held || {})[id] = day(st); (r.heldBy = r.heldBy || {})[id] = a.by; ledger(st, 'took', a.by, a.on);
     }
     function drop(st, a) { const r = AS(st); r.list = r.list.filter(x => x !== a); }
     const callOff = (st, a) => { drop(st, a); C.relNews(st, 'The ' + fname(a.by) + ' has called off its attack on ' + nm(a.target) + '.', 'attack'); return { called: true }; };
@@ -208,13 +240,31 @@
       let won;
       if (side) won = side === 'attack';
       else { if (C.ownerOf(st, a.from) !== a.by) return callOff(st, a);
-        const F = C.garrison(st, a.from), gar = C.garrison(st, a.target); won = rnd(st) < F / (F + gar); }
+        const F = C.garrison(st, a.from), gar = C.defendStrength(st, a.target); won = rnd(st) < F / (F + gar); }
       drop(st, a); bleed(st, a.from);
       if (won) { take(st, a); C.relNews(st, T + ' has fallen to the ' + by + (side ? ', with your help.' : '.'), 'attack'); }
-      else { bleed(st, a.target); (r.fails[a.by] = r.fails[a.by] || []).push(day(st)); C.relNews(st, 'The ' + on + ' beat off the ' + by + ' at ' + T + (side ? ', with your help.' : '.'), 'attack'); }
+      else { bleed(st, a.target); (r.fails[a.by] = r.fails[a.by] || []).push(day(st)); ledger(st, 'failed', a.by, a.on); C.relNews(st, 'The ' + on + ' beat off the ' + by + ' at ' + T + (side ? ', with your help.' : '.'), 'attack'); }
       return { won, side: side || null };
     }
     C.attackSettle = settle;
+    // how a war is going for f against g, over the last 60 days
+    C.warTally = (st, f, g) => { const r = AS(st), t = { lost: 0, failed: 0, took: 0 }; r.ledger = (r.ledger || []).filter(e => day(st) - e.d < A.sue.days);
+      for (const e of r.ledger) { if (e.k === 'took' && e.by === g && e.on === f) t.lost++; else if (e.k === 'failed' && e.by === f && e.on === g) t.failed++; else if (e.k === 'took' && e.by === f && e.on === g) t.took++; }
+      return t; };
+    function sueTick(st) {
+      const r = AS(st), T = r.talks = r.talks || {}, again = r.sueNext = r.sueNext || {};
+      for (const k of Object.keys(T)) { const t = T[k];
+        if (!C.relAtWar(st, t.by, t.to)) { delete T[k]; continue; }   // peace came (the relations tick reports it)
+        if (day(st) - t.day >= A.sue.talks) { delete T[k]; again[t.by + '>' + t.to] = day(st) + A.sue.again; C.relNews(st, 'Talks between the ' + fname(t.by) + ' and the ' + fname(t.to) + ' have broken down.', 'terms'); continue; }
+        shiftRel(st, t.by, t.to, A.sue.warm); }
+      for (const f of WAR()) for (const g of C.relEnemies(st, f)) {
+        if (g === 'hearthwatch' || T[pk0(f, g)] || (again[f + '>' + g] || 0) > day(st)) continue;
+        const x = C.warTally(st, f, g); if (x.lost <= x.took || x.lost - x.took + x.failed < A.sue.need) continue;   // losing more places than it takes, and the war going badly
+        T[pk0(f, g)] = { by: f, to: g, day: day(st) };
+        C.relNews(st, 'The ' + fname(f) + ' sends envoys to the ' + fname(g) + ', asking for terms.', 'terms');
+      }
+    }
+    C.sueTick = sueTick;
 
     C.attackTick = function (st) {
       const r = AS(st);
@@ -222,7 +272,7 @@
         if (!C.relAtWar(st, a.by, a.on) || C.ownerOf(st, a.target) !== a.on) { callOff(st, a); continue; }
         if (day(st) >= a.lands) settle(st, a, null);
       }
-      let cut = new Set(C.supplyCut(st)); r.moved = r.moved || {}; C.grabTick(st, cut);
+      let cut = new Set(C.supplyCut(st)); r.moved = r.moved || {}; C.grabTick(st, cut); C.sueTick(st);
       for (const f of WAR()) if (r.moved[f] == null || day(st) - r.moved[f] >= A.redeployEvery) { if (C.relEnemies(st, f).some(g => g !== 'hearthwatch')) { C.redeploy(st, f, cut); r.moved[f] = day(st); } }
       for (const f of WAR()) {
         if (r.list.filter(a => a.by === f).length >= A.maxActive) continue;
