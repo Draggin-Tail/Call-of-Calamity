@@ -107,6 +107,12 @@
       lines: ['"The Moot will ask the realm to choose between an honest ledger and a dishonest crown. Declare for the Regency and the Lord\'s Hand is yours: its keys, its stipend and its quiet. E.H."'],
       options: [O('accept', 'Accept', st => { fl(st).pledged_regency = day(st); return { text: 'You keep the letter. It is the kind of thing that is useful later.' }; }), O('decline', 'Decline', () => ({})),
         O('burn', 'Burn the letter', st => { C.learn(st, 'harrow_buys', 'A letter you burned'); return {}; })] },
+    // The Steward's Offer: give Harrow back the Second Book and he drops the Regency to stand openly as the Long Ledger (design/succession_moot.md, Two new claimants)
+    { id: 'stewards_offer', who: 'harrow', at: 'crown_keep', meet: 'fig_harrow', trip: st => mootOn(st) && !C.moot(st).declared && proofHeld(st, 'hidden_hand') && !fl(st).crane_hand,
+      setup: 'Harrow is alone in the seal hall with the Moot roll in front of him. He has crossed out "The Regency" in his own hand, neatly, and left the space beside it blank.',
+      lines: ['"You could lay that book before the Lords and finish me. Or you could give it back, and I will stop pretending."', '"No more Steward. I will stand as what I am: the man the whole realm owes. Let them vote on the ledger with their eyes open."'],
+      options: [O('give', 'Give him the Book', st => { spendProof(st, 'hidden_hand', 'ledger'); fl(st).ledger_stands = day(st); return { text: 'He writes "The Long Ledger" in the blank space, and blots it. "Thank you. Honesty is expensive. I can afford it now."' }; }),
+        O('keep', 'Keep it', st => { fl(st).stewards_offer_refused = day(st); return { text: '"Then lay it, if you are going to," he says. "Do not keep me waiting. Waiting costs interest."' }; })] },
     { id: 'osric_purse', who: 'osric', at: null, meet: 'fig_osric', trip: st => Object.values(C.moot(st).canvass).some(c => c.for !== 'osric'),
       setup: 'An Aldermere knight, still muddy from the road, bows too low. The purse he holds out is heavy enough to make the bow worth it.',
       lines: ['"My lord hears you have been telling people who should be king. He admires the energy."', '"He asks only that you stop. Take this for your trouble, and your trouble ends here."'],
@@ -191,7 +197,13 @@
       options: [O('everything', '"Everything."', st => wilYes(st, 'everything'), st => proofHeld(st, 'lost_prince')),
         O('better', '"Only to be better than the others."', st => wilYes(st, 'better'), st => proofHeld(st, 'lost_prince')),
         O('his_choice', '"That is yours to decide."', st => wilYes(st, 'his_choice'), st => proofHeld(st, 'lost_prince')),
-        O('leave', 'Leave it', () => ({ repeat: true }), st => !proofHeld(st, 'lost_prince'))] }
+        O('leave', 'Leave it', () => ({ repeat: true }), st => !proofHeld(st, 'lost_prince'))] },
+    // The Archon's Ward: knowing what sleeps under Vol'Dun, an Inquisitor can carry Ilvane's claim to the Moot
+    { id: 'archons_ward', who: 'ilvane', at: 'voldun', meet: 'fig_ilvane', trip: st => mootOn(st) && !C.moot(st).declared && proofHeld(st, 'forbidden_hoard') && rankOf(st, 'synod') >= 3,
+      setup: 'The Archon receives you below the cathedral, where the floor is warm and the walls hum very faintly.',
+      lines: ['"You have read the Sealed Ledger, so you know what the tithe feeds. Osric would starve it to pay his spears. Harrow would put it out to tender."', '"Only a ruler who keeps the Ward fed can keep the realm safe. Carry my claim to Crown Keep, Inquisitor. I will stand."'],
+      options: [O('carry', 'Carry her claim', st => { fl(st).ilvane_stands = day(st); return { text: 'She seals the claim with the Ward\'s own sigil. "They will hate me," she says. "They will be alive to do it."' }; }),
+        O('refuse', 'Refuse', st => { fl(st).archons_ward_refused = day(st); return { text: '"Then the Sleeper will have to trust someone else\'s appetite," she says.' }; })] },
   ];
   const byId = id => C.MOVES.find(m => m.id === id);
   function wilYes(st, a) { fl(st).wil_consents = day(st); fl(st).wil_answer = a; C.gainLeverage(st, 'lev_old_standard', 'Wil\'s mother told him it was tin'); return { text: 'He puts the ring back on and leaves it there.' }; }

@@ -34,6 +34,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t84 spell weapon share | node | pass |
 | t85 node ownership (phase 1) | node | pass |
 | t86 one faction at a time, rival markups, Banner capital (phase 2) | node | pass |
+| t87 the two new Moot claimants (the Long Ledger, Archon Ilvane) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |
