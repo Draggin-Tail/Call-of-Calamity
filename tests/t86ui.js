@@ -17,10 +17,12 @@ let t=await txt();
 ok('a rival place says it knows whom you serve',/They know you serve the Mercantile Syndicate/.test(t),t.slice(0,300));
 ok('...and that its recruiters will not deal with you',/recruiters will not deal with you/.test(t));
 ok('...and shows no recruit button',!/Recruit \(/.test(t));
+ok('...and no allegiance oath at the hall',!/Swear allegiance/.test(t));
 await close();await p.waitForTimeout(200);
 await nav('Factions');t=await txt();
 ok('the Factions tab shows one rank',/Your rank/i.test(t)&&!/of 3\)/.test(t),t.slice(0,500));
 ok('nothing about secrets, suspicion or a double life is left on it',!/double life|suspicion|secret rank|your cover|Lie low/i.test(t));
+ok('no separate allegiance oath on it',!/Allegiance:/.test(t));
 // an offer from the Crown, at the place where it waits
 const at=await p.evaluate(()=>{const C=GAME_CAMPAIGN,s=GAME_SHELL.state();s.factions.standing.crown=300;s.world.flags.tryout_crown=1;const o=C.offers(s).find(x=>x.faction==='crown');return o&&o.at});
 ok('the Crown makes an offer',!!at);

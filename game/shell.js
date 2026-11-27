@@ -595,11 +595,6 @@ body.campaign #top .skirm{display:none}
     if (sv.open && (sv.shop || n.recruit) && (sv.rival === 'uneasy' || sv.rival === 'opposed') && S.sworn(ST)) out.push(h('div', { class: 'dim', style: 'margin:0 2px 8px', text: 'They know you serve the ' + fname(S.sworn(ST)) + '. ' + (sv.rival === 'opposed' ? 'Their prices are steep for you, and their recruiters will not deal with you.' : 'Their prices are a little steeper for you.') }));
     if (sv.shop) out.push(btn('Shop', () => shopSheet(id), 'full'), h('div', { style: 'height:8px' }));
     if (sv.recruit) out.push(btn('Recruit (' + S.recruitCost(ST) + ' g)', () => recruitSheet(id), 'full'), h('div', { style: 'height:8px' }));
-    if (sv.join) {
-      const f = sv.join.faction, mine = ST.factions.allegiance === f;
-      out.push(h('div', { class: 'card' }, h('b', { text: fname(f) }), h('div', { class: 'dim', text: mine ? 'You have sworn to this faction.' : (sv.join.can ? 'They will take your oath.' : 'They need you to be Friendly (250). You are ' + tierName(f) + ' (' + fmtStand(f) + ').') }), h('div', { style: 'height:6px' }),
-        mine ? btn('Leave the faction', () => swear(null), 'bad full') : btn('Swear allegiance' + (ST.factions.allegiance ? ' (leaves ' + fname(ST.factions.allegiance) + ')' : ''), () => swear(f), 'pri full', !sv.join.can)));
-    }
     if (n.owner === 'hearthwatch') out.push(h('div', { class: 'card' }, h('b', { text: 'Hearthwatch sanctuary' }), h('div', { class: 'dim', text: 'A bed, a fire and no questions. Your wounds are tended and old trails go cold. Takes a day.' }), h('div', { style: 'height:6px' }), btn('Rest here', () => { S.advanceDay(ST, 1); S.sanctuary(ST); S.changeGoodwill(ST, 1, 'rested at a chapel'); toast('You rest. The road feels a little further behind you.'); autosave(); render(); }, 'pri full')));
     return out;
   }
@@ -679,10 +674,6 @@ body.campaign #top .skirm{display:none}
       bits.push(h('div', { style: 'height:6px' }), btn(d.stage ? 'Go deeper' : 'Enter', () => { const e = C.dungeonFight(ST, d.id); if (e) briefing(e); }, 'pri full'));
     }
     return h('div', { class: 'card' }, bits);
-  }
-  function swear(f) {
-    const r = S.setAllegiance(ST, f); if (!r.ok) { toast(r.reason, true); return; }
-    toast(f ? 'You swore to ' + fname(f) : 'You left your faction'); autosave(); render();
   }
   function informantAct(id, k, how) {
     const r = C.informantAct(ST, id, k, how); if (!r.ok) { toast(r.reason, true); return; } autosave(); render();
@@ -1038,7 +1029,7 @@ body.campaign #top .skirm{display:none}
   }
   function factionScreen(main) {
     if (!ST.world.flags.g_factions) { C.guideFlag(ST, 'g_factions'); guideCheck(); }
-    const fs = Object.keys(D.factions).filter(f => f !== 'outlaws' && f !== 'hearthwatch' && (S.isMet(ST, f) || S.getRank(ST, f))), al = ST.factions.allegiance;
+    const fs = Object.keys(D.factions).filter(f => f !== 'outlaws' && f !== 'hearthwatch' && (S.isMet(ST, f) || S.getRank(ST, f)));
     const offers = S.invitations(ST), ranks = S.listRanks(ST), noticed = RK().factions.filter(f => !S.getRank(ST, f) && S.getStanding(ST, f) >= 100 && S.getStanding(ST, f) < RK().standingNeeded[0] && !(C.factionNext && C.factionNext(ST).some(x => x.faction === f)) && !(C.FQ && C.FQ[f] && C.jobActive(ST, C.FQ[f].tryout)));
     main.appendChild(h('div', { class: 'pad' },
       C.proofs(ST).length ? [h('div', { class: 'sh-h', text: 'Proof you carry' }), proofCards()] : null,
@@ -1046,7 +1037,7 @@ body.campaign #top .skirm{display:none}
       ranks.length ? [h('div', { class: 'sh-h', text: 'Your rank' }), ranks.map(rankCard)] : null,
       noticed.length ? [h('div', { class: 'sh-h', text: 'Noticed' }), noticed.map(f => h('div', { class: 'dim', text: fname(f) + ': they have noticed you. Keep helping them and someone will ask you to prove yourself.' }))] : null,
       hearthCard(),
-      h('div', { class: 'card' }, h('b', { text: 'Allegiance: ' + (al ? fname(al) : 'None (free)') }), h('div', { class: 'dim', text: al ? 'You can leave at any hall, at a reputation cost.' : 'Swear an oath at a faction hall once they are Friendly (250).' })),
+      ranks.length ? null : h('div', { class: 'card' }, h('b', { text: 'You serve no faction' }), h('div', { class: 'dim', text: 'Do good work for a faction and they will notice you. Pass their try-out and someone of theirs will offer you a place. You serve one faction at a time.' })),
       fs.length ? null : h('div', { class: 'dim', style: 'margin:10px 0', text: 'You have not met any of the great powers yet. Walk the roads and they will find you.' }),
       raceGroups(fs, f => { const n = S.getStanding(ST, f), pct = Math.round(100 * (n + 1000) / 2000), F = D.factions[f];
         return h('div', { class: 'card', onclick: () => factionSheet(f) }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { style: 'color:' + F.color, text: F.name }), h('div', { class: 'dim', text: F.desc }), C.dossierCount(ST, f) ? h('div', { class: 'dim', style: 'font-size:12px;margin-top:2px', text: 'Dossier: ' + C.dossierCount(ST, f) + ' entr' + (C.dossierCount(ST, f) > 1 ? 'ies' : 'y') }) : null), h('div', { style: 'text-align:right' }, h('b', { text: tierName(f) }), h('div', { class: 'dim', text: (n > 0 ? '+' : '') + n }))),

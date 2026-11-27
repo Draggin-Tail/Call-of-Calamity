@@ -1,4 +1,4 @@
-/* Game state and saving for the campaign. Pure logic (no screens): the state object, save slots, export / import, faction standing and allegiance rules,
+/* Game state and saving for the campaign. Pure logic (no screens): the state object, save slots, export / import, faction standing and rank rules,
    and applying a battle result. The menus (step 5) will sit on top of window.GAME_SAVE.
    Load after combatRules, classes, abilities, passives, gear and loadout. Races and factions data are optional here: if GAME_DATA.races /
    GAME_DATA.factions are missing the rules still run (faction ripple needs GAME_DATA.factions[id].relations = { otherId: -1..1 }).
@@ -9,7 +9,7 @@
      roster[ { id, name, race, primary, secondary, passives[], gear{slot:item}, level, xp, jp, unlocked[classIds] } ],
      party[ unit ids in battle order ],
      inventory{ gold, items{ itemId: count } },
-     factions{ standing{ id: -1000..1000 }, allegiance: id | null (neutral), lastSwitchDay, history[ { day, faction, delta, reason } ] },
+     factions{ standing{ id: -1000..1000 }, ranks{ id: { rank, dormant, trust, since } } (one at most), history[ { day, faction, delta, reason } ] },
      world{ day, calamity, location, nodes{ nodeId: { owner, discovered } }, flags{} },
      campaign{ completed[], battles[ { day, node, won, turns, kills } ] },
      settings{}, nextId }
@@ -34,8 +34,6 @@
     killPenalty: 5,                            // standing lost with a faction per member killed
     rippleFactor: 0.5,                         // share of a change passed to related factions (relation -1..1)
     leavePenalty: 60,                          // standing lost with the faction you leave
-    joinMinTier: 'friendly',                   // standing tier needed to swear allegiance without a defection quest
-    switchCooldownDays: 0,                    // no wait between leaving one faction and swearing to another (node ownership phase 2)
     historyCap: 200, battleCap: 200,
     startGold: 100,
     shop: { sellFraction: 0.5 },
@@ -113,7 +111,7 @@
   S.partyBuilds = st => st.party.map(id => st.roster.find(u => u.id === id)).filter(Boolean).map(u => S.toBuild(u));
 
   // ---- new game ----
-  // opts: { name, race, slot, recruits: [{ name, primary }], gold, location, standing: {faction: n}, allegiance, day }
+  // opts: { name, race, slot, recruits: [{ name, primary }], gold, location, standing: {faction: n}, day }
   S.newGame = function (opts) {
     opts = opts || {};
     const now = Date.now();
@@ -123,7 +121,7 @@
       player: { name: opts.name || 'Hero', race: opts.race || null },
       roster: [], party: [],
       inventory: { gold: opts.gold !== undefined ? opts.gold : S.RULES.startGold, items: {} },
-      factions: { standing: Object.assign({}, opts.standing || {}), allegiance: opts.allegiance || null, lastSwitchDay: -9999, history: [], relationOverrides: {}, ranks: {}, declined: {}, goodwill: 15 },
+      factions: { standing: Object.assign({}, opts.standing || {}), history: [], relationOverrides: {}, ranks: {}, declined: {}, goodwill: 15 },
       world: { day: 0, calamity: 0, location: opts.location || null, nodes: {}, flags: {} },
       campaign: { completed: [], battles: [] },
       settings: {}, nextId: 1
@@ -172,12 +170,13 @@
       st.dispatch = { out: ds0.filter(e => isObj(e) && seen.has(e.unit) && KD[e.kind] && !taken.has(e.unit) && taken.add(e.unit)).slice(0, S.RULES.dispatch.maxOut).map(e => ({ unit: e.unit, kind: e.kind, start: int(e.start, 0, 1e6), end: int(e.end, 0, 1e6),
         reward: { xp: int((e.reward || {}).xp || 0, 0, 1e6), jp: int((e.reward || {}).jp || 0, 0, 1e6), gold: int((e.reward || {}).gold || 0, 0, 1e6) } })) };
       st.party = st.party.filter(id => !taken.has(id)); }
-    st.factions = isObj(st.factions) ? st.factions : { standing: {}, allegiance: null, lastSwitchDay: -9999, history: [] };
+    st.factions = isObj(st.factions) ? st.factions : { standing: {}, history: [] };
     st.factions.standing = isObj(st.factions.standing) ? st.factions.standing : {};
     for (const f of Object.keys(st.factions.standing)) st.factions.standing[f] = int(st.factions.standing[f], S.RULES.standingMin, S.RULES.standingMax);
     st.factions.history = Array.isArray(st.factions.history) ? st.factions.history.slice(-S.RULES.historyCap) : [];
-    if (st.factions.lastSwitchDay === undefined) st.factions.lastSwitchDay = -9999;
-    st.factions.allegiance = st.factions.allegiance || null;
+    // The old allegiance oath is folded into the rank (your rank is your allegiance); it never gave more than a tavern line, so it is simply dropped.
+    if (st.factions.allegiance) fixes.push('Dropped the old allegiance oath (' + st.factions.allegiance + '): your rank is your allegiance now');
+    delete st.factions.allegiance; delete st.factions.lastSwitchDay;
     if (!isObj(st.factions.relationOverrides)) st.factions.relationOverrides = {};
     if (!isObj(st.factions.ranks)) st.factions.ranks = {};
     for (const f of Object.keys(st.factions.ranks)) { const r = st.factions.ranks[f], lad = S.RANK && S.RANK.ladders[f];
@@ -252,7 +251,7 @@
     return { ok: true, state: r.state, fixes: r.fixes, checksumBad: r.checksumBad };
   };
   S.deleteSlot = function (slot) { rm(KEY + slot); const idx = metaIndex(); delete idx[slot]; wr(META_KEY, JSON.stringify(idx)); return { ok: true }; };
-  const summary = st => ({ name: st.meta.name, race: st.player.race, day: st.world.day, party: st.party.length, updated: st.meta.updated, allegiance: st.factions.allegiance });
+  const summary = st => ({ name: st.meta.name, race: st.player.race, day: st.world.day, party: st.party.length, updated: st.meta.updated, allegiance: S.sworn ? S.sworn(st) : null });
   function metaIndex() { try { const m = JSON.parse(rd(META_KEY) || '{}'); return isObj(m) ? m : {}; } catch (e) { return {}; } }
   // One entry per slot for the load screen: null when empty, { error } when unreadable, otherwise a short summary.
   S.listSlots = function () {
@@ -276,7 +275,7 @@
     document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 0);
   };
 
-  // ---- factions: standing, tiers, allegiance ----
+  // ---- factions: standing, tiers ----
   S.getStanding = (st, f) => st.factions.standing[f] || 0;
   S.tierOf = function (n) { let t = S.RULES.tiers[0]; for (const x of S.RULES.tiers) if (n >= x.min) t = x; return t; };
   S.tierIndex = id => S.RULES.tiers.findIndex(t => t.id === id);
@@ -310,24 +309,12 @@
     return out;
   };
   // A faction is 'met' once the player has dealt with it directly (a choice, a fight, a job) or walked into its land. Only met factions show up in change lists; ripple effects on the rest still happen quietly.
-  S.isMet = (st, f) => !!((st.factions.met || {})[f] || (st.factions.ranks || {})[f] || st.factions.allegiance === f);
+  S.isMet = (st, f) => !!((st.factions.met || {})[f] || (st.factions.ranks || {})[f]);
   S.markMet = (st, f) => { if (f) (st.factions.met = st.factions.met || {})[f] = 1; };
   // Net the changes per faction (a +1 and a -10 become one -9), drop zeros, and hide ripples on factions the player has not met.
   S.visibleChanges = function (st, changes) {
     const by = {}, order = []; (changes || []).forEach(c => { if (!c || !c.delta) return; const k = c.faction; if (!by[k]) { by[k] = { faction: k, delta: 0, from: c.from, to: c.to, direct: false }; order.push(k); } by[k].delta += c.delta; by[k].to = c.to; if (!c.via) by[k].direct = true; });
     return order.map(k => by[k]).filter(c => c.delta && (c.direct || S.isMet(st, c.faction)));
-  };
-  // Swear allegiance to a faction (null = neutral path). Needs Friendly standing unless forced (a defection quest).
-  S.setAllegiance = function (st, f, opts) {
-    opts = opts || {}; const R = S.RULES, cur = st.factions.allegiance || null, day = st.world.day;
-    if (f === cur) return { ok: false, reason: 'Already ' + (f ? 'allied with ' + f : 'neutral') };
-    if (f && G().factions && !G().factions[f]) return { ok: false, reason: 'Unknown faction ' + f };
-    if (!opts.force && day - st.factions.lastSwitchDay < R.switchCooldownDays) return { ok: false, reason: 'You switched recently: wait ' + (R.switchCooldownDays - (day - st.factions.lastSwitchDay)) + ' more days' };
-    if (f && !opts.force && S.tierIndex(S.standingTier(st, f).id) < S.tierIndex(R.joinMinTier)) return { ok: false, reason: 'Needs ' + R.joinMinTier + ' standing (now ' + S.standingTier(st, f).name + ')' };
-    const changes = [];
-    if (cur) changes.push(...S.changeStanding(st, cur, -(opts.betrayal ? R.leavePenalty * 3 : R.leavePenalty), { reason: 'left the faction', ripple: false }));
-    st.factions.allegiance = f || null; st.factions.lastSwitchDay = day;
-    return { ok: true, changes };
   };
 
   // ---- progression: skills, mastery, class unlocks, passives, JP ----
