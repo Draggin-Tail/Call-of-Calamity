@@ -36,7 +36,7 @@
     // ---- garrisons ----
     C.garrisonBase = function (id) { const n = C.NODES[id]; if (!n) return 0; return (P.base[n.type] || P.other) + (n.seat && n.type !== 'capital' ? P.hall : 0); };
     C.garrison = function (st, id) { const g = (st.world.nodes[id] || {}).garrison; return typeof g === 'number' ? g : C.garrisonBase(id); };
-    C.setGarrison = function (st, id, v) { const b = C.garrisonBase(id); v = Math.max(0, Math.round(v)); if (v >= b) delete NS(st, id).garrison; else NS(st, id).garrison = v; return v; };
+    C.setGarrison = function (st, id, v) { const b = C.garrisonBase(id); v = Math.max(0, Math.round(v)); if (v === b) delete NS(st, id).garrison; else NS(st, id).garrison = v; return v; };   // above base after an army moves in (3c)
     C.garrisonWord = v => P.words.find(([m]) => v <= m)[1];
 
     // ---- supply ----
@@ -86,9 +86,13 @@
         if (v >= P.defectAt && rnd(st) < P.defectChance) C.defect(st, id);
       }
       for (const id of Object.keys(s.iso)) if (!cut.has(id)) { if (s.cut[id]) { delete s.cut[id]; C.relNews(st, C.NODES[id].name + ' is back in touch with the ' + fname(C.ownerOf(st, id)) + '.', 'supply'); } s.iso[id] -= P.drain; if (s.iso[id] <= 0) delete s.iso[id]; }
-      // regrowth: one man every 10 days, while supplied
-      for (const id of Object.keys(st.world.nodes)) { const g = st.world.nodes[id].garrison; if (typeof g !== 'number' || cut.has(id)) continue;
-        s.regrow[id] = (s.regrow[id] || 0) + 1; if (s.regrow[id] >= P.regrowEvery) { s.regrow[id] = 0; C.setGarrison(st, id, g + 1); } }
+      // regrowth: one man every 10 days, while supplied; a garrison above its base (an army that moved in, 3c) drains back a man every 10 days, supplied or not
+      // a faction's men never exceed the sum of its places' base garrisons (3c): men mustered elsewhere are moved, not made, so regrowth only refills that total
+      const men = {}, cap = {}; for (const id of Object.keys(C.NODES)) { const f = C.ownerOf(st, id); if (!WAR().includes(f)) continue; men[f] = (men[f] || 0) + C.garrison(st, id); cap[f] = (cap[f] || 0) + C.garrisonBase(id); }
+      for (const id of Object.keys(st.world.nodes)) { const g = st.world.nodes[id].garrison; if (typeof g !== 'number') continue; const over = g > C.garrisonBase(id), f = C.ownerOf(st, id); if (cut.has(id) && !over) continue;
+        s.regrow[id] = (s.regrow[id] || 0) + 1; if (s.regrow[id] < P.regrowEvery) continue;
+        if (!over && men[f] != null && men[f] >= cap[f]) continue;   // full strength already: wait until men are lost
+        s.regrow[id] = 0; C.setGarrison(st, id, g + (over ? -1 : 1)); if (men[f] != null) men[f] += over ? -1 : 1; }
       for (const id of Object.keys(s.regrow)) if (typeof (st.world.nodes[id] || {}).garrison !== 'number') delete s.regrow[id];
     };
     C.isolation = function (st, id) { const v = SS(st).iso[id] || 0; return { days: v, cut: !!SS(st).cut[id], stage: v >= P.defectAt ? 3 : v >= P.shrinkAt ? 2 : v >= P.thinAt ? 1 : 0 }; };

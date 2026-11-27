@@ -3,6 +3,7 @@
 // Run: cd tests && node t88.js | grep -v ^PASS
 let fails = 0; const ok = (n, c, info) => { console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !info ? '' : '  [' + info + ']')); if (!c) fails++; };
 const w = require(process.env.LD || './real_ld.js')(); const C = w.GAME_CAMPAIGN, S = w.GAME_SAVE, R = C.REL;
+if (C.grabTick) C.grabTick = () => {};   // relations alone: 3c's Syndicate trade grabs would sour pairs on their own (t90 covers them)
 const fresh = () => { const st = C.newGame({ race: 'human', name: 'T' }); st.world.rbNext = 1e9; st.world.day = 1; C.relState(st).day = 1; C.relState(st).next = 1e9; return st; };
 const set = (st, a, b, v) => S.setRelation(st, a, b, v, { both: true });
 const days = (st, n) => { for (let i = 0; i < n; i++) S.advanceDay(st, 1); };
