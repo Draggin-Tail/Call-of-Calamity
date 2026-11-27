@@ -91,6 +91,30 @@ const ilvaneGame = () => { const st = fresh(); proof(st, 'forbidden_hoard'); cal
   ok('the hold is granted, backed by the Synod', C.grantHold(st, 'pale_vigil').ok && st.world.hold.backer === 'synod');
   ok('Crown rank titles are not renamed to King\'s or Queen\'s', !C.REALM.ilvane.titles && !C.REALM.ledger.titles); }
 
+// ---- no Broken Moot: a second round until someone wins ----
+{ const st = fresh(); callMoot(st); st.world.flags.ledger_stands = 1; st.world.flags.ilvane_stands = 1;
+  const t = C.mootTally(st), v = x => t.seats.find(s => s.seat === x);
+  ok('both new claimants standing: the Lords lean to Osric', v('lords').vote === 'osric');
+  ok('first round: Osric 3, Ledger 2, Ilvane 2, Corisande 1 (no majority)', JSON.stringify(t.firstCounts) === JSON.stringify({ osric: 3, ledger: 2, ilvane: 2, corisande: 1 }), JSON.stringify(t.firstCounts));
+  ok('Corisande drops first, then the Ledger (the Lords like him least of the tied pair)', t.rounds.map(r => r.out).filter(Boolean).join() === 'corisande,ledger', t.rounds.map(r => r.out).join());
+  ok('Osric wins the later round, with the Hearthwatch and the Syndicate', t.winner === 'osric' && t.counts.osric === 6 && v('hearthwatch').final === 'osric' && v('syndicate').final === 'osric', JSON.stringify(t.counts));
+  C.moot(st).canvass.lords = { how: 'persuade', for: 'ilvane', day: 1 };
+  ok('the player can still tip it: swaying the Lords to Ilvane gives her 5', C.mootTally(st).winner === 'ilvane'); }
+{ const st = fresh(); callMoot(st); C.moot(st).canvass.syndicate = { how: 'pressure', for: 'corisande', day: 1 };
+  const t = C.mootTally(st), syn = t.seats.find(s => s.seat === 'synod');
+  ok('an ordinary split: Regency 3, Corisande 3, Osric 2; Osric drops and the Synod turns to the Regency', t.rounds[0].out === 'osric' && t.winner === 'regency' && syn.vote === 'osric' && syn.final === 'regency', JSON.stringify(t.rounds)); }
+{ const st = fresh(); callMoot(st); C.moot(st).canvass.syndicate = { how: 'pressure', for: 'corisande', day: 1 }; at(st, 'crown_keep');
+  C.mootOpen(st); C.mootDeclare(st, 'corisande'); const r = C.mootResolve(st);
+  ok('resolving never gives a Broken Moot', r.ok && r.outcome !== 'broken' && !!st.world.realm && st.world.realm.outcome === r.outcome); }
+{ let bad = 0; for (let i = 0; i < 300; i++) { const st = fresh(); callMoot(st); const f = st.world.flags, m = C.moot(st);
+    if (Math.random() < 0.5) f.ledger_stands = 1; if (Math.random() < 0.5) f.ilvane_stands = 1; if (Math.random() < 0.3) f.corisande_withdrawn = 1; if (Math.random() < 0.3) { f.wil_proclaimed = 1; m.seated.banner = true; }
+    if (Math.random() < 0.3) f.exposed_succession = 1; if (Math.random() < 0.3) f.exposed_forbidden_hoard = 1; if (Math.random() < 0.2) f.exposed_hidden_hand = 1;
+    const stand = C.mootStanding(st); Object.keys(C.MOOT.seats).forEach(k => { const x = Math.random(); if (x < 0.3) m.canvass[k] = { how: x < 0.1 ? 'pressure' : 'persuade', for: stand[Math.floor(Math.random() * stand.length)], day: 1 }; });
+    const t = C.mootTally(st); if (!t.winner || !stand.includes(t.winner)) bad++; }
+  ok('300 random Moots: there is always a winner, and they are standing', bad === 0, bad + ' without'); }
+{ const st = fresh(); C.applyRealm(st, 'broken');
+  ok('an old save whose Moot broke still has its realm', C.realmTitle(st) === 'nobody' && C.AFTER_MOOT.broken); }
+
 // ---- after the Moot ----
 ok('both outcomes have after-Moot lines and a Voss line', ['ledger', 'ilvane'].every(k => C.AFTER_MOOT[k] && C.AFTER_MOOT[k].line && C.AFTER_MOOT[k].board && C.AFTER_MOOT[k].talk.length));
 ok('both outcomes have a dossier line', !!(C.LORE.moot_ledger && C.LORE.moot_ilvane));
