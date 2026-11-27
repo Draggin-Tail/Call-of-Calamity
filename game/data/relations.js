@@ -90,7 +90,7 @@
       news(st, 'The ' + fname(by) + ' has declared war on the ' + fname(on) + '.', 'war');
     }
     function makePeace(st, a, b) {
-      const r = RS(st), k = pk(a, b); if (!r.wars[k]) return; delete r.wars[k]; r.truce[k] = day(st) + R.truceDays; setRival(st, a, b, 'uneasy');
+      const r = RS(st), k = pk(a, b); if (!r.wars[k]) return; delete r.wars[k]; r.truce[k] = day(st) + pairLine(st, a, b, 'truceDays'); setRival(st, a, b, 'uneasy');
       news(st, 'The ' + fname(a) + ' and the ' + fname(b) + ' have made peace. A truce holds for now.', 'peace');
     }
     function makeAlly(st, a, b) {
@@ -113,19 +113,26 @@
       r.pending = { kind, faction: f, with: other, day: day(st) }; news(st, 'The ' + fname(f) + ' has called its council and wants you at one of its halls.', 'summons');
       return true;
     }
+    // A faction's own lines (Phase 4b: the united realm's war posture, C.postureOf); the rest use the shared ones. For a pair, peace and
+    // the alliance lines are the two sides' average and the truce the longer of the two; war needs the declarer's own line.
+    const line = (st, f, key) => { const p = C.postureOf ? C.postureOf(st, f) : null; return p && p[key] !== undefined ? p[key] : R[key]; };
+    const pairLine = (st, a, b, key) => key === 'truceDays' ? Math.max(line(st, a, key), line(st, b, key)) : (line(st, a, key) + line(st, b, key)) / 2;
+    C.relLine = line;
     function checkPair(st, a, b) {
       const r = RS(st), k = pk(a, b), v = rel(st, a, b), me = sworn(st), cool = r.cool[k] && r.cool[k] > day(st);
       const pend = r.pending && pk(r.pending.faction, r.pending.with) === k;
-      if (r.wars[k]) { if (v > R.peace) makePeace(st, a, b); return; }
-      if (r.allies[a] === b) { if (v < R.allyBreak) breakAlly(st, a, b); return; }
+      if (r.wars[k]) { if (v > pairLine(st, a, b, 'peace')) makePeace(st, a, b); return; }
+      if (r.allies[a] === b) { if (v < pairLine(st, a, b, 'allyBreak')) breakAlly(st, a, b); return; }
       if (pend || cool) return;
-      if (v < R.war && !(r.truce[k] && r.truce[k] > day(st))) {
-        const by = warBy(st, a, b); if (!by) return; const on = by === a ? b : a;
+      if (v < Math.max(line(st, a, 'war'), line(st, b, 'war')) && !(r.truce[k] && r.truce[k] > day(st))) {
+        let by = warBy(st, a, b); if (!by) return;
+        if (v >= line(st, by, 'war')) { const o = by === a ? b : a; if (o === 'hearthwatch' || v >= line(st, o, 'war')) return; by = o; }   // the side whose own line is crossed declares
+        const on = by === a ? b : a;
         if (on === 'hearthwatch' && by !== me) return;                 // only the player's faction can make war on the Hearthwatch, and only with a yes
         if (by === me) ask(st, 'war', by, on); else declareWar(st, by, on);
         return;
       }
-      if (v >= R.ally && !r.allies[a] && !r.allies[b]) {
+      if (v >= pairLine(st, a, b, 'ally') && !r.allies[a] && !r.allies[b]) {
         const hw = a === 'hearthwatch' || b === 'hearthwatch'; if (hw && !(me && (me === a || me === b))) return;   // no AI faction allies with the Hearthwatch
         if (me === a || me === b) ask(st, 'ally', me, me === a ? b : a); else makeAlly(st, a, b);
       }

@@ -56,7 +56,7 @@
   // Rank for board purposes: the Hearthwatch has none, so its goodwill tiers stand in (Wary 0, Kindly 1, Trusted 2).
   const workRank = (st, f) => f === 'hearthwatch' ? ['wary', 'kindly', 'trusted'].indexOf(S.goodwillTier ? S.goodwillTier(st).id : 'wary') : rankOf(st, f);
   function nearby(st, from, f, types, hops, owners) {
-    const okOwner = id => owners === 'any' ? true : owners ? owners.includes(C.ownerOf(st, id)) : C.ownerOf(st, id) === f;
+    const okOwner = id => owners === 'any' ? true : owners ? owners.some(o => (o ? heir(st, o) : o) === C.ownerOf(st, id)) : C.ownerOf(st, id) === f;   // Phase 4: an absorbed faction's places are the realm's
     const dist = { [from]: 0 }, q = [from], out = [];
     while (q.length) { const x = q.shift(); if (dist[x] >= hops) continue; Object.keys((C.NODES[x] || {}).links || {}).forEach(y => { if (dist[y] === undefined) { dist[y] = dist[x] + 1; q.push(y); } }); }
     Object.keys(dist).forEach(id => { const n = C.NODES[id]; if (id !== from && n && !n.hidden && types.includes(n.type) && okOwner(id)) out.push(id); });
@@ -106,7 +106,7 @@
   C.MAX_CONTRACTS = 3;
   C.contractBoard = function (st, at) {
     const own = C.factionOwner(st, at); if (!own || !isBoard(st, at, own) || (own !== 'hearthwatch' && (!S.standingTier || S.standingTier(st, own).id === 'hostile'))) return [];
-    const per = Math.floor(day(st) / 4), kinds = Object.entries(C.CONTRACT_KINDS).filter(([, k]) => heir(st, k.faction) === own && workRank(st, own) >= k.minRank).map(([id]) => id);
+    const per = Math.floor(day(st) / 4), kinds = Object.entries(C.CONTRACT_KINDS).filter(([id, k]) => heir(st, k.faction) === own && workRank(st, own) >= k.minRank && (!C.kindOk || C.kindOk(st, id, own))).map(([id]) => id);   // C.kindOk: the realm's magic law (policy.js)
     const taken = new Set(ctr(st).list.filter(c => c.board === at + '|' + per).map(c => c.slot)), out = [];
     for (let slot = 0; slot < 3 && kinds.length; slot++) {
       const kid = kinds[hsh(at + '|' + per + '|' + slot) % kinds.length], K = C.CONTRACT_KINDS[kid], pool = nearby(st, at, own, K.targets, K.hops, K.owners);

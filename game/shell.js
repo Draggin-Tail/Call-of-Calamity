@@ -824,10 +824,10 @@ body.campaign #top .skirm{display:none}
   function itemRow(g, action, count) { const it = D.gear[g]; return h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: it.name + (count > 1 ? ' ×' + count : '') }), h('div', { class: 'dim', text: SLOT_NAME[it.slot] + (it.weapon ? ' · ' + it.weapon.family + (it.weapon.hands === 2 ? ' (2h)' : '') : it.weight ? ' · ' + it.weight : '') }), h('div', { class: 'dim', text: it.desc })), action)); }
   function recruitSheet(id) {
     sheet('Recruit', () => {
-      const sv = C.nodeServices(ST, id), cost = S.recruitCost(ST); if (!sv.recruit) return [h('div', { class: 'dim', text: 'No one is taking on recruits here right now.' })];
+      const sv = C.nodeServices(ST, id), cost = S.recruitCost(ST), price = cl => Math.round(cost * (C.recruitMult ? C.recruitMult(ST, id, cl) : 1)); if (!sv.recruit) return [h('div', { class: 'dim', text: 'No one is taking on recruits here right now.' })];
       const race = sv.recruit.race;
       return [h('div', { class: 'dim', text: (D.races[race] ? D.races[race].name + ' recruits' : 'Recruits') + ' start at level ' + S.recruitLevel(ST) + ' and are yours to build. Roster ' + ST.roster.length + '/' + S.RULES.rosterCap + ' · ' + ST.inventory.gold + ' g' }), h('div', { style: 'height:8px' }),
-        S.entryClasses().map(cl => h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: cname(cl) }), h('div', { class: 'dim', text: D.classes[cl].signature })), btn(cost + ' g', () => { const r = S.recruit(ST, cl, { race }); if (!r.ok) toast(r.reason, true); else { toast(r.unit.name + ' joins you'); autosave(); render(); } }, 'sm pri', ST.inventory.gold < cost || ST.roster.length >= S.RULES.rosterCap))))];
+        S.entryClasses().map(cl => h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: cname(cl) }), h('div', { class: 'dim', text: D.classes[cl].signature })), btn(price(cl) + ' g', () => { const r = S.recruit(ST, cl, { race, mult: C.recruitMult ? C.recruitMult(ST, id, cl) : 1 }); if (!r.ok) toast(r.reason, true); else { toast(r.unit.name + ' joins you'); autosave(); render(); } }, 'sm pri', ST.inventory.gold < price(cl) || ST.roster.length >= S.RULES.rosterCap))))];
     });
   }
 
@@ -1050,7 +1050,7 @@ body.campaign #top .skirm{display:none}
     main.appendChild(h('div', { class: 'pad' },
       C.proofs(ST).length ? [h('div', { class: 'sh-h', text: 'Proof you carry' }), proofCards()] : null,
       C.bounties(ST).length ? [h('div', { class: 'sh-h', text: 'Wanted' }), C.bounties(ST).map(b => h('div', { class: 'card badc' }, h('b', { text: fname(b.faction) + ' have put a price on you' }), h('div', { class: 'dim', text: 'Hunters can find you anywhere. It lapses in ' + b.daysLeft + ' days, or settle it at a Syndicate place or a Hearthwatch chapel.' })))] : null,
-      un ? h('div', { class: 'card', style: 'border-color:' + D.factions.realm.color }, h('b', { style: 'color:' + D.factions.realm.color, text: 'The realm is one: the ' + D.factions.realm.name }), h('div', { class: 'dim', text: '"' + D.factions.realm.motto + '" ' + un.ruler.charAt(0).toUpperCase() + un.ruler.slice(1) + ' rules from Crown Keep.' })) : null,
+      un ? h('div', { class: 'card', style: 'border-color:' + D.factions.realm.color }, h('b', { style: 'color:' + D.factions.realm.color, text: 'The realm is one: the ' + D.factions.realm.name }), h('div', { class: 'dim', text: '"' + D.factions.realm.motto + '" ' + un.ruler.charAt(0).toUpperCase() + un.ruler.slice(1) + ' rules from Crown Keep.' }), C.policyWords ? C.policyWords(ST).map(t => h('div', { class: 'dim', style: 'font-size:12px;margin-top:3px', text: t })) : null) : null,
       ranks.length ? [h('div', { class: 'sh-h', text: 'Your rank' }), ranks.map(rankCard)] : null,
       noticed.length ? [h('div', { class: 'sh-h', text: 'Noticed' }), noticed.map(f => h('div', { class: 'dim', text: fname(f) + ': they have noticed you. Keep helping them and someone will ask you to prove yourself.' }))] : null,
       C.relReport ? realmBlock() : null,
