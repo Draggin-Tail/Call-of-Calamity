@@ -247,7 +247,7 @@
     { id: 'cellar', if: st => C.jobDone(st, 'cellar_ledger'), lines: ['The Syndicate\'s factor is smiling again, and it is not the nice kind.', 'Folk have stopped walking past Applecourt after dark.'] },
     { id: 'mage', if: st => C.jobDone(st, 'hedge_mage'), lines: ['The hedge-mage left Pale Vigil in a hurry.', 'The chantry clerks are not saying why. The chantry clerks are always saying why.'] },
     { id: 'hostile', if: st => Object.keys(window.GAME_DATA.factions).some(f => f !== 'outlaws' && S().standingTier(st, f).id === 'hostile' && S().isMet(st, f)), lines: st => ['There are notices up in the next town. Somebody matching a party like yours.', 'Said nothing, did I? Not yet.'] },
-    { id: 'sworn', if: st => !!st.factions.allegiance, lines: st => ['Is that ' + C.tvName(st.factions.allegiance) + ' colours on that one?', 'It is. Mind your tongue about them tonight.'] },
+    { id: 'sworn', if: st => !!S().sworn(st), lines: st => ['Is that ' + C.tvName(S().sworn(st)) + ' colours on that one?', 'It is. Mind your tongue about them tonight.'] },
     { id: 'dungeon', if: st => Object.keys(C.DUNGEONS).some(d => { try { return C.dungeonStatus(st, d).cleared; } catch (e) { return false; } }), lines: ['They say somebody walked out of the dark under the hills and came back with their pockets full.', 'And their party in one piece. That is the strange part.'] }
   ];
   C.TV_HINTS = [
@@ -866,7 +866,6 @@
       owner, tier, open, rival: rival.rating,
       shop: n.shop && open ? (() => { const rs = C.rotateStock(st, id, n.shop.concat(n.shopFriendly && (tier === 'friendly' || tier === 'allied') ? n.shopFriendly : [])), ev = C.placeEvent(st, id), cal = C.calendar(st.world.day); return { stock: rs.stock, priceMult: Math.round(PRICE[tier] * C.shopMult(st, id) * rival.priceMult * 100) / 100, notes: rs.notes, event: ev && ev.mult !== 1 ? ev.name : null, festival: cal.festival && ['town', 'market', 'capital'].includes(n.type) ? cal.festival : null }; })() : null,
       recruit: n.recruit && open && rival.recruit && C.recruitRace(id) ? { classes: S().entryClasses(), race: C.recruitRace(id) } : null,   // open unless Hostile (or besieged); the recruit's race is the region's
-      join: isHall(n) && n.faction && !lost ? { faction: n.faction, can: S().tierIndex(tier) >= S().tierIndex(S().RULES.joinMinTier) } : null,
       encounter: encounterAvailable(st, id), choice: n.choice && !st.world.flags['choice_' + n.choice] && !(C.CHOICES[n.choice] && C.CHOICES[n.choice].job && !C.jobActive(st, C.CHOICES[n.choice].job)) ? n.choice : null,
       jobOffers: C.jobOffers(st, id), jobReports: C.jobReports(st, id),
       besieged: lost,

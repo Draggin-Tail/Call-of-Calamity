@@ -73,10 +73,11 @@ const recruitOf = f => Object.keys(N).find(id => N[id].recruit && C.defaultOwner
 { const id = shopOf('synod'), buy = sworn => { const st = fresh(); if (sworn) S.joinRank(st, 'syndicate', { force: true }); st.world.location = id; st.inventory.gold = 99999; const it = svc(st, id).shop.stock[0], r = C.buy(st, id, it.id || it); return r.ok ? 99999 - st.inventory.gold : null; };
   const a = buy(false), b = buy(true); ok('buying charges the marked-up price', a && b && Math.abs(b / a - 1.4) < 0.03, a + ' -> ' + b); }
 
-// ---- switching sides has no wait ----
-{ const st = fresh(); st.factions.standing.crown = 300; st.factions.standing.synod = 300;
-  const a = S.setAllegiance(st, 'crown'), b = S.setAllegiance(st, 'synod');
-  ok('swearing allegiance elsewhere has no cooldown', a.ok && b.ok, b.reason); }
+// ---- the old allegiance oath is folded into the rank ----
+ok('there is no separate allegiance oath any more', !S.setAllegiance && !('allegiance' in fresh().factions) && !('join' in C.nodeServices(fresh(), 'crown_keep')));
+{ const st = fresh(); st.factions.allegiance = 'crown'; st.factions.lastSwitchDay = 3; S.joinRank(st, 'synod', { force: true });
+  const r = S.repair(JSON.parse(JSON.stringify(st)));
+  ok('an old save drops its allegiance oath and keeps its rank', !('allegiance' in r.state.factions) && !('lastSwitchDay' in r.state.factions) && S.sworn(r.state) === 'synod' && S.validate(r.state).length === 0); }
 
 // ---- the Banner's capital ----
 ok('Outlaw\'s Rest is the Broken Banner\'s capital', N.outlaws_rest.type === 'capital' && N.outlaws_rest.capital === 'broken_banner' && C.defaultOwner('outlaws_rest') === 'broken_banner');
