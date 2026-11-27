@@ -100,6 +100,27 @@ const rank = (st, f) => S.joinRank(st, f, { force: true, leave: true });
   C.applyEncounterResult(st, C.attackEncounter(st, a.target), 'hold', { won: true, kills: [], survivors: [] });
   ok('winning for the defenders beats the attack off at once', C.ownerOf(st, a.target) === 'broken_banner' && !C.attackOn(st, a.target) && C.attackMargin(st, 'crown') === 1.75); }
 
+// ---- trade grabs ----
+{ const st = fresh(); const o = C.grabOptions(st);
+  ok('the Syndicate can eye a weakly held market or town up to 6 roads out', o.length > 0 && o.every(x => ['market', 'town'].includes(C.NODES[x.target].type) && x.dist <= 6 && x.on !== 'syndicate' && x.force >= 1.5 * x.garrison), o.length);
+  C.grabTick(st, new Set()); const g = C.attackState(st).grab;
+  ok('at peace with everyone, it starts a grab, in the news', g && g.target === o[0].target && C.relState(st).news.some(n => n.kind === 'grab' && n.text.includes('buying up the debts')));
+  const v0 = C.relValue(st, 'syndicate', g.on); for (let i = 0; i < 10; i++) { st.world.day++; C.grabTick(st, new Set()); }
+  ok('its relation with the holder sours each day', C.relValue(st, 'syndicate', g.on) < v0 - 0.09, v0 + ' -> ' + C.relValue(st, 'syndicate', g.on));
+  ok('when war comes, the Syndicate is the one that declares it', C.relDeclarer(st, 'syndicate', g.on) === 'syndicate' && C.relDeclarer(st, g.on, 'syndicate') === 'syndicate');
+  war(st, 'syndicate', g.on); const way = new Set(C.grabWay(st)), ao = C.attackOptions(st, 'syndicate');
+  ok('in a grab war it attacks only the prize and the holder\'s places on the way to it', way.has(g.target) && ao.every(x => x.on !== g.on || way.has(x.target)), [...way].join());
+  (st.world.nodes[g.target] = st.world.nodes[g.target] || {}).owner = 'syndicate'; C.grabTick(st, new Set());
+  ok('holding the prize, it asks for terms', !!C.attackState(st).grab.took && C.relState(st).news.some(n => n.text.includes('asking the')));
+  const v1 = C.relValue(st, 'syndicate', g.on); st.world.day++; C.grabTick(st, new Set()); ok('and the relation warms toward peace', C.relValue(st, 'syndicate', g.on) > v1);
+  ok('it asks for no more of the holder\'s places once it has the prize', !C.attackOptions(st, 'syndicate').some(x => x.on === g.on)); }
+{ const st = fresh(); war(st, 'crown', 'syndicate'); C.grabTick(st, new Set()); ok('at war already, it starts no grab', !C.attackState(st).grab); }
+
+// ---- men are moved, not made ----
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); const men = f => Object.keys(C.NODES).filter(id => C.ownerOf(st, id) === f).reduce((n, id) => n + C.garrison(st, id), 0), cap = f => Object.keys(C.NODES).filter(id => C.ownerOf(st, id) === f).reduce((n, id) => n + C.garrisonBase(id), 0);
+  for (let i = 0; i < 120; i++) { day(st); C.attackState(st).list.forEach(a => { a.lands = 1e9; }); }
+  ok('mustering and regrowth never take a faction past the sum of its base garrisons', men('crown') <= cap('crown') && men('broken_banner') <= cap('broken_banner'), men('crown') + '/' + cap('crown')); }
+
 // ---- wiring and saves ----
 { const st = fresh(); war(st, 'crown', 'broken_banner'); C.relState(st).wars['broken_banner|crown'].since = 1; S.advanceDay(st, 1); ok('the daily tick runs from advanceDay', C.attacks(st).length > 0); }
 { const st = fresh(); const s2 = S.repair(JSON.parse(JSON.stringify(st))).state; delete s2.world.atk; S.advanceDay(s2, 1); ok('a save without attack state loads and ticks', !!s2.world.atk); }

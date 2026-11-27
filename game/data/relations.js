@@ -104,6 +104,7 @@
     // who would start a war: the side whose motive names the other, else the side that thinks worse of the other; never the Hearthwatch
     function warBy(st, a, b) {
       const can = [a, b].filter(f => f !== 'hearthwatch'); if (!can.length) return null;
+      const dc = C.relDeclarer ? C.relDeclarer(st, a, b) : null; if (dc && can.includes(dc)) return dc;   // a faction with a reason of its own (3c: a Syndicate trade grab)
       const m = can.filter(f => C.MOTIVES[f].foes.includes(f === a ? b : a)); if (m.length === 1) return m[0];
       const pool = m.length ? m : can; return pool.slice().sort((x, y) => S.getRelation(st, x, x === a ? b : a) - S.getRelation(st, y, y === a ? b : a) || (x < y ? -1 : 1))[0];
     }

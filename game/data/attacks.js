@@ -14,7 +14,12 @@
    - During the warning the player can step in at the place: help hold it (fight the attackers) or join the attack (fight the garrison).
      A won fight decides the attack for that side at once; a lost one leaves it to the roll. Standing rises with the side helped and falls with the other.
    - Motives pick targets: places a faction held at the start come first, then the faction its motive names, then rich places
-     (the Syndicate wants markets and towns), then the easier fight and the shorter march. */
+     (the Syndicate wants markets and towns), then the easier fight and the shorter march.
+   - Trade grabs (the Syndicate's motive): at peace with everyone, the Syndicate eyes a weakly held market or town up to 6 roads from its land
+     (one it could take by the margin), on a way that passes only its own, unclaimed and beast ground and the holder's places. Its relation with the
+     holder sours each day until it declares war; it attacks only the prize and the holder's places on the way to it, and once it holds the prize,
+     it asks for terms (the relation warms each day until peace). If the place stops being weak, changes hands or the war ends first, it lets go.
+     Between grabs it waits 60 days. */
 (function () {
   function go() {
     const C = window.GAME_CAMPAIGN, S = window.GAME_SAVE;
@@ -28,6 +33,7 @@
       counterOdds: 0.6,               // a defender strikes back elsewhere when the attackers' odds would still be above this after calling in men
       redeployEvery: 7, frontCap: 2,  // weekly redeployment; a front is fed up to 1.5x the strongest enemy within reach, never past 2x its base
       standing: 10,
+      grab: { by: 'syndicate', types: ['market', 'town'], reach: 6, sour: 0.01, terms: 0.02, rest: 60 },
       value: { castle: 4, town: 3, market: 3, village: 2, hamlet: 1.5 }, other: 1,
       squads: {
         crown: { name: 'Crown soldiers', enemies: [{ primary: 'warrior', name: 'Crown Guard' }, { primary: 'archer', name: 'Crown Bowman' }, { primary: 'squire', name: 'Crown Recruit' }] },
@@ -92,6 +98,7 @@
           + (f === 'syndicate' && (n.type === 'market' || n.type === 'town') ? 1 : 0) + o.odds - 0.3 * (o.dist - 1);
         out.push(o);
       }
+      const g = AS(st).grab; if (g && g.by === f) { const way = g.took ? new Set() : grabWay(st, g); return out.filter(o => o.on !== g.on || way.has(o.target)).map(o => (o.target === g.target && (o.score += 3), o)).sort((a, b) => b.score - a.score || (a.target < b.target ? -1 : 1)); }   // a grab war is about one prize and the way to it
       return out.sort((a, b) => b.score - a.score || (a.target < b.target ? -1 : 1));
     };
     function launch(st, f, o, counter) {
@@ -124,6 +131,66 @@
       for (const y of mine) { if (need <= 0) break; if (fr.has(y) || bz.has(y) || C.garrison(st, y) <= keepOf(y)) continue; C.setGarrison(st, y, C.garrison(st, y) - 1); n++; need--; }
       if (n) C.setGarrison(st, P, C.garrison(st, P) + n); return n ? { to: P, men: n } : null;
     };
+    // ---- trade grabs: the Syndicate's motive ----
+    const pk = (a, b) => [a, b].sort().join('|');
+    const shiftRel = (st, a, b, d) => S.setRelation(st, a, b, C.relValue(st, a, b) + d, { both: true });
+    // the strongest army f could gather against T (launch place plus muster), from a supplied place within reach
+    function bestForce(st, f, T, cut, bz) {
+      let best = 0; for (const L of Object.keys(C.NODES)) { if (C.ownerOf(st, L) !== f || cut.has(L) || bz.has(L)) continue; if (!(T in C.marchReach(st, f, L))) continue;
+        best = Math.max(best, C.garrison(st, L) + pool(st, f, L, bz, cut)); }
+      return best;
+    }
+    // roads from the grabber's land, through its own, unclaimed and beast ground and X's places (the way a grab war would clear)
+    function grabDist(st, G, X, from) {
+      const ok = id => { const o = C.ownerOf(st, id); return o === G || o === 'neutral' || o === 'monsters' || o === X && targetable(st, id); };
+      const d = {}, q = []; from.forEach(id => { d[id] = 0; q.push(id); });
+      while (q.length) { const x = q.shift(); if (d[x] >= A.grab.reach) continue; for (const y of C.supplyNeighbours(x)) if (!(y in d) && ok(y)) { d[y] = d[x] + 1; q.push(y); } }
+      return d;
+    }
+    const mineOf = (st, G) => Object.keys(C.NODES).filter(id => C.ownerOf(st, id) === G);
+    // the holder's places on a shortest way from the grabber's land to the prize, and the prize itself
+    function grabWay(st, g) {
+      const dS = grabDist(st, g.by, g.on, mineOf(st, g.by)), dP = grabDist(st, g.by, g.on, [g.target]), L = dS[g.target], way = new Set([g.target]);
+      if (L == null) return way;
+      for (const y of Object.keys(dS)) if (C.ownerOf(st, y) === g.on && dP[y] != null && dS[y] + dP[y] === L) way.add(y);
+      return way;
+    }
+    C.grabWay = (st) => { const g = AS(st).grab; return g ? [...grabWay(st, g)] : []; };
+    C.grabOptions = function (st, cut) {
+      const G = A.grab.by, rs = C.relState(st), bz = busy(st), out = [], mine = mineOf(st, G); cut = cut || new Set(C.supplyCut(st));
+      const army = {}; for (const L of mine) if (!cut.has(L) && !bz.has(L)) army[L] = C.garrison(st, L) + pool(st, G, L, bz, cut);
+      for (const X of WAR()) {
+        if (X === G || C.relAllyOf(st, G) === X || (rs.truce[pk(G, X)] || 0) > day(st)) continue;
+        const d = grabDist(st, G, X, mine);
+        for (const T of Object.keys(d)) { const n = C.NODES[T]; if (C.ownerOf(st, T) !== X || !A.grab.types.includes(n.type) || bz.has(T)) continue;
+          // the army that could open the way: the biggest one gathered within marching reach of the first of X's places on it
+          const way = [...grabWay(st, { by: G, on: X, target: T })], first = way.filter(y => d[y] === Math.min(...way.map(z => d[z])));
+          let F = 0; for (const L of Object.keys(army)) { const R = C.marchReach(st, G, L); if (first.some(y => y in R)) F = Math.max(F, army[L]); }
+          const gar = C.garrison(st, T); if (F < C.attackMargin(st, G) * gar) continue;
+          out.push({ target: T, on: X, dist: d[T], force: F, garrison: gar, score: (A.value[n.type] || A.other) + F / (F + gar) - 0.3 * d[T] }); }
+      }
+      return out.sort((a, b) => b.score - a.score || (a.target < b.target ? -1 : 1));
+    };
+    C.relDeclarer = (st, a, b) => { const g = (st.world.atk || {}).grab; return g && !g.took && (g.on === a || g.on === b) && (g.by === a || g.by === b) ? g.by : null; };
+    function grabTick(st, cut) {
+      const r = AS(st), G = A.grab.by; if (!WAR().includes(G)) return; let g = r.grab;
+      const end = text => { r.grab = null; r.grabNext = day(st) + A.grab.rest; if (text) C.relNews(st, text, 'grab'); };
+      if (g) {
+        const war = C.relAtWar(st, G, g.on); if (war) g.warred = true;
+        if (g.took) { if (!war) end(null); else shiftRel(st, G, g.on, A.grab.terms); return; }
+        if (C.ownerOf(st, g.target) === G) { g.took = day(st); C.relNews(st, 'The ' + fname(G) + ' has what it wanted in ' + nm(g.target) + ', and is asking the ' + fname(g.on) + ' for terms.', 'grab'); return; }
+        if (C.ownerOf(st, g.target) !== g.on) return end('The ' + fname(G) + ' has lost interest in ' + nm(g.target) + '.');
+        if (g.warred && !war) return end(null);
+        if (!war) { if (!C.grabOptions(st, cut).some(o => o.target === g.target)) return end('Syndicate factors have stopped buying up debts in ' + nm(g.target) + '.');
+          shiftRel(st, G, g.on, -A.grab.sour); }
+        return;
+      }
+      if (C.relEnemies(st, G).length || (r.grabNext || 0) > day(st)) return;
+      const o = C.grabOptions(st, cut)[0]; if (!o) return;
+      r.grab = { by: G, target: o.target, on: o.on, day: day(st) };
+      C.relNews(st, 'Syndicate factors are buying up the debts of ' + nm(o.target) + '. The ' + fname(o.on) + ' does not like it.', 'grab');
+    }
+    C.grabTick = grabTick;
     function bleed(st, id) { if (C.NODES[id] && C.garrison(st, id) > 1) C.setGarrison(st, id, C.garrison(st, id) - 1); }
     function take(st, a) {
       const id = a.target; (st.world.nodes[id] = st.world.nodes[id] || {}).owner = a.by;
@@ -153,7 +220,7 @@
         if (!C.relAtWar(st, a.by, a.on) || C.ownerOf(st, a.target) !== a.on) { callOff(st, a); continue; }
         if (day(st) >= a.lands) settle(st, a, null);
       }
-      let cut = new Set(C.supplyCut(st)); r.moved = r.moved || {};
+      let cut = new Set(C.supplyCut(st)); r.moved = r.moved || {}; C.grabTick(st, cut);
       for (const f of WAR()) if (r.moved[f] == null || day(st) - r.moved[f] >= A.redeployEvery) { if (C.relEnemies(st, f).some(g => g !== 'hearthwatch')) { C.redeploy(st, f, cut); r.moved[f] = day(st); } }
       for (const f of WAR()) {
         if (r.list.filter(a => a.by === f).length >= A.maxActive) continue;
