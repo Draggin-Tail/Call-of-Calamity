@@ -56,6 +56,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | tload | browser | pass |
 | tmap | browser | pass (flaky: a click sometimes times out; rerun) |
 | tparty_ui | browser | 2 fail: the outnumbered warning in the briefing |
+| thud the full-screen battle HUD, portrait and landscape: no page scrolling, panels on screen, zoom, pan, rotate, skill lists, the ⋯ menu | browser | pass |
 | t86ui phase 2 screens | browser | pass |
 | t88ui the realm on the Factions tab, speaking in council, the council scene (phase 3a) | browser | pass |
 | t89ui the garrison and a cut-off line on the place sheet (phase 3b) | browser | pass |
