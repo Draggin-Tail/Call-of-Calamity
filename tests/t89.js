@@ -54,7 +54,8 @@ ok('garrisons read as words, never numbers', ['thin', 'held', 'held', 'held', 's
 // ---- wiring ----
 { const st = fresh(); surround(st, T, 'outlaws'); S.advanceDay(st, 3); ok('the daily tick runs from advanceDay', C.isolation(st, T).days === 3, C.isolation(st, T).days); }
 { const st = fresh(); const s2 = S.repair(JSON.parse(JSON.stringify(st))).state; ok('a save without supply state loads and ticks', (delete s2.world.supply, S.advanceDay(s2, 1), !!s2.world.supply)); }
-{ let cut = 0; const t = Date.now(); for (let g = 0; g < 10; g++) { const st = C.newGame({ race: 'human', name: 'T' }); st.world.rng = (g * 7919 + 13) >>> 0; S.advanceDay(st, 200); cut += C.supplyCut(st).length; }
-  ok('200 days of real play: no place is cut off without borders moving (3c), and the tick is cheap', cut === 0 && Date.now() - t < 20000, cut + ' cut, ' + (Date.now() - t) + ' ms'); }
+{ const at0 = C.attackTick; if (at0) C.attackTick = () => {};   // borders held still: 3c attacks are off for this check (t90 covers them)
+  let cut = 0; const t = Date.now(); for (let g = 0; g < 10; g++) { const st = C.newGame({ race: 'human', name: 'T' }); st.world.rng = (g * 7919 + 13) >>> 0; S.advanceDay(st, 200); cut += C.supplyCut(st).length; }
+  ok('200 days of real play: no place is cut off without borders moving (3c), and the tick is cheap', cut === 0 && Date.now() - t < 20000, cut + ' cut, ' + (Date.now() - t) + ' ms'); if (at0) C.attackTick = at0; }
 
 console.log(fails ? fails + ' FAILED' : 'ALL PASS');

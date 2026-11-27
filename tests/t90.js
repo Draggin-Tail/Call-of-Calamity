@@ -1,0 +1,90 @@
+// Node ownership, phase 3c (design/node_ownership_and_land.md section 16): AI attacks. Who may attack what, the margin and war weariness,
+// warning, cooldown and the cap on attacks under way, how an attack is settled, armies moving in, and the player stepping in for either side.
+// Run: cd tests && node t90.js | grep -v ^PASS
+let fails = 0; const ok = (n, c, info) => { console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !info ? '' : '  [' + info + ']')); if (!c) fails++; };
+const w = require(process.env.LD || './real_ld.js')(); const C = w.GAME_CAMPAIGN, S = w.GAME_SAVE, A = C.ATTACK;
+const fresh = () => { const st = C.newGame({ race: 'human', name: 'T' }); st.world.rbNext = 1e9; st.world.day = 1; C.relState(st).day = 1; C.relState(st).next = 1e9; return st; };
+const war = (st, a, b) => { C.relState(st).wars[[a, b].sort().join('|')] = { since: 1, by: a }; };
+const day = (st, n) => { for (let i = 0; i < (n || 1); i++) { st.world.day++; C.supplyTick(st); C.attackTick(st); } };
+const news = st => C.relState(st).news.filter(n => n.kind === 'attack').map(n => n.text);
+
+ok('data checks pass', C.validateAttacks().length === 0, C.validateAttacks().join('; '));
+ok('the agreed numbers: 7 days warning, 7 days between attacks, 2 at once, margin 1.5', A.warn === 7 && A.cooldown === 7 && A.maxActive === 2 && A.margin === 1.5);
+
+// ---- who may attack what ----
+{ const st = fresh(); C.attackTick(st); ok('no war, no attacks', C.attacks(st).length === 0); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); const o = C.attackOptions(st, 'crown');
+  ok('at war, the Crown has targets', o.length > 0);
+  ok('every target is held by the enemy, sits next to a Crown place, and is not a capital', o.every(x => C.ownerOf(st, x.target) === 'broken_banner' && C.supplyNeighbours(x.target).includes(x.from) && C.ownerOf(st, x.from) === 'crown' && C.NODES[x.target].type !== 'capital'));
+  ok('the force is the strongest neighbouring garrison, and beats the target by 1.5x', o.every(x => x.force === Math.max(...C.supplyNeighbours(x.target).filter(y => C.ownerOf(st, y) === 'crown').map(y => C.garrison(st, y))) && x.force >= 1.5 * x.garrison));
+  const x = o[0]; ok('an attack can only start from a supplied place', !C.attackOptions(st, 'crown', new Set([x.from])).some(y => y.from === x.from));
+  C.setGarrison(st, x.target, Math.ceil(x.force / 1.5) + 1); ok('a garrison the force cannot beat by the margin is left alone', !C.attackOptions(st, 'crown').some(y => y.target === x.target)); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); const o = C.attackOptions(st, 'crown').find(x => x.force < 2 * x.garrison) || C.attackOptions(st, 'crown')[0];
+  C.attackState(st).fails.crown = [1, 1]; ok('each failed attack in the last 60 days adds 0.25 to the margin', C.attackMargin(st, 'crown') === 2);
+  st.world.day = 70; ok('older failures are forgotten', C.attackMargin(st, 'crown') === 1.5 && !C.attackState(st).fails.crown); }
+{ const st = fresh(); const hw = Object.keys(C.NODES).find(id => C.ownerOf(st, id) === 'hearthwatch'); war(st, 'crown', 'hearthwatch');
+  ok('the Hearthwatch is never a target', !C.attackOptions(st, 'crown').some(x => C.ownerOf(st, x.target) === 'hearthwatch'), hw); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); ['crown', 'syndicate', 'synod', 'broken_banner'].forEach(f => ['crown', 'syndicate', 'synod', 'broken_banner'].forEach(g => { if (f < g) war(st, f, g); }));
+  const all = ['crown', 'syndicate', 'synod', 'broken_banner'].flatMap(f => C.attackOptions(st, f));
+  ok('capitals are never targets (left for 3d)', all.length && !all.some(x => C.NODES[x.target].type === 'capital')); }
+
+// ---- warning, cooldown, two at once ----
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown');
+  ok('an attack is announced 7 days ahead, in the news', a && a.lands === st.world.day + 7 && news(st).some(t => t.includes('massing')));
+  ok('the target shows as under threat', !!C.attackOn(st, a.target) && C.nodeServices(st, a.target).attack.days === 7);
+  for (let i = 0; i < 6; i++) { st.world.day++; C.attackTick(st); }
+  ok('no second Crown attack within 7 days', C.attacks(st).filter(x => x.by === 'crown').length === 1);
+  st.world.day++; C.supplyTick(st); C.attackTick(st); }
+{ const run = cap => { const st = fresh(); war(st, 'crown', 'broken_banner'); const r = C.attackState(st); let most = 0; A.maxActive = cap;
+    for (let i = 0; i < 40; i++) { day(st); most = Math.max(most, C.attacks(st).filter(x => x.by === 'broken_banner').length); r.list.forEach(a => { a.lands = 1e9; }); }
+    A.maxActive = 2; return most; };
+  ok('with two targets, the Banner has both under way at once', run(2) === 2); ok('and the cap holds (tried at 1)', run(1) === 1); }
+
+// ---- settling ----
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown'), f0 = C.garrison(st, a.from);
+  ok('nothing is settled before the day it lands', (day(st, 6), C.ownerOf(st, a.target) === 'broken_banner' && !!C.attackOn(st, a.target)));
+  day(st, 1); ok('on the day it lands it is settled one way or the other', !C.attacks(st).includes(a) && news(st).some(t => t.includes('fallen') || t.includes('beat off'))); }
+{ let won = 0, n = 300; for (let i = 0; i < n; i++) { const st = fresh(); st.world.rng = i * 7919 + 1; war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown');
+    C.setGarrison(st, a.from, 9); C.setGarrison(st, a.target, 1); a.lands = st.world.day; C.attackTick(st); if (C.ownerOf(st, a.target) === 'crown') won++; }
+  ok('the roll: force 9 against 1 wins about 90% of the time', won / n > 0.82 && won / n < 0.97, won + '/' + n); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown'); C.setGarrison(st, a.from, 8);
+  C.attackSettle(st, a, 'attack');
+  ok('a winner takes the place: owner, news and a grudge', C.ownerOf(st, a.target) === 'crown' && news(st).some(t => t.includes('fallen')) && !!C.relState(st).grudge['broken_banner|crown']);
+  ok('the army moves in: half the force (it may sit above the base), the rest stays, less a man lost', C.garrison(st, a.target) === 4 && C.garrison(st, a.from) === 3, C.garrison(st, a.target) + '/' + C.garrison(st, a.from));
+  const g = C.garrison(st, a.target), b = C.garrisonBase(a.target);
+  if (g > b) { day(st, 10); ok('a garrison above its base drains back a man every 10 days', C.garrison(st, a.target) === g - 1, C.garrison(st, a.target)); } }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown'), f0 = C.garrison(st, a.from), t0 = C.garrison(st, a.target);
+  C.attackSettle(st, a, 'hold');
+  ok('beaten off: the place stays, both sides lose a man, and the failure counts toward war weariness', C.ownerOf(st, a.target) === 'broken_banner' && C.garrison(st, a.from) === Math.max(1, f0 - 1) && C.garrison(st, a.target) === Math.max(1, t0 - 1) && C.attackMargin(st, 'crown') === 1.75); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown');
+  delete C.relState(st).wars['broken_banner|crown']; day(st);
+  ok('peace calls off an attack under way', !C.attacks(st).length && C.ownerOf(st, a.target) === 'broken_banner' && news(st).some(t => t.includes('called off'))); }
+
+// ---- stepping in ----
+const rank = (st, f) => S.joinRank(st, f, { force: true, leave: true });
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown');
+  ok('away from the place there is no fight to join', C.attackEncounter(st, a.target) === null);
+  st.world.location = a.target; ok('unsworn, you can help either side', C.attackSides(st, a.target).join() === 'hold,attack');
+  rank(st, 'crown'); ok('sworn to the attacker, you can only join the attack', C.attackSides(st, a.target).join() === 'attack');
+  rank(st, 'broken_banner'); ok('sworn to the defender, you can only help hold it', C.attackSides(st, a.target).join() === 'hold'); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown'); st.world.location = a.target;
+  const k = C.attackEncounter(st, a.target), E = C.ENCOUNTERS[k], b = C.encounterBuilds(k, 'attack'), hb = C.encounterBuilds(k, 'hold');
+  ok('the fight has both sides: join the attack fights the garrison, holding fights the attackers', b.builds.every(u => u.faction === 'broken_banner') && hb.builds.every(u => u.faction === 'crown') && E.options.length === 2);
+  ok('the briefing shows the standing at stake', b.standing.crown === 10 && b.standing.broken_banner === -10);
+  const s0 = S.getStanding(st, 'crown'), r = C.applyEncounterResult(st, k, 'attack', { won: true, kills: [], survivors: [] });
+  ok('winning for the attackers takes the place at once', C.ownerOf(st, a.target) === 'crown' && r.attack && r.attack.won && !C.attackOn(st, a.target));
+  ok('and the side you helped thinks better of you', S.getStanding(st, 'crown') > s0); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown'); st.world.location = a.target;
+  const k = C.attackEncounter(st, a.target); C.applyEncounterResult(st, k, 'hold', { won: false, kills: [], survivors: [] });
+  ok('losing a fight leaves the attack to the roll', !!C.attackOn(st, a.target));
+  C.applyEncounterResult(st, C.attackEncounter(st, a.target), 'hold', { won: true, kills: [], survivors: [] });
+  ok('winning for the defenders beats the attack off at once', C.ownerOf(st, a.target) === 'broken_banner' && !C.attackOn(st, a.target) && C.attackMargin(st, 'crown') === 1.75); }
+
+// ---- wiring and saves ----
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.relState(st).wars['broken_banner|crown'].since = 1; S.advanceDay(st, 1); ok('the daily tick runs from advanceDay', C.attacks(st).length > 0); }
+{ const st = fresh(); const s2 = S.repair(JSON.parse(JSON.stringify(st))).state; delete s2.world.atk; S.advanceDay(s2, 1); ok('a save without attack state loads and ticks', !!s2.world.atk); }
+{ let moved = 0, t = Date.now(); for (let g = 0; g < 10; g++) { const st = C.newGame({ race: 'human', name: 'T' }); st.world.rng = (g * 7919 + 13) >>> 0; S.advanceDay(st, 300);
+    moved += Object.keys(C.NODES).filter(id => C.ownerOf(st, id) !== C.defaultOwner(id)).length; }
+  ok('300 days of real play: places change hands and the tick stays cheap', moved > 0 && Date.now() - t < 30000, moved + ' changed, ' + (Date.now() - t) + ' ms'); }
+
+console.log(fails ? fails + ' FAILED' : 'ALL PASS');
