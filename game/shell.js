@@ -1044,11 +1044,13 @@ body.campaign #top .skirm{display:none}
   }
   function factionScreen(main) {
     if (!ST.world.flags.g_factions) { C.guideFlag(ST, 'g_factions'); guideCheck(); }
-    const fs = Object.keys(D.factions).filter(f => f !== 'outlaws' && f !== 'hearthwatch' && (S.isMet(ST, f) || S.getRank(ST, f)));
-    const offers = S.invitations(ST), ranks = S.listRanks(ST), noticed = RK().factions.filter(f => !S.getRank(ST, f) && S.getStanding(ST, f) >= 100 && S.getStanding(ST, f) < RK().standingNeeded[0] && !(C.factionNext && C.factionNext(ST).some(x => x.faction === f)) && !(C.FQ && C.FQ[f] && C.jobActive(ST, C.FQ[f].tryout)));
+    const gone = f => !!(C.absorbed && C.absorbed(ST, f)), un = C.union ? C.union(ST) : null;   // Phase 4: factions absorbed into the united realm leave the list
+    const fs = Object.keys(D.factions).filter(f => f !== 'outlaws' && f !== 'hearthwatch' && !gone(f) && (S.isMet(ST, f) || S.getRank(ST, f)));
+    const offers = S.invitations(ST), ranks = S.listRanks(ST), noticed = RK().factions.filter(f => !gone(f) && !S.getRank(ST, f) && S.getStanding(ST, f) >= 100 && S.getStanding(ST, f) < RK().standingNeeded[0] && !(C.factionNext && C.factionNext(ST).some(x => x.faction === f)) && !(C.FQ && C.FQ[f] && C.jobActive(ST, C.FQ[f].tryout)));
     main.appendChild(h('div', { class: 'pad' },
       C.proofs(ST).length ? [h('div', { class: 'sh-h', text: 'Proof you carry' }), proofCards()] : null,
       C.bounties(ST).length ? [h('div', { class: 'sh-h', text: 'Wanted' }), C.bounties(ST).map(b => h('div', { class: 'card badc' }, h('b', { text: fname(b.faction) + ' have put a price on you' }), h('div', { class: 'dim', text: 'Hunters can find you anywhere. It lapses in ' + b.daysLeft + ' days, or settle it at a Syndicate place or a Hearthwatch chapel.' })))] : null,
+      un ? h('div', { class: 'card', style: 'border-color:' + D.factions.realm.color }, h('b', { style: 'color:' + D.factions.realm.color, text: 'The realm is one: the ' + D.factions.realm.name }), h('div', { class: 'dim', text: '"' + D.factions.realm.motto + '" ' + un.ruler.charAt(0).toUpperCase() + un.ruler.slice(1) + ' rules from Crown Keep.' })) : null,
       ranks.length ? [h('div', { class: 'sh-h', text: 'Your rank' }), ranks.map(rankCard)] : null,
       noticed.length ? [h('div', { class: 'sh-h', text: 'Noticed' }), noticed.map(f => h('div', { class: 'dim', text: fname(f) + ': they have noticed you. Keep helping them and someone will ask you to prove yourself.' }))] : null,
       C.relReport ? realmBlock() : null,
