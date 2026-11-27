@@ -26,7 +26,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 
 `tload.js` starts its own server, so stop `serve.js` first. `GAME_URL` overrides the page address.
 
-## Baseline (game build of 2026-11-23, plus node ownership phases 1 and 2)
+## Baseline (game build of 2026-11-23, plus node ownership phases 1 to 4a)
 
 | Test | Kind | Result |
 |---|---|---|
@@ -39,6 +39,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t89 supply and garrisons: supply paths, isolation stages, defection, regrowth (phase 3b) | node | pass |
 | t90 AI attacks: marching, the muster and margin, war weariness, the defender's answer, redeployment, warning, cooldown, settling, armies moving in, stepping in, overextension, rallying at home, suing for terms (phase 3c) | node | pass |
 | t91 sieges: stages by place type, a roll per stage, stepping in at a stage, the last stand, the capital rule, wiping a faction out (phase 3d) | node | pass |
+| t92 human unification: the Moot's coronation, war victories (alone, with an ally, with the Hearthwatch), flavours, places and capitals, standing carried over, ranks ending, the hand-over, closed quest chains, old saves (phase 4a) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |
@@ -50,13 +51,14 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | tdungeon | browser | pass |
 | tledge | browser | pass |
 | tload | browser | pass |
-| tmap | browser | pass |
+| tmap | browser | pass (flaky: a click sometimes times out; rerun) |
 | tparty_ui | browser | 2 fail: the outnumbered warning in the briefing |
 | t86ui phase 2 screens | browser | pass |
 | t88ui the realm on the Factions tab, speaking in council, the council scene (phase 3a) | browser | pass |
 | t89ui the garrison and a cut-off line on the place sheet (phase 3b) | browser | pass |
 | t90ui the contested ring, the threat card, stepping in for either side (phase 3c) | browser | pass |
 | t91ui a siege's stages on the place sheet, the last stand's briefing (phase 3d) | browser | pass |
+| t92ui the opening scene and the oath, the realm's colour on the map, the Factions tab after the union (phase 4a) | browser | pass |
 
 The failing checks look like tests that are older than the game build. They have not been changed.
 

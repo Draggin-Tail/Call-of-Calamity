@@ -119,13 +119,13 @@
     }
 
     // ---- sieges (3d) ----
-    const isCap = id => { const n = C.NODES[id]; return !!n && (n.type === 'capital' || !!n.capital); };
+    const isCap = id => { const n = C.NODES[id]; return !!n && ((n.type === 'capital' && !n.formerCapital) || !!n.capital); };   // Phase 4: an absorbed faction's old capital is an ordinary place
     // places that count for the capital rule: not hidden, and in the capital's own land (decided after 3d: hidden places and land abroad,
     // which no army can reach, don't keep a capital safe; they pass to whoever takes it)
     const outOfReach = (f, y) => { const c = capOf(f); return !!C.NODES[y].hidden || !!c && C.NODES[y].region !== C.NODES[c].region; };
     const holdsOther = (st, f, id) => Object.keys(C.NODES).some(y => y !== id && C.ownerOf(st, y) === f && !outOfReach(f, y));
     C.fallen = (st, f) => !!((st.world.fallen || {})[f]);
-    C.siegeStages = id => { const n = C.NODES[id]; return !n ? 1 : isCap(id) ? A.siege.stages.capital : (A.siege.stages[n.type] || A.siege.other); };
+    C.siegeStages = id => { const n = C.NODES[id]; return !n ? 1 : isCap(id) ? A.siege.stages.capital : n.formerCapital ? A.siege.stages.castle : (A.siege.stages[n.type] || A.siege.other); };
     C.stageName = (a) => (A.siege.names[a.stages || 1] || [])[a.stage || 0] || null;
     // a capital only once its faction holds nothing else (hidden places and land abroad count)
     const targetable = (st, id) => { const n = C.NODES[id], o = C.ownerOf(st, id); return !!n && !n.hidden && o !== 'hearthwatch' && (!isCap(id) || !holdsOther(st, o, id)); };

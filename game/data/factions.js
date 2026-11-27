@@ -82,6 +82,6 @@
   // page needs no new <script> tag; each one waits until GAME_CAMPAIGN exists before it runs. Skipped outside a browser (tests load them directly).
   try {
     const me = typeof document !== 'undefined' && document.currentScript;
-    if (me && me.src && document.createElement) ['intrigue.js', 'intrigue_cast.js', 'faction_work.js', 'faction_climax.js', 'story_world.js', 'faction_quests.js', 'relations.js', 'supply.js', 'attacks.js', 'roads.js', 'gear_tiers.js', 'uniques.js', 'enemy_kits.js', 'gold_economy.js', 'loot.js', 'arena.js', 'arena_uniques.js', '../story_screens.js'].forEach(f => { const s = document.createElement('script'); s.src = me.src.replace(/factions\.js([?#].*)?$/, f); (document.head || document.documentElement).appendChild(s); });
+    if (me && me.src && document.createElement) ['intrigue.js', 'intrigue_cast.js', 'faction_work.js', 'faction_climax.js', 'story_world.js', 'faction_quests.js', 'relations.js', 'supply.js', 'attacks.js', 'unification.js', 'roads.js', 'gear_tiers.js', 'uniques.js', 'enemy_kits.js', 'gold_economy.js', 'loot.js', 'arena.js', 'arena_uniques.js', '../story_screens.js'].forEach(f => { const s = document.createElement('script'); s.src = me.src.replace(/factions\.js([?#].*)?$/, f); (document.head || document.documentElement).appendChild(s); });
   } catch (e) { /* no DOM: nothing to load */ }
 })();

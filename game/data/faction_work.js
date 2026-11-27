@@ -51,7 +51,8 @@
   const ctr = st => st.world.contracts || (st.world.contracts = { n: 0, list: [] });
   // Boards: a faction's castles, capitals and halls; the Banner and the Hearthwatch hold no castles, so any place they own has one.
   C.BOARD_ANY = { broken_banner: true, hearthwatch: true };
-  const isBoard = (st, id, f) => { const n = C.NODES[id]; return !!n && C.ownerOf(st, id) === f && (C.BOARD_ANY[f] || n.type === 'castle' || n.type === 'capital' || n.type === 'hall'); };
+  const heir = (st, f) => C.heirOf ? C.heirOf(st, f) : f;   // Phase 4: an absorbed faction's work is handed to the united realm
+  const isBoard = (st, id, f) => { const n = C.NODES[id]; f = heir(st, f); return !!n && C.ownerOf(st, id) === f && (C.BOARD_ANY[f] || n.type === 'castle' || n.type === 'capital' || n.type === 'hall'); };
   // Rank for board purposes: the Hearthwatch has none, so its goodwill tiers stand in (Wary 0, Kindly 1, Trusted 2).
   const workRank = (st, f) => f === 'hearthwatch' ? ['wary', 'kindly', 'trusted'].indexOf(S.goodwillTier ? S.goodwillTier(st).id : 'wary') : rankOf(st, f);
   function nearby(st, from, f, types, hops, owners) {
@@ -105,7 +106,7 @@
   C.MAX_CONTRACTS = 3;
   C.contractBoard = function (st, at) {
     const own = C.factionOwner(st, at); if (!own || !isBoard(st, at, own) || (own !== 'hearthwatch' && (!S.standingTier || S.standingTier(st, own).id === 'hostile'))) return [];
-    const per = Math.floor(day(st) / 4), kinds = Object.entries(C.CONTRACT_KINDS).filter(([, k]) => k.faction === own && workRank(st, own) >= k.minRank).map(([id]) => id);
+    const per = Math.floor(day(st) / 4), kinds = Object.entries(C.CONTRACT_KINDS).filter(([, k]) => heir(st, k.faction) === own && workRank(st, own) >= k.minRank).map(([id]) => id);
     const taken = new Set(ctr(st).list.filter(c => c.board === at + '|' + per).map(c => c.slot)), out = [];
     for (let slot = 0; slot < 3 && kinds.length; slot++) {
       const kid = kinds[hsh(at + '|' + per + '|' + slot) % kinds.length], K = C.CONTRACT_KINDS[kid], pool = nearby(st, at, own, K.targets, K.hops, K.owners);
