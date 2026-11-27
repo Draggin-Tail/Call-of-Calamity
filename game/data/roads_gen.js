@@ -83,6 +83,10 @@
     stops.forEach(id => { const p = C.NODES[id].pos; C.NODES[id].pos = [+p[0].toFixed(3), +p[1].toFixed(3)]; });
   })();
   C.applyMapPos();   // border stops sit where the map layout put them
+  // ---- more roads across the old human borders (node ownership 3c): the pairs the road rule above would join if the human land had always been
+  //      one region, except Rivermeet–Blackstone Archive (too close to the start). Direct, 1 day, like any road inside a region. ----
+  C.HUMAN_LINKS = [['hobbs_reach', 'beacon_hill'], ['golden_reach', 'reliquary_hill'], ['signal_tower', 'greycrown_peak'], ['beacon_hill', 'reliquary_hill'], ['pilgrims_stair', 'hungry_mile'], ['ledgerhall', 'long_stair']];
+  C.HUMAN_LINKS.forEach(([a, b]) => { if (!C.NODES[a] || !C.NODES[b]) throw new Error('human link endpoint missing: ' + a + ' ' + b); C.EDGES.push([a, b, 1]); });
   Object.values(C.NODES).forEach(n => { n.links = {}; });
   C.EDGES.forEach(([a, b, d]) => { C.NODES[a].links[b] = d; C.NODES[b].links[a] = d; });
 

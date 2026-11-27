@@ -15,7 +15,8 @@
      A won fight decides the attack for that side at once; a lost one leaves it to the roll. Standing rises with the side helped and falls with the other.
    - Motives pick targets: places a faction held at the start come first, then the faction its motive names, then rich places
      (the Syndicate wants markets and towns), then the easier fight and the shorter march.
-   - Trade grabs (the Syndicate's motive): at peace with everyone, the Syndicate eyes a weakly held market or town up to 6 roads from its land
+   - Trade grabs (the Syndicate's motive): at peace with everyone, the Syndicate eyes a weakly held market or town up to 6 roads from its land,
+     held by a faction already at war with someone else,
      (one it could take by the margin), on a way that passes only its own, unclaimed and beast ground and the holder's places. Its relation with the
      holder sours each day until it declares war; it attacks only the prize and the holder's places on the way to it, and once it holds the prize,
      it asks for terms (the relation warms each day until peace). If the place stops being weak, changes hands or the war ends first, it lets go.
@@ -161,6 +162,7 @@
       const army = {}; for (const L of mine) if (!cut.has(L) && !bz.has(L)) army[L] = C.garrison(st, L) + pool(st, G, L, bz, cut);
       for (const X of WAR()) {
         if (X === G || C.relAllyOf(st, G) === X || (rs.truce[pk(G, X)] || 0) > day(st)) continue;
+        if (!C.relEnemies(st, X).some(e => e !== G && e !== 'hearthwatch')) continue;   // only from a rival busy with a war of its own
         const d = grabDist(st, G, X, mine);
         for (const T of Object.keys(d)) { const n = C.NODES[T]; if (C.ownerOf(st, T) !== X || !A.grab.types.includes(n.type) || bz.has(T)) continue;
           // the army that could open the way: the biggest one gathered within marching reach of the first of X's places on it

@@ -101,7 +101,9 @@ const rank = (st, f) => S.joinRank(st, f, { force: true, leave: true });
   ok('winning for the defenders beats the attack off at once', C.ownerOf(st, a.target) === 'broken_banner' && !C.attackOn(st, a.target) && C.attackMargin(st, 'crown') === 1.75); }
 
 // ---- trade grabs ----
-{ const st = fresh(); const o = C.grabOptions(st);
+{ const st = fresh(); ok('no grab while every rival is at peace (it waits for a busy one)', C.grabOptions(st).length === 0);
+  war(st, 'crown', 'broken_banner'); const o = C.grabOptions(st);
+  ok('only from a rival busy with a war of its own', o.length > 0 && o.every(x => x.on === 'crown' || x.on === 'broken_banner'), o.map(x => x.on).join());
   ok('the Syndicate can eye a weakly held market or town up to 6 roads out', o.length > 0 && o.every(x => ['market', 'town'].includes(C.NODES[x.target].type) && x.dist <= 6 && x.on !== 'syndicate' && x.force >= 1.5 * x.garrison), o.length);
   C.grabTick(st, new Set()); const g = C.attackState(st).grab;
   ok('at peace with everyone, it starts a grab, in the news', g && g.target === o[0].target && C.relState(st).news.some(n => n.kind === 'grab' && n.text.includes('buying up the debts')));
