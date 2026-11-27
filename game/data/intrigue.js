@@ -54,7 +54,7 @@
       corisande: ['heralds_cross', 'sheepfold', 'wheatvale'], wil: ['widows_barrow', 'heron_hide', 'dunmere_keep'] },
     calls: { writ: 'The Heir\'s Writ has been read aloud. The Lords can no longer pretend the throne is a mystery.', petition: 'As Lord\'s Hand, you have asked Harrow to ring the bell and end the Interval. He cannot refuse the Hand.',
       wil: 'The Banner has ridden to Crown Keep with the prince\'s son, and will not leave until the Lords hear him.', second: 'The Lords have learned that the Steward was the Hidden Hand. They call the Moot again.' },
-    hallBacking: 3, pressureCost: 60, loserCost: 80, declareSuspicion: 40, canvassSuspicion: 10, pledgeCost: 40, holdShopMult: 0.85, holdCoolPerDay: 3
+    hallBacking: 3, pressureCost: 60, loserCost: 80, pledgeCost: 40, holdShopMult: 0.85
   };
   // what each outcome does to the realm. Rivalry ratings: open / uneasy / opposed (S.rivalry reads st.factions.rivalryOverrides).
   const KING = ['King\'s Sword', 'King\'s Knight', 'Banneret', 'King\'s Hand'], QUEEN = ['Queen\'s Sword', 'Queen\'s Knight', 'Banneret', 'Queen\'s Hand'];
@@ -135,7 +135,7 @@
     const f = fl(st), r = [], rl = st.world.realm;
     if (rl) { if (rl.outcome === 'regency' && f.exposed_hidden_hand && !f.second_moot) r.push('second'); return r; }
     if (f.exposed_succession) r.push('writ');
-    const cr = S.getRank(st, 'crown'); if (cr && cr.rank >= 4 && !cr.secret) r.push('petition');
+    const cr = S.getRank(st, 'crown'); if (cr && cr.rank >= 4) r.push('petition');
     if (f.wil_proclaimed) r.push('wil');
     return r;
   };
@@ -199,9 +199,8 @@
       if (f === 'hearthwatch') S.changeGoodwill(st, -15, 'pressured at the Moot');
       else { changes.push(...S.changeStanding(st, f, -C.MOOT.pressureCost, { reason: 'pressured at the Moot', ripple: false })); fl(st)['bounty_' + f] = st.world.day; }
     }
-    const r = S.getRank(st, f), sus = r && r.secret ? S.addSuspicion(st, f, 'canvass', { amount: C.MOOT.canvassSuspicion }) : null;
     m.canvass[seat] = { how, for: claimant, day: st.world.day }; m.backing = claimant;
-    return { ok: true, seat, how, claimant, changes, spent, suspicion: !!(sus && sus.ok), tally: C.mootTally(st) };
+    return { ok: true, seat, how, claimant, changes, spent, tally: C.mootTally(st) };
   };
 
   // ---- the Moot itself: open, testimony, declarations, resolution ----
@@ -226,13 +225,12 @@
   };
   C.mootResolve = function (st) {
     const m = M(st); if (!m.declared) return { ok: false, reason: 'Declare first' }; if (m.result || m.hall) return { ok: false, reason: 'Already counted' };
-    const t = C.mootTally(st), f = fl(st), sus = [], changes = []; m.tally = t;
-    for (const s of t.seats) { const r = S.getRank(st, s.faction); if (r && r.secret && s.vote !== m.declared) { const x = S.addSuspicion(st, s.faction, 'declare', { amount: C.MOOT.declareSuspicion }); if (x.ok) sus.push(s.faction); } }
+    const t = C.mootTally(st), f = fl(st), changes = []; m.tally = t;
     if (f.pledged_regency && m.declared !== 'regency') changes.push(...S.changeStanding(st, 'crown', -C.MOOT.pledgeCost, { reason: 'broke a promise to the Steward', ripple: false }));
     if (t.winner && t.winner !== 'osric' && (t.counts.osric || 0) >= C.MOOT.hallBacking && !f.armoury_burned) {
-      m.hall = { pending: true, winner: t.winner }; return { ok: true, tally: t, hall: true, suspicion: sus, changes };
+      m.hall = { pending: true, winner: t.winner }; return { ok: true, tally: t, hall: true, changes };
     }
-    const fin = finish(st, t.winner || 'broken'); return Object.assign({ ok: true, tally: t, hall: false, suspicion: sus }, fin, { changes: changes.concat(fin.changes) });
+    const fin = finish(st, t.winner || 'broken'); return Object.assign({ ok: true, tally: t, hall: false }, fin, { changes: changes.concat(fin.changes) });
   };
   // The Hall of Oaths: Osric's men try to take the hall. side: defend | coup (only if you declared for him). won: result of the fight.
   C.mootHall = function (st, side, won) {
@@ -305,17 +303,12 @@
   C.holdServices = function (st, id) {
     const h = st.world.hold; if (!h || h.lost || h.node !== id) return null;
     const cap = Object.keys(C.NODES).find(k => C.NODES[k].capital === h.backer), stock = (cap && C.NODES[cap].shop) || ['healer_locket', 'traveler_boots', 'steel_dagger'];
-    return { rest: true, stash: Object.assign({}, h.stash), recruitFrom: h.backer, shop: { stock: stock.slice(), priceMult: C.MOOT.holdShopMult }, lieLow: true, siege: h.siege, reclaim: h.reclaim };
+    return { rest: true, stash: Object.assign({}, h.stash), recruitFrom: h.backer, shop: { stock: stock.slice(), priceMult: C.MOOT.holdShopMult }, siege: h.siege, reclaim: h.reclaim };
   };
   C.holdStash = function (st, itemId, dir) {
     if (!atHold(st)) return { ok: false, reason: 'You are not at your hold' }; const h = st.world.hold, inv = st.inventory.items;
     const [a, b] = dir === 'in' ? [inv, h.stash] : [h.stash, inv]; if (!a[itemId]) return { ok: false, reason: 'None to move' };
     a[itemId]--; if (!a[itemId]) delete a[itemId]; b[itemId] = (b[itemId] || 0) + 1; return { ok: true };
-  };
-  C.holdLieLow = function (st, days) {
-    if (!atHold(st)) return { ok: false, reason: 'You are not at your hold' }; days = Math.max(1, days | 0); S.advanceDay(st, days);
-    for (const f of Object.keys(st.factions.ranks || {})) { const r = st.factions.ranks[f]; if (r.secret && !r.dormant) r.suspicion = Math.max(0, (r.suspicion || 0) - C.MOOT.holdCoolPerDay * days); }
-    return { ok: true, days };
   };
   // Betrayal: turning Hostile with the backer who granted it brings a herald (checked on arrival).
   C.holdCheck = function (st) {

@@ -236,11 +236,10 @@
       if (!st.world.wander) { const a = C.contractArrive(st, to); r.contract = a; if (a.fight) r.wander = st.world.wander; } return r; }; }
 
 
-  // ---- cross-faction harm: work that hurts a faction costs standing there, and raises Suspicion if you serve it in secret ----
+  // ---- cross-faction harm: work that hurts a faction costs standing there ----
   C.harm = function (st, f, amount) {
     if (f === 'hearthwatch') { gw(st, -Math.max(1, Math.round(amount / 5)), 'harmed the Hearthwatch'); return; }
     S.changeStanding(st, f, -amount, { reason: 'your work hurt them', ripple: false });
-    const r = S.getRank(st, f); if (r && r.secret) S.addSuspicion(st, f, 'harm');
   };
   // An option written as data: { serve: n (the contract's faction), harm: { faction: n }, gw, gold, cost, deed: [path, weight, public], item, flag, days, text }
   const OPT = (f, id, label, sp) => ({ id, label, cost: sp.cost, effect: st => {

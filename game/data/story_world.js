@@ -155,125 +155,7 @@
       return out; }; }
 
 
-  // ===== 5. Double lives (rules in gamestate.js for the secret rank's own meter; this adds the other side and the content) =====
-  // A double life has two ways to go wrong, each its own meter:
-  //   - your TRUE faction (the secret rank) suspects you have gone native: S.suspicion on the secret rank (gamestate.js);
-  //   - your COVER faction (a public rank, while you hold any secret rank) suspects you are a spy: st.world.secret.cover[faction].
-  // Three things feed them: work that hurts that faction, being seen at the other side's halls, and deeds that go against that faction's ideals.
-  // Tests and exposure come from whichever side has more cause; 'against' is the other side (what the test asks you to hurt).
-  // A secret rank is not "the main faction": climaxes go by rank (3+), so a public Crown knight can secretly be a Synod spy at heart.
-  const hshS = s => { let a = 2166136261; for (let i = 0; i < s.length; i++) { a ^= s.charCodeAt(i); a = Math.imul(a, 16777619); } return a >>> 0; };
-  const sec = st => { const x = st.world.secret || (st.world.secret = {}); x.hinted = x.hinted || {}; x.seen = x.seen || {}; x.cover = x.cover || {}; x.coverTest = x.coverTest || {}; x.coverTrust = x.coverTrust || {}; return x; };
-  const NAME = f => (C.tvName ? C.tvName(f) : f);
-  const ranks = st => S.listRanks(st);
-  const secretRanks = st => ranks(st).filter(r => r.secret && !r.dormant);
-  const isSpy = st => secretRanks(st).length > 0;
-  const coverRanks = st => isSpy(st) ? ranks(st).filter(r => !r.secret && !r.dormant) : [];
-  const againstOf = (st, f) => { const pub = ranks(st).filter(r => !r.secret && r.faction !== f).map(r => r.faction); const opp = pub.find(g => S.rivalry(f, g, st) === 'opposed'); return opp || pub[0] || (f === 'crown' ? 'broken_banner' : 'crown'); };
-  const trueOf = (st, f) => { const sr = secretRanks(st).map(r => r.faction); return sr.find(g => S.rivalry(f, g, st) === 'opposed') || sr[0]; };
-  const sneaky = st => (st.party || []).some(id => ['rogue', 'scout', 'assassin'].includes(((st.roster || []).find(u => u.id === id) || {}).primary));
-  const Z = () => S.SUSPICION;
-  const tierOfV = v => { let t = 0; Z().tiers.forEach((x, i) => { if (v >= x) t = i + 1; }); return t; };
-  C.coverSuspicion = (st, f) => Math.round(sec(st).cover[f] || 0);
-  function addCover(st, f, amount) { if (!coverRanks(st).some(r => r.faction === f)) return; const c = sec(st).cover, prev = tierOfV(c[f] || 0); c[f] = Math.max(0, Math.min(100, (c[f] || 0) + amount)); if (tierOfV(c[f]) >= 3 && prev < 3) sec(st).coverTest[f] = true; }
-  // the side that doubts you: true faction (gone native) or cover faction (a spy)
-  function doubt(st, f, why, amount) { const r = S.getRank(st, f); if (!r) return; if (r.secret) S.addSuspicion(st, f, why, amount !== undefined ? { amount } : undefined); else addCover(st, f, amount !== undefined ? amount : (Z().gain[why] || 0)); }
-  // hurting a faction: secret members are doubted by it (as before); public members who are spies are suspected by it too
-  { const h0 = C.harm; C.harm = function (st, f, amount) { const r = S.getRank(st, f); h0.apply(this, arguments); if (r && !r.secret) addCover(st, f, Z().gain.harm || 12); }; }
-  // each faction's ideals, on the two reputation scales (+1 values it, -1 scorns it). Acting against them makes members doubt you.
-  C.IDEALS = { crown: { honesty: 1 }, syndicate: { mercy: -1 }, synod: { mercy: -1 }, broken_banner: { mercy: 1 } };
-  C.IDEAL_GAIN = 3;   // Suspicion per point of a deed that goes against a faction's ideals (public deeds; private at a third)
-  { const d1 = C.deed; C.deed = function (st, faction, path, weight, opts) { const d = d1.apply(this, arguments); if (!isSpy(st) || !d.axes) return d;
-      const share = d.public ? 1 : C.REPUTE.privateShare;
-      ranks(st).forEach(r => { const I = C.IDEALS[r.faction]; if (!I) return; let clash = 0; for (const ax of ['mercy', 'honesty']) if (I[ax] && d.axes[ax] && Math.sign(I[ax]) !== Math.sign(d.axes[ax])) clash += Math.abs(d.axes[ax]);
-        if (clash) doubt(st, r.faction, 'ideals', Math.round(clash * C.IDEAL_GAIN * share * 10) / 10); });
-      return d; }; }
-  C.SECRET_TEXT = {
-    crown: { hint: ['A sergeant at the gate checks your papers twice, and writes something down.', 'An unsigned note under your door: "We know where you sleep. Do you?"'],
-      test: { setup: a => 'A Crown captain hands you sealed orders: arrest an agent of ' + NAME(a) + ' at the next town. "You know their faces," he says. "We hear you do."\n\nHe watches you read them, a little more closely than a captain needs to.',
-        loyal: 'Make the arrest', betray: 'Warn the agent and let him slip away', see: 'Break the seal first', seeText: 'The orders are blank. It was never about the agent. You hand them back unopened, and the captain laughs.' },
-      expose: 'Lord Marshal Voss is waiting in your room with two knights and the look of a man who hoped he was wrong.' },
-    syndicate: { hint: ['Your account at the counting house has been "reviewed". Nobody says by whom.', 'Dov Quill meets your eye and does not say hello. He always says hello.'],
-      test: { setup: a => 'Factor Crane leaves a ledger open on the table, full of the secrets of ' + NAME(a) + ', and steps out of the room. "One minute," she says.\n\nIt is a very convenient ledger to leave lying about.',
-        loyal: 'Copy the useful pages for Crane', betray: 'Copy it for your other masters', see: 'Close it and wait for her to come back', seeText: 'She comes back exactly a minute later. "Good," she says, and puts the ledger, which is blank, back in the drawer.' },
-      expose: 'Three Collectors in your lodging, and a ledger open at a page with your name on it, in two columns.' },
-    synod: { hint: ['A priest blesses you in the street, and watches which way you go.', 'Sister Maren will not meet your eye. "They asked me about you," she says, at last.'],
-      test: { setup: a => 'An inquisitor puts you in a cell with a prisoner from ' + NAME(a) + ' and locks the door behind you. "Get a confession. You speak their language, we are told."\n\nThe prisoner looks at you as if he expected you.',
-        loyal: 'Get the confession, whatever it takes', betray: 'Go easy and get nothing', see: 'Ask the prisoner which chantry trained him', seeText: 'He stumbles over the answer. He is a Synod novice in borrowed clothes. The inquisitor nods and lets you out.' },
-      expose: 'Inquisitor-Captain Thorne is sitting on your bed. "I like you," he says. "That is why I came myself."' },
-    broken_banner: { hint: ['The camp goes quiet when you ride in. Then loud again, too loud.', 'Someone has cut a notch in your saddle. Old Standard says it is nothing. It is not nothing.'],
-      test: { setup: a => 'Old Standard asks you to guide a raid on a convoy of ' + NAME(a) + '. "You know their roads," he says, "better than the rest of us."\n\nThe fire goes quiet while you answer.',
-        loyal: 'Lead the raid', betray: 'Send word to the convoy', see: 'Scout the convoy first', seeText: 'The wagons are empty and the guards are Banner riders in borrowed coats. Old Standard grins when you report it.' },
-      expose: 'Old Standard is waiting at your fire, alone, with your rank strip in his hand.' }
-  };
-  // seen in the wrong place (once a day each): at the halls of a faction opposed to your true one (true faction doubts), or at your true faction's halls (cover suspects)
-  function seenCheck(st, at) {
-    const n = C.NODES[at], own = C.factionOwner(st, at); if (!n || !own || !['capital', 'hall', 'castle'].includes(n.type)) return; const sn = sec(st).seen;
-    secretRanks(st).filter(r => S.rivalry(r.faction, own, st) === 'opposed').forEach(r => { const k = r.faction + '|' + day(st); if (!sn[k]) { sn[k] = 1; S.addSuspicion(st, r.faction, 'seen'); } });
-    if (secretRanks(st).some(r => r.faction === own)) coverRanks(st).filter(r => S.rivalry(r.faction, own, st) !== 'open').forEach(r => { const k = 'c|' + r.faction + '|' + day(st); if (!sn[k]) { sn[k] = 1; addCover(st, r.faction, Z().gain.seen || 8); } });
-  }
-  // what threatens you most right now: { kind, side: 'true'|'cover', faction (the one doubting), against }
-  C.secretCheck = function (st) {
-    const s = sec(st); if (s.pending) return C.secretScene(st);
-    const tr = secretRanks(st).map(r => ({ side: 'true', faction: r.faction, v: S.suspicion(st, r.faction), test: S.testDue(st, r.faction) }));
-    const cv = coverRanks(st).map(r => ({ side: 'cover', faction: r.faction, v: sec(st).cover[r.faction] || 0, test: !!s.coverTest[r.faction] }));
-    const all = tr.concat(cv).sort((a, b) => b.v - a.v);
-    const against = m => m.side === 'true' ? againstOf(st, m.faction) : trueOf(st, m.faction);
-    const ex = all.find(m => tierOfV(m.v) >= 4); if (ex) { s.pending = { kind: 'expose', side: ex.side, faction: ex.faction, against: against(ex) }; return C.secretScene(st); }
-    const te = all.find(m => m.test); if (te) { s.pending = { kind: 'test', side: te.side, faction: te.faction, against: against(te) }; return C.secretScene(st); }
-    for (const m of all) { const t = tierOfV(m.v), key = m.side + '|' + m.faction, had = s.hinted[key] || 0; if (t >= 1 && t <= 2 && t > had) { s.hinted[key] = t; const T = C.SECRET_TEXT[m.faction]; return { kind: 'hint', side: m.side, faction: m.faction, tier: t, text: T ? T.hint[t - 1] : 'Someone is watching you.' }; } }
-    return null;
-  };
-  const EXPOSE_HINT = { bluff: 'Talk your way out. Only works if they still like you.', bargain: 'Pay, and give up the rank quietly.', fight: 'Fight your way out. Lose, and they put a price on you.', burn: 'Walk away from them for good.' };
-  C.secretScene = function (st) {
-    const p = sec(st).pending; if (!p) return null; const T = C.SECRET_TEXT[p.faction] || C.SECRET_TEXT.crown, cover = p.side === 'cover';
-    if (p.kind === 'test') { const trust = cover ? (sec(st).coverTrust[p.faction] || 0) : ((S.getRank(st, p.faction) || {}).trust || 0), canSee = trust >= 1 || sneaky(st);
-      return { kind: 'test', side: p.side, faction: p.faction, against: p.against, setup: T.test.setup(p.against), options: [{ id: 'loyal', label: T.test.loyal, ok: true }, { id: 'betray', label: T.test.betray, ok: true }, { id: 'see', label: T.test.see, ok: canSee, why: canSee ? null : 'Needs a rogue or scout with you, or their trust' }] }; }
-    const opts = cover ? coverExposureOptions(st, p.faction) : S.exposureOptions(st, p.faction).map(o => ({ id: o.id, label: o.name + (o.cost ? ' (' + o.cost + ' gold)' : ''), ok: o.available, hint: EXPOSE_HINT[o.id] }));
-    return { kind: 'expose', side: p.side, faction: p.faction, against: p.against, setup: cover ? T.expose + ' "We know who you really answer to: ' + NAME(p.against) + '."' : T.expose, options: opts };
-  };
-  // exposure by your cover faction: lose the cover, and your true allegiance is out in the open
-  function coverExposureOptions(st, f) { const v = sec(st).cover[f] || 0, forced = v >= Z().forcedAt, r = S.getRank(st, f), cost = 80 * ((r && r.rank) || 1) + 80, tier = S.standingTier(st, f).id;
-    return [{ id: 'bluff', label: 'Bluff or talk it out', ok: !forced && (tier === 'friendly' || tier === 'allied'), hint: EXPOSE_HINT.bluff }, { id: 'bargain', label: 'Confess and bargain (' + cost + ' gold)', ok: !forced && st.inventory.gold >= cost, cost, hint: EXPOSE_HINT.bargain }, { id: 'fight', label: 'Fight or flee', ok: true, hint: EXPOSE_HINT.fight }, { id: 'burn', label: 'Burn the bridge', ok: true, hint: EXPOSE_HINT.burn }]; }
-  function resolveCover(st, f, choice, o) {
-    o = o || {}; const r = S.getRank(st, f); if (!r) return { ok: false }; const hit = 60 + 30 * r.rank, c = sec(st).cover; let kept = false, bounty = false;
-    const reveal = () => { const tf = trueOf(st, f); delete st.factions.ranks[f]; c[f] = 0; if (tf && st.factions.ranks[tf]) { const sr = st.factions.ranks[tf]; sr.secret = false; sr.suspicion = 0; } fl(st)['revealed_' + (tf || 'secret')] = day(st); return tf; };
-    if (choice === 'bluff') { const ch = Math.max(0.2, Math.min(0.85, 0.35 + S.getStanding(st, f) / 2000)); if ((o.roll === undefined ? 0.5 : o.roll) < ch) { kept = true; c[f] = 45; } }
-    else if (choice === 'fight') { if (o.won) { kept = true; c[f] = 50; } else bounty = true; }
-    if (kept) return { ok: true, kept: true, choice };
-    const mult = choice === 'bargain' ? 0.4 : choice === 'burn' ? 0.8 : choice === 'fight' ? 1.5 : 1;
-    if (choice === 'bargain') st.inventory.gold -= 80 * r.rank + 80;
-    const ch = S.changeStanding(st, f, -Math.round(hit * mult), { reason: 'unmasked as a spy', ripple: false }); const revealed = reveal(); if (bounty) fl(st)['bounty_' + f] = day(st);
-    return { ok: true, kept: false, bounty, choice, revealed, changes: ch };
-  }
-  C.secretChoose = function (st, optId) {
-    const s = sec(st), p = s.pending; if (!p) return { ok: false, reason: 'Nothing is happening' }; const T = C.SECRET_TEXT[p.faction] || C.SECRET_TEXT.crown, cover = p.side === 'cover';
-    const v = C.secretScene(st), o = v.options.find(x => x.id === optId); if (!o) return { ok: false, reason: 'Not an option' }; if (!o.ok) return { ok: false, reason: o.why || 'Not possible now' };
-    if (p.kind === 'test') {
-      s.pending = null; const pass = () => { if (cover) { s.coverTest[p.faction] = false; s.cover[p.faction] = Math.max(0, (s.cover[p.faction] || 0) - Z().testPass.reset); s.coverTrust[p.faction] = (s.coverTrust[p.faction] || 0) + 1; S.changeStanding(st, p.faction, Z().testPass.standing, { reason: 'passed a loyalty test', ripple: false }); return { ok: true, passed: true }; } return S.resolveTest(st, p.faction, true); };
-      if (optId === 'loyal') { const r = pass(); C.harm(st, p.against, 20); C.deed(st, p.faction, 'gray', 1, { axes: { mercy: 0, honesty: -1 } }); return Object.assign({ ok: true, passed: true, text: 'It is done. They watch you do it, and the watching stops.' }, r, { passed: true }); }
-      if (optId === 'see') { const r = pass(); return Object.assign({ ok: true, text: T.test.seeText }, r, { passed: true }); }
-      let r; if (cover) { s.coverTest[p.faction] = false; s.cover[p.faction] = Math.min(100, (s.cover[p.faction] || 0) + Z().gain.test_fail); r = { ok: true, passed: false }; } else r = S.resolveTest(st, p.faction, false);
-      S.changeStanding(st, p.against, 15, { reason: 'you protected them', ripple: false });
-      return Object.assign({ ok: true, text: 'You protect them. Somewhere, someone writes it down.' }, r, { passed: false });
-    }
-    if (optId === 'fight') { const lv = lvl(st), sq = (C.SECRETS[Object.keys(C.SECRETS).find(k => C.SECRETS[k].faction === p.faction)] || {}).squad;
-      const enemies = sq ? sq[lv > 7 ? 1 : 0].map(e => Object.assign({}, e)) : [{ primary: 'warrior', name: 'Enforcer' }, { primary: 'archer', name: 'Bowman' }, { primary: 'rogue', name: 'Knife' }];
-      return startFight(st, { name: 'Cornered', rec: lv + 1, enemyFaction: p.faction, enemies, objective: null, exposure: p.faction, exposureSide: p.side, reward: { xp: 80 + 12 * lv, gold: 10 } }, 'There is only one way out of this room.'); }
-    s.pending = null; const roll = (hshS(p.faction + '|' + day(st)) % 100) / 100, r = cover ? resolveCover(st, p.faction, optId, { roll }) : S.resolveExposure(st, p.faction, optId, { roll });
-    const text = optId === 'bluff' ? (r.kept ? 'You talk. They listen. Somehow, they believe you, this time.' : 'You talk. They do not believe a word of it.')
-      : optId === 'bargain' ? 'You confess, and pay. They take your rank and let you keep a little of their regard.' : 'You tell them the truth yourself, on your own terms, and walk out before they can decide what to do with it.';
-    return Object.assign({ ok: true, text }, r);
-  };
-  { const ae1 = C.applyEncounterResult; C.applyEncounterResult = function (st, encId, opt, res) { const E = C.ENCOUNTERS[encId], out = ae1.apply(this, arguments), s = sec(st);
-      if (E && E.exposure && s.pending && s.pending.faction === E.exposure) { const side = s.pending.side; s.pending = null; out.exposure = side === 'cover' ? resolveCover(st, E.exposure, 'fight', { won: !!(res && res.won) }) : S.resolveExposure(st, E.exposure, 'fight', { won: !!(res && res.won) }); } return out; }; }
-  // lying low at a Hearthwatch house cools both sides
-  C.lieLow = function (st, days) {
-    if (C.ownerOf(st, st.world.location) !== 'hearthwatch') return { ok: false, reason: 'Only the Hearthwatch takes people in without asking' };
-    days = Math.max(1, days | 0); S.advanceDay(st, days); if (S.tickSecrets) S.tickSecrets(st, days, { cool: true, hearth: true }); if (S.sanctuary) S.sanctuary(st);
-    const c = sec(st).cover; Object.keys(c).forEach(f => { c[f] = Math.max(0, c[f] - (Z().hearthCoolPerDay || 6) * days - (Z().sanctuaryCool || 15)); }); return { ok: true, days };
-  };
-  { const tr1 = C.travel; C.travel = function (st, to) { const r = tr1.apply(this, arguments); if (r && r.ok) { seenCheck(st, to); if (!st.world.wander) r.secret = C.secretCheck(st); } return r; }; }
+  // ===== 5. Double lives: cut (node ownership phase 2, design/node_ownership_and_land.md section 9). One faction at a time, no Suspicion. =====
 
   // ===== 6. Loose ends from the first pass =====
   const rankN = (st, f) => { const r = S.getRank(st, f); return r ? r.rank : 0; };
@@ -315,7 +197,7 @@
       options: [B7('voss', 'Ask the Lord Marshal to sign it', st => { fl(st).job_pardon = day(st); if (fl(st).voss_pardon) fl(st).voss_pardon = 0; C.deed(st, 'crown', 'light', 1); return { text: 'Voss reads the names twice. "I left some of these men at Marrow Ford," he says, and signs.' }; }, st => !!fl(st).voss_pardon || rankN(st, 'crown') >= 3 || !!fl(st).voss_speak),
         B7('corisande', 'Ask Lady Hale', st => { fl(st).job_pardon = day(st); C.deed(st, 'hearthwatch', 'light', 1, { public: true }); return { text: 'She writes it on the spot, in her own hand, and seals it with a ring she rarely wears. "If I am queen, it stands. If I am not, it stands anyway."' }; }, st => mootLive(st) && !fl(st).corisande_withdrawn),
         B7('harrow', 'Ask the Steward, for a price', st => { fl(st).job_pardon = day(st); S.changeStanding(st, 'crown', -20, { reason: 'a pardon for outlaws', ripple: false }); C.deed(st, null, 'gray', 0, { axes: { mercy: 0, honesty: -1 } }); return { text: 'Harrow seals it without reading it. "Everything has a price," he says. "This one you will pay later."' }; }),
-        B7('forge', 'Have the Syndicate forge one (65 gold)', st => { st.inventory.gold -= 65; fl(st).job_pardon = day(st); const cr = S.getRank(st, 'crown'); if (cr && cr.secret) S.addSuspicion(st, 'crown', 'forgery', { amount: 10 }); C.deed(st, 'syndicate', 'gray', 1, { axes: { mercy: 0, honesty: -2 } }); return { text: 'Dov Quill\'s cousin does seals. The wax is perfect. The signature is better than the real one.' }; }, st => rankN(st, 'syndicate') >= 1 && st.inventory.gold >= 65),
+        B7('forge', 'Have the Syndicate forge one (65 gold)', st => { st.inventory.gold -= 65; fl(st).job_pardon = day(st); C.deed(st, 'syndicate', 'gray', 1, { axes: { mercy: 0, honesty: -2 } }); return { text: 'Dov Quill\'s cousin does seals. The wax is perfect. The signature is better than the real one.' }; }, st => rankN(st, 'syndicate') >= 1 && st.inventory.gold >= 65),
         B7('later', 'Not yet', () => ({ repeat: true }))] },
     { id: 'realm_court', who: 'voss', at: 'crown_keep', trip: st => !!st.world.realm,
       setup: 'Crown Keep, the first morning after the Moot. Lord Marshal Voss finds you in the yard, and for once he is not giving orders.', lines: [], view: st => { const o = st.world.realm.outcome, a = AFTER[o]; return [a ? a.line : '', VOSS_AFTER[o] || '']; },
@@ -332,7 +214,7 @@
   C.hideBrielle = function (st) {
     const wv = st.world.wander; if (!wv || !wv.enc || wv.enc.intrigue !== 'brielle_patrol') return { ok: false, reason: 'No patrol on the road' };
     if (!sneakyParty(st)) return { ok: false, reason: 'You need a rogue or scout with you' };
-    st.world.wander = null; fl(st).brielle_hidden = day(st); const sy = S.getRank(st, 'synod'); if (sy) { if (sy.secret) S.addSuspicion(st, 'synod', 'hid', { amount: 5 }); else C.harm(st, 'synod', 5); }
+    st.world.wander = null; fl(st).brielle_hidden = day(st); if (S.getRank(st, 'synod')) C.harm(st, 'synod', 5);
     return { ok: true, text: 'A ditch, a cart of turnips, and a very long minute. The patrol rides past.' };
   };
 
@@ -346,7 +228,7 @@
       return out; }; }
   // Story fights that must be fought cannot be dodged by walking away (travel used to clear them): the Hall of Oaths, being found out,
   // the story's own fights, and a siege you chose to meet. Retreating in battle still ends them, as a defeat. Bad Paper and retaking a hold can wait.
-  C.mustFight = st => { const w = st.world.wander, e = w && w.kind === 'fight' && w.from === w.to && w.enc; return !!(e && (e.hall || e.exposure || (e.intrigue && e.intrigue !== 'brielle_patrol') || e.act3 || e.holdSiege)); };
+  C.mustFight = st => { const w = st.world.wander, e = w && w.kind === 'fight' && w.from === w.to && w.enc; return !!(e && (e.hall || (e.intrigue && e.intrigue !== 'brielle_patrol') || e.act3 || e.holdSiege)); };
   { const tv = C.travel; C.travel = function (st) {
       if (C.mustFight(st)) return { ok: false, reason: 'You cannot walk away from this. Open the story and see it through.' };
       const r = tv.apply(this, arguments); if (!r || !r.ok) return r;

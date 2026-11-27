@@ -35,7 +35,7 @@
     rippleFactor: 0.5,                         // share of a change passed to related factions (relation -1..1)
     leavePenalty: 60,                          // standing lost with the faction you leave
     joinMinTier: 'friendly',                   // standing tier needed to swear allegiance without a defection quest
-    switchCooldownDays: 30,
+    switchCooldownDays: 0,                    // no wait between leaving one faction and swearing to another (node ownership phase 2)
     historyCap: 200, battleCap: 200,
     startGold: 100,
     shop: { sellFraction: 0.5 },
@@ -182,11 +182,17 @@
     if (!isObj(st.factions.ranks)) st.factions.ranks = {};
     for (const f of Object.keys(st.factions.ranks)) { const r = st.factions.ranks[f], lad = S.RANK && S.RANK.ladders[f];
       if (!lad || !isObj(r)) { delete st.factions.ranks[f]; continue; }
-      st.factions.ranks[f] = { rank: int(r.rank, 1, 4), secret: !!r.secret, dormant: !!r.dormant, suspicion: Math.max(0, Math.min(100, +r.suspicion || 0)), trust: int(r.trust || 0, 0, 99), testDue: !!r.testDue, since: int(r.since || 0, 0, 1e6) }; }
+      st.factions.ranks[f] = { rank: int(r.rank, 1, 4), dormant: !!r.dormant, trust: int(r.trust || 0, 0, 99), since: int(r.since || 0, 0, 1e6), wasSecret: !!r.secret }; }
+    // One faction at a time (node ownership phase 2): an old save with several ranks keeps its highest public one (ties: the one held longest).
+    { const ks = Object.keys(st.factions.ranks);
+      if (ks.length > 1) { const R0 = st.factions.ranks, pick = ks.slice().sort((a, b) => (R0[a].wasSecret - R0[b].wasSecret) || (R0[b].rank - R0[a].rank) || (R0[a].since - R0[b].since))[0];
+        ks.filter(f => f !== pick).forEach(f => { delete R0[f]; st.factions.history.push({ day: st.world && st.world.day || 0, faction: f, delta: 0, reason: 'you gave up this rank: you serve one faction at a time now' }); fixes.push('Kept one rank (' + pick + '), dropped ' + f); }); }
+      for (const f of Object.keys(st.factions.ranks)) delete st.factions.ranks[f].wasSecret; }
     if (!isObj(st.factions.declined)) st.factions.declined = {};
     st.factions.goodwill = Math.max(15, Math.min(100, +st.factions.goodwill || 15));
     for (const k of Object.keys(st.factions.relationOverrides)) { const v = st.factions.relationOverrides[k]; if (typeof v !== 'number' || !isFinite(v) || !/^[a-z_]+>[a-z_]+$/.test(k)) delete st.factions.relationOverrides[k]; else st.factions.relationOverrides[k] = Math.max(-1, Math.min(1, v)); }
     st.world = isObj(st.world) ? st.world : {}; st.world.day = int(st.world.day, 0, 1e6); st.world.calamity = int(st.world.calamity, 0, 1e6);
+    delete st.world.secret;   // double lives were cut (node ownership phase 2)
     st.world.nodes = isObj(st.world.nodes) ? st.world.nodes : {}; st.world.flags = isObj(st.world.flags) ? st.world.flags : {}; st.world.location = st.world.location || null;
     st.campaign = isObj(st.campaign) ? st.campaign : {}; st.campaign.completed = Array.isArray(st.campaign.completed) ? st.campaign.completed : [];
     st.campaign.battles = Array.isArray(st.campaign.battles) ? st.campaign.battles.slice(-S.RULES.battleCap) : [];
@@ -563,9 +569,10 @@
   };
 
 
-  // ---- faction ranks, secret ranks and suspicion, Hearthwatch goodwill (design/human_factions.md) ----
-  // st.factions.ranks[f] = { rank 1-4, secret, dormant, suspicion 0-100 (hidden), trust, testDue, since }; st.factions.goodwill = Hearthwatch meter;
-  // st.factions.declined[f] = day an invitation was refused.  Nothing here is ever game over: every cost is standing, rank, gold or a flag.
+  // ---- faction ranks, Hearthwatch goodwill (design/human_factions.md, design/node_ownership_and_land.md section 9) ----
+  // One faction at a time: st.factions.ranks holds at most one { rank 1-4, dormant, trust, since }. The Hearthwatch has no rank (goodwill only)
+  // and sits outside the limit. st.factions.goodwill = Hearthwatch meter; st.factions.declined[f] = day an invitation was refused.
+  // Nothing here is ever game over: every cost is standing, rank, gold or a flag.
   S.RANK = {
     factions: ['crown', 'syndicate', 'synod', 'broken_banner'],          // Hearthwatch has no rank (goodwill only)
     ladders: {
@@ -575,10 +582,11 @@
       broken_banner: ['Cutpurse', 'Rider', 'Captain', 'Banner-Bearer']
     },
     standingNeeded: [250, 400, 600, 800],       // standing to be offered rank 1..4
-    maxRanks: 3, maxPublic: 2, inviteCooldownDays: 30,
+    maxRanks: 1, inviteCooldownDays: 30,
     uneasyDrain: 0.25,                          // serving one faction costs this share (extra) with an Uneasy rival
     leaveFactor: 1,                             // x RULES.leavePenalty when you walk away cleanly
-    outcastCost: 40                             // standing lost with the Crown when the Broken Banner takes in an outcast
+    outcastCost: 40,                            // standing lost with the Crown when the Broken Banner takes in an outcast
+    rivalPrice: { uneasy: 1.2, opposed: 1.4 }   // what a rival faction's shops charge you while you hold a rank (Opposed recruiters also refuse you)
   };
   // Rivalry table (agreed). One line per pair; ratings can be changed by world events later.
   S.RIVALRY = { 'crown|syndicate': 'uneasy', 'crown|synod': 'uneasy', 'crown|broken_banner': 'opposed', 'syndicate|synod': 'opposed', 'syndicate|broken_banner': 'open',
@@ -588,37 +596,35 @@
     const k = [a, b].sort().join('|'), ov = st && st.factions && st.factions.rivalryOverrides && st.factions.rivalryOverrides[k];
     return ov || S.RIVALRY[k] || 'open';
   };
-  S.SUSPICION = {
-    tiers: [20, 45, 70, 95],                    // hidden thresholds: faint, noticed, tested, cornered
-    gain: { harm: 12, seen: 8, witness: 10, gear: 6, test_fail: 30 },
-    dayLeak: 0.4, coolPerDay: 3, hearthCoolPerDay: 6, sanctuaryCool: 15, informantFactor: 0.7,
-    testPass: { reset: 40, standing: 40, trust: 1 }, forcedAt: 100
-  };
   S.GOODWILL = { min: 15, max: 100, tiers: [{ id: 'wary', name: 'Wary', min: 15 }, { id: 'kindly', name: 'Kindly', min: 30 }, { id: 'trusted', name: 'Trusted', min: 60 }], discount: 0.9 };
 
   const rk = (st, f) => (st.factions.ranks || {})[f] || null;
-  S.getRank = (st, f) => { const r = rk(st, f); return r ? { faction: f, rank: r.rank, title: S.RANK.ladders[f][r.rank - 1], secret: !!r.secret, dormant: !!r.dormant, trust: r.trust || 0 } : null; };
+  S.getRank = (st, f) => { const r = rk(st, f); return r ? { faction: f, rank: r.rank, title: S.RANK.ladders[f][r.rank - 1], dormant: !!r.dormant, trust: r.trust || 0 } : null; };
   S.listRanks = st => Object.keys(st.factions.ranks || {}).map(f => S.getRank(st, f));
-  S.rankCounts = st => { const l = S.listRanks(st); return { total: l.length, public: l.filter(r => !r.secret).length, secret: l.filter(r => r.secret).length }; };
+  S.sworn = st => Object.keys(st.factions.ranks || {})[0] || null;     // the one faction you hold a rank in, or null
+  // What a faction's shops and recruiters make of you: 1 (no rival), or the Uneasy / Opposed markup while you serve its rival. The Hearthwatch never marks you up.
+  S.rivalStance = function (st, f) {
+    const mine = S.sworn(st); if (!mine || !f || f === mine || f === 'hearthwatch' || !S.RANK.factions.includes(f)) return { rating: 'open', priceMult: 1, recruit: true };
+    const rating = S.rivalry(mine, f, st); return { rating, priceMult: S.RANK.rivalPrice[rating] || 1, recruit: rating !== 'opposed' };
+  };
 
-  // Can the player take rank 1 in f, publicly or secretly?  Returns { ok, needsSecret, reason }.
+  // Can the player take rank 1 in f?  Returns { ok, reason, leaves }. Holding another rank is not a block for an offer: accepting means leaving it (S.joinRank with leave).
   S.canJoin = function (st, f, opts) {
-    opts = opts || {}; const R = S.RANK, c = S.rankCounts(st), secret = !!opts.secret;
+    opts = opts || {}; const R = S.RANK, cur = S.sworn(st);
     if (!R.factions.includes(f)) return { ok: false, reason: 'No ranks in ' + f };
     if (rk(st, f)) return { ok: false, reason: 'Already a member' };
     if (!opts.force && !opts.outcast && S.getStanding(st, f) < R.standingNeeded[0]) return { ok: false, reason: 'Needs Friendly standing' };
-    if (c.total >= R.maxRanks) return { ok: false, reason: 'You already hold ' + R.maxRanks + ' ranks' };
-    if (!secret && c.public >= R.maxPublic) return { ok: false, needsSecret: true, reason: 'Only ' + R.maxPublic + ' ranks can be public' };
-    if (!secret) for (const g of Object.keys(st.factions.ranks || {})) if (!rk(st, g).secret && S.rivalry(f, g, st) === 'opposed') return { ok: false, needsSecret: true, reason: 'Opposed to your public rank in ' + g + ': take this one in secret' };
-    return { ok: true };
+    if (cur && !opts.leave) return { ok: false, leaves: cur, reason: 'You serve the ' + ((G().factions || {})[cur] || { name: cur }).name + ': leave them first' };
+    return { ok: true, leaves: cur || null };
   };
   S.joinRank = function (st, f, opts) {
     opts = opts || {}; const chk = S.canJoin(st, f, opts); if (!chk.ok) return chk;
-    st.factions.ranks = st.factions.ranks || {};
-    st.factions.ranks[f] = { rank: 1, secret: !!opts.secret, dormant: false, suspicion: 0, trust: 0, testDue: false, since: st.world.day };
     const changes = [];
+    if (chk.leaves) { const l = S.leaveRank(st, chk.leaves, { betrayal: !!opts.betrayal }); changes.push(...(l.changes || [])); }
+    st.factions.ranks = st.factions.ranks || {};
+    st.factions.ranks[f] = { rank: 1, dormant: false, trust: 0, since: st.world.day };
     if (opts.outcast && f === 'broken_banner') changes.push(...S.changeStanding(st, 'crown', -S.RANK.outcastCost, { reason: 'joined the Broken Banner', ripple: false }));
-    return { ok: true, rank: S.getRank(st, f), changes };
+    return { ok: true, rank: S.getRank(st, f), left: chk.leaves || null, changes };
   };
   S.promote = function (st, f, opts) {
     opts = opts || {}; const r = rk(st, f); if (!r) return { ok: false, reason: 'Not a member' };
@@ -628,6 +634,7 @@
     r.rank++; return { ok: true, rank: S.getRank(st, f) };
   };
   S.setDormant = function (st, f, on) { const r = rk(st, f); if (!r) return { ok: false, reason: 'Not a member' }; r.dormant = !!on; return { ok: true }; };
+  // Leaving costs standing (betraying costs more). Coming back later starts you at rank 1 again.
   S.leaveRank = function (st, f, opts) {
     opts = opts || {}; const r = rk(st, f); if (!r) return { ok: false, reason: 'Not a member' };
     delete st.factions.ranks[f];
@@ -641,77 +648,22 @@
     return out;
   };
   // Offers the player can accept or refuse: join (Friendly standing) or promotion. Refused offers rest for a while.
+  // A join offer from another faction while you hold a rank carries `leaves`: taking it means leaving your faction.
   S.invitations = function (st) {
     const out = [], R = S.RANK, dec = st.factions.declined || {};
     for (const f of R.factions) {
       if (dec[f] !== undefined && st.world.day - dec[f] < R.inviteCooldownDays) continue;
       const r = rk(st, f), stand = S.getStanding(st, f);
-      if (!r) { const c = S.canJoin(st, f); if (c.ok || c.needsSecret) out.push({ faction: f, kind: 'join', title: R.ladders[f][0], needsSecret: !!c.needsSecret }); }
+      if (!r) { const c = S.canJoin(st, f, { leave: true }); if (c.ok) out.push({ faction: f, kind: 'join', title: R.ladders[f][0], leaves: c.leaves || null }); }
       else if (!r.dormant && r.rank < 4 && stand >= R.standingNeeded[r.rank]) out.push({ faction: f, kind: 'promote', title: R.ladders[f][r.rank] });
     }
     return out;
   };
   S.declineInvitation = function (st, f) { st.factions.declined = st.factions.declined || {}; st.factions.declined[f] = st.world.day; return { ok: true }; };
   // Fallback: the Broken Banner takes in anyone with nowhere else to go, at a rank-1 cost with the Crown.
-  S.outcastJoin = function (st) { return S.joinRank(st, 'broken_banner', { outcast: true, secret: !!(opts_pub(st)) }); };
-  function opts_pub(st) { return S.canJoin(st, 'broken_banner', { outcast: true }).needsSecret; }
-
-  // ---- suspicion (hidden; the shell shows only story hints from suspicionTier) ----
-  S.suspicion = (st, f) => { const r = rk(st, f); return r && r.secret ? Math.round(r.suspicion || 0) : 0; };
-  S.suspicionTier = function (st, f) { const v = S.suspicion(st, f); let t = 0; S.SUSPICION.tiers.forEach((x, i) => { if (v >= x) t = i + 1; }); return t; };   // 0 none, 1 faint, 2 noticed, 3 tested, 4 cornered
-  S.addSuspicion = function (st, f, why, opts) {
-    opts = opts || {}; const r = rk(st, f); if (!r || !r.secret || r.dormant) return { ok: false };
-    const base = opts.amount !== undefined ? opts.amount : (S.SUSPICION.gain[why] || 0), n = base * (opts.informant ? S.SUSPICION.informantFactor : 1), prev = S.suspicionTier(st, f);
-    r.suspicion = Math.max(0, Math.min(100, (r.suspicion || 0) + n)); const t = S.suspicionTier(st, f);
-    if (t >= 3 && !r.testDue && prev < 3) r.testDue = true;
-    return { ok: true, tier: t, tierUp: t > prev, testDue: r.testDue };
-  };
-  // Time: secrets leak slowly. Cooling (days away from both factions, or at a Hearthwatch chapel) works the other way. Dormant ranks do neither.
-  S.tickSecrets = function (st, days, opts) {
-    opts = opts || {}; const Z = S.SUSPICION;
-    for (const f of Object.keys(st.factions.ranks || {})) {
-      const r = rk(st, f); if (!r.secret || r.dormant) continue;
-      r.suspicion = Math.max(0, Math.min(100, (r.suspicion || 0) + (opts.cool ? -(opts.hearth ? Z.hearthCoolPerDay : Z.coolPerDay) : Z.dayLeak) * days));
-    }
-  };
-  S.sanctuary = function (st) {    // Hearthwatch chapel: free healing and a place to lie low. A rebuild point, not a power-up.
-    for (const f of Object.keys(st.factions.ranks || {})) { const r = rk(st, f); if (r.secret && !r.dormant) r.suspicion = Math.max(0, (r.suspicion || 0) - S.SUSPICION.sanctuaryCool); }
-    return { ok: true, healed: true, goodwill: S.goodwillTier(st) };
-  };
-  S.testDue = (st, f) => !!(rk(st, f) && rk(st, f).testDue);
-  S.resolveTest = function (st, f, passed) {
-    const r = rk(st, f); if (!r || !r.testDue) return { ok: false, reason: 'No test pending' }; r.testDue = false;
-    if (passed) { r.suspicion = Math.max(0, (r.suspicion || 0) - S.SUSPICION.testPass.reset); r.trust = (r.trust || 0) + S.SUSPICION.testPass.trust;
-      return { ok: true, passed: true, changes: S.changeStanding(st, f, S.SUSPICION.testPass.standing, { reason: 'passed a loyalty test', ripple: false }) }; }
-    r.suspicion = Math.min(100, (r.suspicion || 0) + S.SUSPICION.gain.test_fail); return { ok: true, passed: false, tier: S.suspicionTier(st, f) };
-  };
-  // Exposure is always a scene. Ignored warnings (suspicion at 100) take the good options away.
-  S.exposureOptions = function (st, f) {
-    const r = rk(st, f); if (!r || !r.secret) return []; const forced = (r.suspicion || 0) >= S.SUSPICION.forcedAt, cost = 80 * r.rank + 80;
-    return [
-      { id: 'bluff', name: 'Bluff or talk it out', available: !forced && (S.tierOf(S.getStanding(st, f)).id !== 'neutral' && S.tierOf(S.getStanding(st, f)).id !== 'hostile' || (st.world.flags['favour_' + f] || 0) > 0) },
-      { id: 'bargain', name: 'Confess and bargain', available: !forced && st.inventory.gold >= cost, cost },
-      { id: 'fight', name: 'Fight or flee', available: true },
-      { id: 'burn', name: 'Burn the bridge', available: true }
-    ];
-  };
-  // choice: bluff {roll 0..1} | bargain | fight {won, innocentsKilled} | burn.   Rank is lost on every path except a won fight or a good bluff.
-  S.resolveExposure = function (st, f, choice, opts) {
-    opts = opts || {}; const r = rk(st, f); if (!r) return { ok: false, reason: 'No such rank' };
-    const o = S.exposureOptions(st, f).find(x => x.id === choice); if (!o) return { ok: false, reason: 'Unknown choice' }; if (!o.available) return { ok: false, reason: 'That option is gone' };
-    const hit = 60 + 30 * r.rank, ch = []; let kept = false, bounty = false;
-    const lose = (mult) => { delete st.factions.ranks[f]; ch.push(...S.changeStanding(st, f, -Math.round(hit * mult), { reason: 'secret rank exposed', ripple: false })); };
-    if (choice === 'bluff') { const chance = Math.max(0.2, Math.min(0.85, 0.35 + S.getStanding(st, f) / 2000)); if ((opts.roll === undefined ? 0.5 : opts.roll) < chance) { kept = true; r.suspicion = 45; } else { lose(1); } }
-    else if (choice === 'bargain') { st.inventory.gold -= o.cost; lose(0.4); }
-    else if (choice === 'fight') {
-      if (opts.won) { kept = true; r.suspicion = 50; } else { lose(1.5); bounty = true; }
-      if (opts.innocentsKilled) st.factions.goodwill = Math.max(S.GOODWILL.min, (st.factions.goodwill || S.GOODWILL.min) - 10 * opts.innocentsKilled);
-    }
-    else if (choice === 'burn') { lose(0.8); for (const g of S.RANK.factions) if (g !== f && S.rivalry(f, g, st) === 'opposed' && S.getStanding(st, g) > -200) ch.push(...S.changeStanding(st, g, 20, { reason: 'you walked away on your own terms', ripple: false })); st.world.flags['burned_' + f] = st.world.day; }
-    if (bounty) st.world.flags['bounty_' + f] = st.world.day;
-    if (kept && st.factions.ranks[f]) st.factions.ranks[f].testDue = false;
-    return { ok: true, kept, bounty, changes: ch, choice };
-  };
+  S.outcastJoin = function (st) { return S.joinRank(st, 'broken_banner', { outcast: true }); };
+  // Hearthwatch chapel: free healing. A rebuild point, not a power-up.
+  S.sanctuary = function (st) { return { ok: true, healed: true, goodwill: S.goodwillTier(st) }; };
 
   // ---- Hearthwatch goodwill: lighter meter, hard to push below the floor, always a way back ----
   S.getGoodwill = st => Math.max(S.GOODWILL.min, Math.min(S.GOODWILL.max, Math.round(st.factions.goodwill === undefined ? S.GOODWILL.min : st.factions.goodwill)));
@@ -719,8 +671,6 @@
   S.changeGoodwill = function (st, d, why) { const prev = S.getGoodwill(st); st.factions.goodwill = Math.max(S.GOODWILL.min, Math.min(S.GOODWILL.max, prev + d)); st.factions.history.push({ day: st.world.day, faction: 'hearthwatch', delta: S.getGoodwill(st) - prev, reason: why || 'goodwill' }); return S.getGoodwill(st); };
   S.hearthPriceMult = st => S.goodwillTier(st).id === 'trusted' ? S.GOODWILL.discount : 1;
 
-  const _adv = S.advanceDay;
-  S.advanceDay = function (st, n) { const before = st.world.day, r = _adv(st, n); if (r > before) S.tickSecrets(st, r - before); return r; };
 
   window.GAME_SAVE = S;
 })();
