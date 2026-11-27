@@ -103,9 +103,9 @@
   // ---- who is standing ----
   C.mootStanding = function (st) {
     const f = fl(st), out = [];
-    if (!handExposed(st) && f.ledger_stands == null) out.push('regency'); // once the Steward is known to be the Hand, the Regency is finished; standing openly as the Ledger, he drops it
-    if (f.ledger_stands != null) out.push('ledger');               // a day number (0 on the first day), so test for presence
-    if (f.ilvane_stands != null && !hoardLaid(st)) out.push('ilvane');     // the Sealed Ledger laid before the Moot ends her claim
+    if (!handExposed(st) && !f.ledger_stands) out.push('regency'); // once the Steward is known to be the Hand, the Regency is finished; standing openly as the Ledger, he drops it
+    if (f.ledger_stands) out.push('ledger');
+    if (f.ilvane_stands && !hoardLaid(st)) out.push('ilvane');     // the Sealed Ledger laid before the Moot ends her claim
     out.push('osric');
     if (!f.corisande_withdrawn) out.push('corisande');
     if (f.wil_proclaimed) out.push('wil');

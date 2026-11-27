@@ -111,7 +111,7 @@
     { id: 'stewards_offer', who: 'harrow', at: 'crown_keep', meet: 'fig_harrow', trip: st => mootOn(st) && !C.moot(st).declared && proofHeld(st, 'hidden_hand') && !fl(st).crane_hand,
       setup: 'Harrow is alone in the seal hall with the Moot roll in front of him. He has crossed out "The Regency" in his own hand, neatly, and left the space beside it blank.',
       lines: ['"You could lay that book before the Lords and finish me. Or you could give it back, and I will stop pretending."', '"No more Steward. I will stand as what I am: the man the whole realm owes. Let them vote on the ledger with their eyes open."'],
-      options: [O('give', 'Give him the Book', st => { spendProof(st, 'hidden_hand', 'ledger'); fl(st).ledger_stands = day(st); return { text: 'He writes "The Long Ledger" in the blank space, and blots it. "Thank you. Honesty is expensive. I can afford it now."' }; }),
+      options: [O('give', 'Give him the Book', st => { spendProof(st, 'hidden_hand', 'ledger'); fl(st).ledger_stands = Math.max(1, day(st)); return { text: 'He writes "The Long Ledger" in the blank space, and blots it. "Thank you. Honesty is expensive. I can afford it now."' }; }),
         O('keep', 'Keep it', st => { fl(st).stewards_offer_refused = day(st); return { text: '"Then lay it, if you are going to," he says. "Do not keep me waiting. Waiting costs interest."' }; })] },
     { id: 'osric_purse', who: 'osric', at: null, meet: 'fig_osric', trip: st => Object.values(C.moot(st).canvass).some(c => c.for !== 'osric'),
       setup: 'An Aldermere knight, still muddy from the road, bows too low. The purse he holds out is heavy enough to make the bow worth it.',
@@ -202,7 +202,7 @@
     { id: 'archons_ward', who: 'ilvane', at: 'voldun', meet: 'fig_ilvane', trip: st => mootOn(st) && !C.moot(st).declared && proofHeld(st, 'forbidden_hoard') && rankOf(st, 'synod') >= 3,
       setup: 'The Archon receives you below the cathedral, where the floor is warm and the walls hum very faintly.',
       lines: ['"You have read the Sealed Ledger, so you know what the tithe feeds. Osric would starve it to pay his spears. Harrow would put it out to tender."', '"Only a ruler who keeps the Ward fed can keep the realm safe. Carry my claim to Crown Keep, Inquisitor. I will stand."'],
-      options: [O('carry', 'Carry her claim', st => { fl(st).ilvane_stands = day(st); return { text: 'She seals the claim with the Ward\'s own sigil. "They will hate me," she says. "They will be alive to do it."' }; }),
+      options: [O('carry', 'Carry her claim', st => { fl(st).ilvane_stands = Math.max(1, day(st)); return { text: 'She seals the claim with the Ward\'s own sigil. "They will hate me," she says. "They will be alive to do it."' }; }),
         O('refuse', 'Refuse', st => { fl(st).archons_ward_refused = day(st); return { text: '"Then the Sleeper will have to trust someone else\'s appetite," she says.' }; })] },
   ];
   const byId = id => C.MOVES.find(m => m.id === id);

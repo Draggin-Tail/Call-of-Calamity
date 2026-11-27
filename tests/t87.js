@@ -51,6 +51,9 @@ ok('both claimants are listed with their backers', C.MOOT.claimants.ledger.backe
   ok('the board reads that debts are the law', /debts are the law/.test(C.AFTER_MOOT.ledger.board));
   ok('the Moot is recorded in the dossier', C.knows ? C.knows(st, 'moot_ledger') : true); }
 
+{ const st = fresh(); st.world.day = 0; proof(st, 'hidden_hand'); callMoot(st); offer(st, 'stewards_offer', 'give', 'crown_keep');
+  ok('the Ledger stands even if the Book is given back on day 0', C.mootStanding(st).includes('ledger')); }
+
 // ---- Archon Ilvane ----
 { const st = fresh(); proof(st, 'forbidden_hoard'); callMoot(st); S.joinRank(st, 'synod', { force: true }); S.promote(st, 'synod', { force: true });
   ok('at Synod rank 2, The Archon\'s Ward does not come', (at(st, 'voldun'), C.startMove(st, 'archons_ward')) === null); }
