@@ -37,7 +37,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t87 the two new Moot claimants (the Long Ledger, Archon Ilvane) | node | pass |
 | t88 relations between factions: drift, wars, alliances, the council, levers, ideals (phase 3a) | node | pass |
 | t89 supply and garrisons: supply paths, isolation stages, defection, regrowth (phase 3b) | node | pass |
-| t90 AI attacks: marching, the muster and margin, war weariness, the defender's answer, redeployment, warning, cooldown, settling, armies moving in, stepping in (phase 3c) | node | pass |
+| t90 AI attacks: marching, the muster and margin, war weariness, the defender's answer, redeployment, warning, cooldown, settling, armies moving in, stepping in, overextension, rallying at home, suing for terms (phase 3c) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |

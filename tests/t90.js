@@ -123,6 +123,34 @@ const rank = (st, f) => S.joinRank(st, f, { force: true, leave: true });
   for (let i = 0; i < 120; i++) { day(st); C.attackState(st).list.forEach(a => { a.lands = 1e9; }); }
   ok('mustering and regrowth never take a faction past the sum of its base garrisons', men('crown') <= cap('crown') && men('broken_banner') <= cap('broken_banner'), men('crown') + '/' + cap('crown')); }
 
+// ---- against snowballing ----
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); const o = C.attackOptions(st, 'crown')[0];
+  const a = { n: 99, by: 'crown', on: o.on, target: o.target, from: o.from, day: 1, lands: 1 }; C.attackState(st).list.push(a); C.attackSettle(st, a, 'attack');
+  ok('a place just taken counts at half its base toward its new owner\'s men', C.newlyTaken(st, o.target) && C.capShare(st, o.target) === 0.5);
+  ok('and regrows half as fast', C.regrowFactor(st, o.target) === 2);
+  st.world.day = 62; ok('after 60 days it counts in full', !C.newlyTaken(st, o.target) && C.capShare(st, o.target) === 1); }
+{ const st = fresh(); const mine = Object.keys(C.NODES).filter(id => C.ownerOf(st, id) === 'syndicate' && C.NODES[id].type !== 'capital');
+  ok('a faction with most of its land is not rallying', !C.rallying(st, 'syndicate'));
+  const cap = Object.keys(C.NODES).find(id => C.NODES[id].type === 'capital' && C.NODES[id].capital === 'syndicate'), near = C.supplyNeighbours(cap).find(y => C.ownerOf(st, y) === 'syndicate' && C.NODES[y].type !== 'capital');
+  const far = mine.filter(id => id !== near).slice(0, Math.ceil(mine.length * 0.6)); far.forEach(id => { (st.world.nodes[id] = st.world.nodes[id] || {}).owner = 'crown'; });
+  ok('one that holds under 60% of its starting places rallies', C.rallying(st, 'syndicate'));
+  ok('its places within 3 roads of its capital defend at 1.5x and regrow twice as fast', C.homeRally(st, near) && C.defendStrength(st, near) === 1.5 * C.garrison(st, near) && C.regrowFactor(st, near) === 0.5, near);
+  const remote = Object.keys(C.NODES).find(id => C.ownerOf(st, id) === 'syndicate' && !C.homeRally(st, id));
+  if (remote) ok('places further out get no help', C.defendStrength(st, remote) === C.garrison(st, remote)); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); const r = C.attackState(st);
+  r.ledger = [{ d: 1, k: 'took', by: 'crown', on: 'broken_banner' }, { d: 1, k: 'took', by: 'crown', on: 'broken_banner' }, { d: 1, k: 'took', by: 'broken_banner', on: 'crown' }, { d: 1, k: 'failed', by: 'broken_banner', on: 'crown' }];
+  C.sueTick(st); ok('lost 2, took back 1, failed once: not yet enough to sue', !C.talking(st, 'crown', 'broken_banner'));
+  r.ledger.push({ d: 1, k: 'failed', by: 'broken_banner', on: 'crown' }); C.sueTick(st);
+  const t = C.talking(st, 'crown', 'broken_banner');
+  ok('losing more than it takes, and three setbacks: the loser asks for terms, in the news', t && t.by === 'broken_banner' && C.relState(st).news.some(n => n.kind === 'terms' && n.text.includes('asking for terms')));
+  ok('neither side starts a new attack on the other while they talk', C.attackOptions(st, 'crown').every(x => x.on !== 'broken_banner') && C.attackOptions(st, 'broken_banner').every(x => x.on !== 'crown'));
+  const v0 = C.relValue(st, 'crown', 'broken_banner'); st.world.day++; C.sueTick(st); ok('the relation warms each day', C.relValue(st, 'crown', 'broken_banner') > v0 + 0.019);
+  st.world.day = t.day + 60; C.relValue(st, 'crown', 'broken_banner'); S.setRelation(st, 'crown', 'broken_banner', -1, { both: true }); C.sueTick(st);
+  ok('talks that bring no peace in 60 days break down', !C.talking(st, 'crown', 'broken_banner') && C.relState(st).news.some(n => n.text.includes('broken down')));
+  C.sueTick(st); ok('and the loser can\'t ask again for 30 days', !C.talking(st, 'crown', 'broken_banner')); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackState(st).talks = { 'broken_banner|crown': { by: 'broken_banner', to: 'crown', day: 1 } };
+  delete C.relState(st).wars['broken_banner|crown']; C.sueTick(st); ok('talks end when peace comes', !C.talking(st, 'crown', 'broken_banner')); }
+
 // ---- wiring and saves ----
 { const st = fresh(); war(st, 'crown', 'broken_banner'); C.relState(st).wars['broken_banner|crown'].since = 1; S.advanceDay(st, 1); ok('the daily tick runs from advanceDay', C.attacks(st).length > 0); }
 { const st = fresh(); const s2 = S.repair(JSON.parse(JSON.stringify(st))).state; delete s2.world.atk; S.advanceDay(s2, 1); ok('a save without attack state loads and ticks', !!s2.world.atk); }
