@@ -56,7 +56,7 @@
     const rel = (st, a, b) => (S.getRelation(st, a, b) + S.getRelation(st, b, a)) / 2;
     const shift = (st, a, b, d) => S.setRelation(st, a, b, rel(st, a, b) + d, { both: true });
     const setRival = (st, a, b, v) => { st.factions.rivalryOverrides = st.factions.rivalryOverrides || {}; st.factions.rivalryOverrides[pk(a, b)] = v; };
-    const news = (st, text, kind) => { const r = RS(st); r.news.push({ day: day(st), text, kind: kind || 'news' }); if (r.news.length > R.news) r.news = r.news.slice(-R.news); };
+    const news = C.relNews = (st, text, kind) => { const r = RS(st); r.news.push({ day: day(st), text, kind: kind || 'news' }); if (r.news.length > R.news) r.news = r.news.slice(-R.news); };
     const atWar = (st, a, b) => !!RS(st).wars[pk(a, b)];
     const allyOf = (st, f) => RS(st).allies[f] || null;
     C.relAtWar = atWar; C.relAllyOf = allyOf; C.relValue = rel;
