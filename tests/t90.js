@@ -31,7 +31,7 @@ ok('the agreed numbers: 7 days warning, 7 days between attacks, 2 at once, margi
   ok('the Hearthwatch is never a target', !C.attackOptions(st, 'crown').some(x => C.ownerOf(st, x.target) === 'hearthwatch'), hw); }
 { const st = fresh(); war(st, 'crown', 'broken_banner'); ['crown', 'syndicate', 'synod', 'broken_banner'].forEach(f => ['crown', 'syndicate', 'synod', 'broken_banner'].forEach(g => { if (f < g) war(st, f, g); }));
   const all = ['crown', 'syndicate', 'synod', 'broken_banner'].flatMap(f => C.attackOptions(st, f));
-  ok('capitals are never targets (left for 3d)', all.length && !all.some(x => C.NODES[x.target].type === 'capital')); }
+  ok('capitals are not targets while their faction holds other places (3d)', all.length && !all.some(x => C.NODES[x.target].type === 'capital')); }
 
 // ---- warning, cooldown, two at once ----
 { const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown');
