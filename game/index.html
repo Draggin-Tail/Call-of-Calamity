@@ -1,4 +1,27 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style><script>/* DEBUG (preview only, remove before merge): shows script errors and a stuck enemy turn on screen, so they can be screenshotted on a phone. */
+(function(){
+  var box=null,lines=[];
+  function show(msg){
+    lines.push(String(msg).slice(0,600));if(lines.length>6)lines.shift();
+    if(!box){box=document.createElement('div');box.id='dbgbox';box.title='Tap to hide';
+      box.style.cssText='position:fixed;z-index:99999;left:8px;right:8px;top:calc(8px + env(safe-area-inset-top));max-height:45vh;overflow:auto;background:#2a0d10;color:#ffd7d2;border:2px solid #ff5a4a;border-radius:8px;padding:8px 10px;font:12px/1.35 ui-monospace,Menlo,monospace;white-space:pre-wrap;word-break:break-word;box-shadow:0 6px 20px #000a';
+      box.onclick=function(){box.style.display='none'};}
+    if(!box.parentNode&&document.body)document.body.appendChild(box);
+    box.style.display='block';box.textContent='Something went wrong. Screenshot this and send it to Claude (tap to hide):\n\n'+lines.join('\n\n');
+  }
+  window.__dbgShow=show;
+  window.addEventListener('error',function(e){show((e.message||'error')+'\n  at '+(e.filename||'').split('/').pop()+':'+e.lineno+':'+e.colno+(e.error&&e.error.stack?'\n'+String(e.error.stack).split('\n').slice(0,5).join('\n'):''))});
+  window.addEventListener('unhandledrejection',function(e){var r=e.reason;show('Unhandled: '+(r&&r.message||r)+(r&&r.stack?'\n'+String(r.stack).split('\n').slice(0,5).join('\n'):''))});
+  var ce=console.error;console.error=function(){try{var a=[].slice.call(arguments).map(function(x){return x&&x.stack?x.message+'\n'+String(x.stack).split('\n').slice(0,5).join('\n'):String(x)});show('console.error: '+a.join(' '))}catch(_){}return ce.apply(console,arguments)};
+  // Watchdog: an enemy (AI) turn that has not moved on for 12 seconds is reported with the battle state.
+  var last='',since=Date.now();
+  setInterval(function(){try{
+    if(typeof active==='undefined'||!active||typeof over==='undefined'||over||typeof PL!=='undefined'&&PL)return;
+    var ai=typeof isAI==='function'&&isAI(active),key=(active.n||'')+'|'+(typeof TURN!=='undefined'?TURN:'')+'|'+(typeof spent!=='undefined'?spent:'');
+    if(key!==last){last=key;since=Date.now();return}
+    if(ai&&Date.now()-since>12000){since=Date.now()+60000;show('Enemy turn stuck: '+active.n+' ('+active.team+'), busy='+(typeof busy!=='undefined'?busy:'?')+', turn '+(typeof TURN!=='undefined'?TURN:'?')+', points spent '+(typeof spent!=='undefined'?spent:'?')+', screen '+innerWidth+'x'+innerHeight+', '+navigator.userAgent)}
+  }catch(_){}},2000);
+})();</script></head><body>
 <title>Call of Calamity</title>
 <style>
 :root{--bg:#121c26;--panel:#1b2a38;--t1:#27394a;--t2:#2c4054;--rock:#0d141b;--ink:#e9e4d3;--dim:#8da1af;--gold:#e2b24c;--ally:#4ea5cc;--foe:#cc6150;--ok:#7cc480;--line:#3a5266}
