@@ -44,7 +44,7 @@
       { name: 'The tithe door', enemies: ['wizard:The First Jailer', 'stone_golem:Door Warden', 'enchanter:Stair Warden'].map(U), boss: true }] };
   { const id = 'voldun_undercity', d = C.DUNGEONS[id], par = C.NODES[d.parent];
     if (par && !C.NODES[id]) {
-      C.NODES[id] = { name: d.name, region: par.region, type: 'dungeon', pos: [+(par.pos[0] + 0.014).toFixed(3), +(par.pos[1] + 0.016).toFixed(3)], desc: d.desc, dungeon: id, hidden: true, links: { [d.parent]: 1 } };
+      C.NODES[id] = { name: d.name, region: par.region, area: par.area, type: 'dungeon', pos: [+(par.pos[0] + 0.014).toFixed(3), +(par.pos[1] + 0.016).toFixed(3)], desc: d.desc, dungeon: id, hidden: true, links: { [d.parent]: 1 } };
       par.links[id] = 1; if (C.EDGES) C.EDGES.push([d.parent, id, 1]);
       const MAPS = ['classic_ridge', 'corner_ambush', 'twin_cliffs', 'king_spire', 'sunken_causeway'];
       d.floors.forEach((f, i) => { const rec = d.rec + (f.boss ? 1 : 0); C.ENCOUNTERS['dg_' + id + '_' + (i + 1)] = { name: d.name + ': ' + f.name, map: 'dgm_' + id + '_' + (i + 1), rec, enemyFaction: 'synod', enemies: f.enemies.map(e => Object.assign({}, e)),
@@ -73,7 +73,7 @@
       [B('stop', 'Stop them', st => { fl(st).crown_banneret = day(st); C.harm(st, 'crown', 20); S.changeStanding(st, 'broken_banner', 25, { reason: 'stopped a burning', ripple: false }); C.deed(st, 'crown', 'light', 2, { public: true }); return { text: 'Your lances form up across the road. The captain thinks about it, and turns his men round. Lord Osric will hear of this.' }; }),
        B('ride', 'Ride on', st => { fl(st).crown_banneret = day(st); C.deed(st, 'crown', 'gray', 1); return { text: 'The smoke follows you for a mile. Your lances do not look at you.' }; }),
        B('join', 'Lend him your lances', st => { fl(st).crown_banneret = day(st); S.serve(st, 'crown', 40, { reason: 'helped clear the outlaws' }); C.harm(st, 'broken_banner', 30); C.deed(st, 'crown', 'dark', 2, { public: true }); return { text: 'It is over by noon. Lord Osric sends his thanks, and a cask of wine.' }; })]),
-    beat('crown_marches', 'voss', null, st => !!fl(st).knighted && !!fl(st).marches_warned && !fl(st).marches_defended && !fl(st).crown_marches && C.NODES[st.world.location] && C.NODES[st.world.location].region === 'free_marches',
+    beat('crown_marches', 'voss', null, st => !!fl(st).knighted && !!fl(st).marches_warned && !fl(st).marches_defended && !fl(st).crown_marches && C.NODES[st.world.location] && C.areaOf(st.world.location) === 'free_marches',
       'The Free Marches: farms, hedgerows, and smoke on the horizon. The raiders will be here by nightfall.\n\nThe garrison captain is glad to see a knight, and gladder still to hand you the decision. "I have forty men. The Lord Marshal\'s orders say hold the gate. My mother lives out on the farms."',
       ['"We cannot hold the farms and the gate both. Tell me which."'],
       [B('evacuate', 'Get the farm folk out first', st => { fl(st).crown_marches = 'evacuate'; gw(st, 5, 'evacuated the Marches'); C.deed(st, 'crown', 'light', 2, { public: true }); return { text: 'The carts go south toward Millstream. The gate will be harder to hold now.' }; }),

@@ -12,9 +12,8 @@
   const visited = (st, id) => !!(st.world.nodes[id] && st.world.nodes[id].visited);
   const lvl = st => { const l = (st.party || []).map(id => ((st.roster || []).find(u => u.id === id) || {}).level || 1); return Math.max(1, Math.round(l.reduce((a, b) => a + b, 0) / Math.max(1, l.length))) || 1; };
   const rnd = st => { let x = (st.world.rbSeed || (st.world.day * 7919 + 17)) | 0; x ^= x << 13; x ^= x >>> 17; x ^= x << 5; st.world.rbSeed = x || 1; return ((x >>> 0) % 100003) / 100003; };   // saved with the game, so a reload gives the same road
-  const regionName = r => (C.REGIONS[r] || {}).name || r;
+  const regionName = r => C.landName(r);
   const fname = f => (window.GAME_DATA.factions[f] || {}).name || f;
-  const HUMAN = ['crownlands', 'free_marches', 'voldun', 'river_cities'];
   const setFight = (st, w, enc) => { st.world.wander = Object.assign({}, w, { kind: 'fight', enc, text: w.fightText || w.text }); C.ENCOUNTERS.wander = enc; return { ok: true, fight: true }; };
   const encFor = (st, w, name, faction, enemies, extra) => { const lv = lvl(st) + (extra || 0);
     return { name, map: C.mapFor(st, w.region, w.to), rec: lv, enemyFaction: faction, enemies: enemies.map(e => Object.assign({}, e)), objective: null, once: false, wander: true, obstacle: w.obstacle, gate: w.gate || null,
@@ -29,8 +28,8 @@
     const stop = gateStop(from, to); if (fl(st)['gate_' + stop]) return null;
     // been in that land before (an older save, or coming home): no gate
     if (Object.keys(st.world.nodes).some(id => visited(st, id) && N(id) && N(id).region === N(to).region)) { fl(st)['gate_' + stop] = Math.max(1, st.world.day); return null; }
-    const holder = C.ownerOf(st, to) || (C.REGIONS[N(to).region] || {}).faction || 'outlaws';
-    return { stop, holder, region: N(to).region, human: HUMAN.includes(N(to).region) };
+    const holder = C.factionOwner(st, to) || 'outlaws';   // unclaimed or monster ground: raiders keep the border road
+    return { stop, holder, region: N(to).region, human: N(to).region === 'human' };
   };
   const GATE_TEXT = {
     harvest_road: 'A Synod toll-chapel stands across the Harvest Road. Two wardens with lamps look over everyone going east into Vol\'Dun, and write down what they see.',
@@ -89,7 +88,7 @@
   function blockDue(st, from, to) {
     const R = C.ROADBLOCK; if (st.world.rbNext === undefined) st.world.rbNext = R.first;
     if (st.world.day < st.world.rbNext) return false;
-    if (visited(st, to) || N(to).type === 'road' || N(from).region !== N(to).region) return false;   // only on the way somewhere new, not at the borders
+    if (visited(st, to) || N(to).type === 'road' || C.areaOf(from) !== C.areaOf(to)) return false;   // only on the way somewhere new, not at the borders (old human areas included)
     const f = fl(st); if (f.opening && !f.guide_done && !f.guide_off && !f.guide_none) return false;   // not during the guided first week
     return true;
   }

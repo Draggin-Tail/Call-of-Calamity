@@ -138,6 +138,7 @@ body.campaign #top .skirm{display:none}
 .sh-map .n.t-village,.mkey .t-village{width:36px;height:36px;border-radius:50%;background:#24402a;color:#e8f0d0}
 .sh-map .n.t-hamlet,.mkey .t-hamlet{width:28px;height:28px;border-radius:50%;border-width:2px;background:#4a3d2c;color:#e9d9b8}
 .sh-map .n.t-poi,.mkey .t-poi{width:32px;height:32px;border-radius:5px;background:#43285a;color:#e7c8ff}
+.sh-map .n{border-width:4px}.sh-map .n.t-capital{border-width:6px}
 .sh-map .n.t-poi{transform:translate(-50%,-50%) scale(var(--ns,1)) rotate(45deg)}.mkey .t-poi{transform:rotate(45deg)}.sh-map .n.t-poi .ti,.mkey .t-poi .ti{transform:rotate(-45deg)}
 .sh-map .n.t-zone,.mkey .t-zone{width:40px;height:40px;border-radius:14px;border-style:dashed;background:rgba(70,40,20,.85);color:#b9e08a}
 .sh-map .n.t-road,.mkey .t-road{width:26px;height:26px;border-radius:5px;border-width:2px;background:#3b4048;color:#cfd6de}
@@ -299,7 +300,29 @@ body.campaign #top .skirm{display:none}
     if (!(to in seen)) return null; const p = []; for (let x = to; x !== from; x = seen[x]) p.unshift(x); return p;
   }
   const pathDays = (from, p) => { let d = 0, a = from; p.forEach(b => { d += C.travelCost(a, b); a = b; }); return d; };
-  function ownerColor(id) { const o = C.ownerOf(ST, id); return o && D.factions[o] ? D.factions[o].color : '#4a5a68'; }
+  function ownerColor(id) { const o = C.ownerOf(ST, id); return o && D.factions[o] ? D.factions[o].color : o === 'player' ? '#e2b24c' : (C.OWNERLESS[o] || {}).color || '#4a5a68'; }
+  // ---- owner colours on the land (design/node_ownership_and_land.md, section 8): each spot on the map takes the colour of the nearest
+  //      place that has one. Unclaimed ground, dungeons and hidden places leave the art bare, and so does anything far from every place
+  //      (open sea, the empty Desolation). Drawn once at world scale and redrawn only when an owner changes. ----
+  const ownerField = { key: null, url: null, builds: 0 };
+  function ownerFieldUrl() {
+    const ids = Object.keys(C.NODES).filter(id => !C.NODES[id].hidden && !C.NODES[id].dungeon), key = ids.map(id => C.ownerOf(ST, id)).join();
+    if (ownerField.key === key) return ownerField.url;
+    if (typeof document === 'undefined' || !document.createElement) return null;
+    const FW = 345, FH = 188, AX = 1380, AY = 752, maxD = 0.07 * AX, cv = document.createElement('canvas'); cv.width = FW; cv.height = FH;
+    const g = cv.getContext('2d'); if (!g) return null; const img = g.createImageData(FW, FH), P = [], cols = [];
+    const rgb = hex => { const m = /^#?([0-9a-f]{6})$/i.exec(hex || ''); if (!m) return null; const v = parseInt(m[1], 16); return [v >> 16, (v >> 8) & 255, v & 255]; };
+    const oi = {}, byOwner = [];   // one colour per owner, so borders fall only where the owner changes
+    ids.forEach(id => { const o = C.ownerOf(ST, id); if (!(o in oi)) { oi[o] = byOwner.length; byOwner.push(D.factions[o] ? rgb(D.factions[o].color) : o === 'player' ? rgb('#e2b24c') : null); } P.push([C.NODES[id].pos[0] * AX, C.NODES[id].pos[1] * AY, oi[o]]); });
+    cols.push(...byOwner);
+    const own = new Int16Array(FW * FH);
+    for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) { const px = (x + 0.5) / FW * AX, py = (y + 0.5) / FH * AY; let best = -1, bd = maxD * maxD;
+      for (let i = 0; i < P.length; i++) { const dx = P[i][0] - px, dy = P[i][1] - py, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = P[i][2]; } } own[y * FW + x] = best; }
+    for (let y = 0; y < FH; y++) for (let x = 0; x < FW; x++) { const k = y * FW + x, c = own[k] >= 0 ? cols[own[k]] : null; if (!c) continue;
+      const edge = (x > 0 && cols[own[k - 1]] !== c) || (x < FW - 1 && cols[own[k + 1]] !== c) || (y > 0 && cols[own[k - FW]] !== c) || (y < FH - 1 && cols[own[k + FW]] !== c);
+      img.data.set([c[0], c[1], c[2], edge ? 190 : 70], k * 4); }
+    g.putImageData(img, 0, 0); ownerField.key = key; ownerField.url = cv.toDataURL(); ownerField.builds++; return ownerField.url;
+  }
 
   // ---------- where to go: quest markers ----------
   // offer (!): work you can take at a place you know; goal (◆): the next step of something you have taken; report (✓): go back and get paid; lead (?): a place named in a story lead.
@@ -400,7 +423,8 @@ body.campaign #top .skirm{display:none}
     const box = h('div', { class: 'sh-map', style: 'height:' + Math.min(boxH, H) + 'px' });
     const inner = h('div', { style: 'position:relative;width:' + W + 'px;height:' + H + 'px;background:radial-gradient(ellipse at 50% 45%,#22384a 0%,#13212d 70%)' });
     loadArt(T ? T.img : 'art/world.jpg', u => { inner.style.backgroundImage = 'url(' + u + ')'; inner.style.backgroundSize = '100% 100%'; });
-    const TINT = { free_marches: '#d98a2b' }, tint = r => TINT[r] || (C.REGIONS[r] && C.REGIONS[r].faction && D.factions[C.REGIONS[r].faction] ? D.factions[C.REGIONS[r].faction].color : '#4a5a68');
+    const LINE = '#e8dcc0';   // territory outlines are plain now: the owner colours below show who holds what
+    { const u = ownerFieldUrl(); if (u) { const fw = W / cw, fh = H / ch; inner.appendChild(h('div', { class: 'ofield', style: 'position:absolute;inset:0;overflow:hidden;pointer-events:none' }, h('img', { src: u, alt: '', style: 'position:absolute;max-width:none;left:' + (-crop[0] * fw) + 'px;top:' + (-crop[1] * fh) + 'px;width:' + fw + 'px;height:' + fh + 'px' }))); } }
     const pts = poly => poly.map(p => proj(p).map(v => v.toFixed(1)).join(',')).join(' ');
     let svg = '<svg width="' + W + '" height="' + H + '" style="position:absolute;inset:0">';
     const marks = questMarks();
@@ -409,7 +433,7 @@ body.campaign #top .skirm{display:none}
         const R = C.REGIONS[r] || {}, isK = known[r];
         if (R.unclaimed) svg += '<polygon points="' + pts(t.poly) + '" fill="#000" fill-opacity=".25" stroke="#c8b8a0" stroke-opacity=".55" stroke-width="2" stroke-dasharray="6 6"/>';
         else if (!isK) svg += '<polygon points="' + pts(t.poly) + '" fill="#0b1118" fill-opacity=".62" stroke="#0b1118" stroke-opacity=".8" stroke-width="2"/>';
-        else svg += '<polygon points="' + pts(t.poly) + '" fill="' + tint(r) + '" fill-opacity="' + (r === here ? '.28' : '.16') + '" stroke="' + tint(r) + '" stroke-opacity=".85" stroke-width="' + (r === here ? 4 : 2.5) + '" stroke-linejoin="round"/>';
+        else svg += '<polygon points="' + pts(t.poly) + '" fill="none" stroke="' + LINE + '" stroke-opacity="' + (r === here ? '.7' : '.35') + '" stroke-width="' + (r === here ? 3 : 2) + '" stroke-linejoin="round"/>';
       });
       const fs = Math.round(Math.max(11, Math.min(18, 13 * Z)));
       Object.entries(C.TERRITORIES).forEach(([r, t]) => { const R = C.REGIONS[r] || {}, [x, y] = proj(t.label); const nm = !t.painted ? terrName(r).toUpperCase() : null, sub = R.unclaimed ? 'Unclaimed' : !known[r] ? 'Unexplored' : null;
@@ -429,16 +453,13 @@ body.campaign #top .skirm{display:none}
       Object.entries(qt).forEach(([r, q]) => { const t = C.TERRITORIES[r]; if (!t || !known[r]) return; const [x, y] = proj(t.label); inner.appendChild(h('div', { class: 'qm q-' + q.kind, style: 'left:' + (x + 46) + 'px;top:' + (y + 6) + 'px;--ns:1', title: q.why.join(', '), text: QM_ICON[q.kind] })); });
     } else { // ---- region view: this territory's picture, its places and roads, and the roads out ----
       Object.entries(C.TERRITORIES).forEach(([r, t]) => { if (r === mode || !t.next.includes(mode) && !(t.next || []).length) return; if (r !== mode && !known[r]) return;
-        if (r !== mode) svg += '<polygon points="' + pts(t.poly) + '" fill="none" stroke="' + tint(r) + '" stroke-opacity=".5" stroke-width="2" stroke-dasharray="5 6"/>'; });
-      svg += '<polygon points="' + pts(T.poly) + '" fill="' + tint(mode) + '" fill-opacity=".06" stroke="' + tint(mode) + '" stroke-opacity=".9" stroke-width="3" stroke-linejoin="round"/>';
+        if (r !== mode) svg += '<polygon points="' + pts(t.poly) + '" fill="none" stroke="' + LINE + '" stroke-opacity=".35" stroke-width="2" stroke-dasharray="5 6"/>'; });
+      svg += '<polygon points="' + pts(T.poly) + '" fill="none" stroke="' + LINE + '" stroke-opacity=".6" stroke-width="3" stroke-linejoin="round"/>';
     }
     // which places are drawn: in a region, its own places plus the far ends of roads leaving it; in the world view, none (capitals above)
     const show = {}; if (T) Object.entries(C.NODES).forEach(([id, n]) => { if (n.region !== mode) return; show[id] = 1; Object.keys(n.links).forEach(l => { if (C.NODES[l].region !== mode) show[l] = 2; }); });
     const nodes = Object.entries(C.NODES).filter(([id]) => show[id]);
     if (T) {
-      svg += '<g opacity=".3">'; // places held by someone other than their territory's owner (enclaves, besieged towns)
-      nodes.forEach(([id, n]) => { if (!C.isDiscovered(ST, id)) return; const o = C.ownerOf(ST, id), rf = (C.REGIONS[n.region] || {}).faction; if (!o || o === rf) return; const [x, y] = px(n); svg += '<circle cx="' + x + '" cy="' + y + '" r="' + (26 * ns) + '" fill="' + ownerColor(id) + '"/>'; });
-      svg += '</g>';
       const seen = {};
       nodes.forEach(([id, n]) => Object.keys(n.links).forEach(to => {
         if (!show[to]) return; const key = [id, to].sort().join('|'); if (seen[key]) return; seen[key] = 1;
@@ -455,7 +476,7 @@ body.campaign #top .skirm{display:none}
       const dgOpen = sv.dungeon && !sv.dungeon.cleared, bk = sv.besieged ? 'siege' : sv.encounter ? 'fight' : sv.choice ? 'scene' : dgOpen ? 'dungeon' : null;   // what is waiting here: fight, story scene, dungeon run, or a siege
       inner.appendChild(h('button', { class: 'n t-' + n.type + (cur ? ' cur' : '') + (bk ? ' w-' + bk : '') + (far ? ' far' : '') + (marks[id] && (marks[id].kind === 'goal' || marks[id].kind === 'report') ? ' q-ring' : ''), style: 'left:' + x + 'px;top:' + y + 'px;--ns:' + ns + ';border-color:' + (cur ? 'var(--gold)' : ownerColor(id)), onclick: e => { e.stopPropagation(); nodeSheet(id); }, 'aria-label': n.name }, typeIcon(n.type)));
       if (cur || n.type === 'capital' || Z >= 1.6 || (!n.route && (MAJOR[n.type] || LABEL_MID[n.type])) || far) inner.appendChild(h('div', { class: 'lbl' + (n.type === 'capital' ? ' cap' : n.type === 'zone' ? ' zn' : ''), style: 'left:' + x + 'px;top:' + (y + 26 * ns) + 'px', text: n.name }));
-      if (n.type === 'zone' && n.danger > 0) inner.appendChild(h('div', { class: 'bdg b-zone z' + Math.min(3, Math.max((C.REGIONS[n.region] || {}).danger || 0, n.danger)), style: 'left:' + x + 'px;top:' + y + 'px;--ns:' + ns, text: '⚔' }));
+      if (n.type === 'zone' && n.danger > 0) inner.appendChild(h('div', { class: 'bdg b-zone z' + Math.min(3, C.landDanger(id)), style: 'left:' + x + 'px;top:' + y + 'px;--ns:' + ns, text: '⚔' }));
       const qm = marks[id]; if (qm) inner.appendChild(h('div', { class: 'qm q-' + qm.kind, style: 'left:' + x + 'px;top:' + y + 'px;--ns:' + ns, title: qm.why.join(', '), text: QM_ICON[qm.kind] }));
       if (bk) inner.appendChild(h('div', { class: 'bdg b-' + bk, style: 'left:' + x + 'px;top:' + y + 'px;--ns:' + ns, text: { siege: 'under attack', fight: '⚔', scene: '✦', dungeon: '☠' }[bk] }));
     });
@@ -519,14 +540,14 @@ body.campaign #top .skirm{display:none}
   }
 
   // ---------- node sheet ----------
-  function nodeRisk(id) { const d = Math.max((C.REGIONS[C.NODES[id].region] || {}).danger || 0, C.NODES[id].danger || 0); return d >= 3 ? 'bandits, beasts and worse.' : d === 2 ? 'raiders and beasts.' : 'mostly petty bandits and strays.'; }
+  function nodeRisk(id) { const d = C.landDanger(id); return d >= 3 ? 'bandits, beasts and worse.' : d === 2 ? 'raiders and beasts.' : 'mostly petty bandits and strays.'; }
   function nodeSheet(id) { sheet(C.NODES[id].name, () => nodeBody(id)); }
   // a road out of somewhere you have been, to somewhere you have not: no name, no details, only the way there
   function unknownSheet(id) {
     const n = C.NODES[id], via = Object.keys(n.links).filter(l => C.isDiscovered(ST, l) && ((ST.world.nodes[l] || {}).visited || ST.world.location === l)), p = pathTo(ST.world.location, id);
     const leaves = via.length && C.NODES[via[0]].region !== n.region;
     sheet('An unmarked road', () => [h('div', { text: 'A road leads off from ' + via.map(l => C.NODES[l].name).join(' and ') + ' toward somewhere you have not been.' }),
-      leaves ? h('div', { class: 'dim', style: 'margin-top:6px', text: 'It crosses out of ' + ((C.REGIONS[C.NODES[via[0]].region] || {}).name || 'this land') + '. Borders are watched.' }) : null, h('div', { style: 'height:8px' }),
+      leaves ? h('div', { class: 'dim', style: 'margin-top:6px', text: 'It crosses out of ' + (C.landName(C.NODES[via[0]].region) || 'this land') + '. Borders are watched.' }) : null, h('div', { style: 'height:8px' }),
       p ? btn('Follow the road (' + pathDays(ST.world.location, p) + ' day' + (pathDays(ST.world.location, p) > 1 ? 's' : '') + ')', () => travel(p), 'pri full') : h('div', { class: 'dim', text: 'You cannot get there from here yet.' })]);
   }
   function nodeBody(id) {
@@ -1142,6 +1163,6 @@ body.campaign #top .skirm{display:none}
       h('div', { class: 'dim', style: 'margin-top:14px', text: S.storageOk() ? 'Saves are kept in this browser. Download a file to keep a backup.' : 'Browser storage is blocked here: saves last only until you close this page. Download a file to keep your progress.' })));
   }
 
-  window.GAME_SHELL = { state: () => ST, render, showOnMap, openJournal: sub => { if (window.GAME_STORY_SCREENS) window.GAME_STORY_SCREENS.close(); jTab = sub || 'quests'; tab = 'quests'; render(); }, pathTo, travelPath: p => travel(p), open: () => { showShell(true); }, _set: s => { ST = s; view = 'game'; } };
+  window.GAME_SHELL = { state: () => ST, render, _ownerField: () => ({ builds: ownerField.builds, key: ownerField.key }), showOnMap, openJournal: sub => { if (window.GAME_STORY_SCREENS) window.GAME_STORY_SCREENS.close(); jTab = sub || 'quests'; tab = 'quests'; render(); }, pathTo, travelPath: p => travel(p), open: () => { showShell(true); }, _set: s => { ST = s; view = 'game'; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
 })();

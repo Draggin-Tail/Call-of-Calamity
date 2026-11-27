@@ -87,4 +87,8 @@
   C.EDGES.forEach(([a, b, d]) => { C.NODES[a].links[b] = d; C.NODES[b].links[a] = d; });
 
 
+
+  // ---- one human land: the roads above were laid out per old territory; from here on the four are one region (human), and each place
+  //      keeps its old territory as its area (C.AREAS) ----
+  Object.values(C.NODES).forEach(n => { if (C.AREAS[n.region]) { n.area = n.region; n.region = 'human'; } });
 })();

@@ -449,7 +449,7 @@
     salt_road: [0.5, 0.679, 'river_cities'],
     eastern_pass: [0.822, 0.679, 'goblin_fens']
   };
-  const KEEP_OWNER = { greywater_landing: 'syndicate', stilt_market: 'syndicate', hearthstone_priory: 'hearthwatch', drowned_chapel: 'hearthwatch', brimstone_chapel: 'hearthwatch', outlaws_rest: 'broken_banner', widows_barrow: 'broken_banner', heron_hide: 'broken_banner' }; // Syndicate trading enclaves inside orc country
+  const KEEP_OWNER = { greywater_landing: 'syndicate', stilt_market: 'syndicate', hearthstone_priory: 'hearthwatch', drowned_chapel: 'hearthwatch', brimstone_chapel: 'hearthwatch', outlaws_rest: 'broken_banner', widows_barrow: 'broken_banner', gullsong: 'broken_banner', lowmeadows: 'broken_banner', heron_hide: 'broken_banner' }; // Syndicate trading enclaves inside orc country
   Object.entries(LAYOUT).forEach(([id, [x, y, region]]) => {
     const n = C.NODES[id]; if (!n) throw new Error('LAYOUT: unknown ' + id);
     if (n.region !== region) delete n.owner;
@@ -470,8 +470,7 @@
   C.PLACE_TYPES = ['capital', 'castle', 'market', 'town', 'village', 'hamlet', 'poi', 'zone', 'road', 'dungeon'];
   C.PARKED = {};
   ['port_vane', 'rimecap_reach', 'gull_light', 'lone_beacon', 'kestrel_rock', 'whitepan', 'fernmouth', 'pearl_shallows', 'tidemother_shrine', 'kelp_market', 'drowned_orchard', 'skerry_rest', 'reefwatch', 'wreckers_cove', 'whitepan_landing', 'fishers_ledge'].forEach(id => { if (!C.NODES[id]) throw new Error('PARKED: unknown ' + id); C.PARKED[id] = C.NODES[id]; delete C.NODES[id]; });
-  // Everything inside a faction's region defaults to that faction's territory (the Free Marches belong to nobody).
-  Object.values(C.NODES).forEach(n => { const r = C.REGIONS[n.region]; if (!n.owner && r && r.faction && n.region !== 'free_marches') n.owner = r.faction; });
+  // Places with no owner of their own get one from C.defaultOwner (campaign.js): by land, area, and what lives in a dungeon.
 
   // ---- World layout v4: every place on the new painted map. Positions were spread evenly over each territory, keeping each place
   //      where it stood relative to its neighbours on the old map (tools: tools/layout.py). Border stops and dungeons are included. ----

@@ -354,7 +354,7 @@
   };
   Object.entries(C.DUNGEONS).forEach(([id, d]) => {
     const par = C.NODES[d.parent]; if (!par) throw new Error('DUNGEONS: unknown parent ' + d.parent);
-    C.NODES[id] = { name: d.name, region: par.region, type: 'dungeon', pos: (C.MAP_POS[id] || d.pos).slice(), desc: d.desc, dungeon: id, hidden: !!d.hidden, links: {} };
+    C.NODES[id] = { name: d.name, region: par.region, area: par.area, type: 'dungeon', pos: (C.MAP_POS[id] || d.pos).slice(), desc: d.desc, dungeon: id, hidden: !!d.hidden, links: {} };
     C.NODES[id].links[d.parent] = 1; par.links[id] = 1; C.EDGES.push([d.parent, id, 1]);
     d.floors.forEach((f, i) => {
       const last = i === d.floors.length - 1, rec = d.rec + (f.boss ? 1 : 0);

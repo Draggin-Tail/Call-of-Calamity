@@ -279,7 +279,7 @@
   // ---- Rookwood Barn: Osric's hidden armoury, a leaf off Aldermere Hold ----
   if (C.NODES.aldermere_hold && !C.NODES.rookwood_barn) {
     const p = C.NODES.aldermere_hold.pos;
-    C.NODES.rookwood_barn = { name: 'Rookwood Barn', region: C.NODES.aldermere_hold.region, type: 'poi', pos: [+(p[0] - 0.018).toFixed(3), +(p[1] - 0.022).toFixed(3)], desc: 'A tithe barn with new locks and old walls.', hidden: true, links: { aldermere_hold: 1 }, encounter: 'rookwood_armoury' };
+    C.NODES.rookwood_barn = { name: 'Rookwood Barn', region: C.NODES.aldermere_hold.region, area: C.NODES.aldermere_hold.area, type: 'poi', pos: [+(p[0] - 0.018).toFixed(3), +(p[1] - 0.022).toFixed(3)], desc: 'A tithe barn with new locks and old walls.', hidden: true, links: { aldermere_hold: 1 }, encounter: 'rookwood_armoury' };
     C.NODES.aldermere_hold.links.rookwood_barn = 1; if (C.EDGES) C.EDGES.push(['aldermere_hold', 'rookwood_barn', 1]);
     C.ENCOUNTERS.rookwood_armoury = { name: 'Rookwood Barn', map: 'tithe_raiders', rec: 6, enemyFaction: 'outlaws', once: true, winFlag: 'armoury_won',
       enemies: [{ primary: 'warrior', name: 'Levy Sergeant' }, { primary: 'archer', name: 'Barn Bowman' }, { primary: 'squire', name: 'Aldermere Levy' }], objective: { type: 'leader', leader: 0 }, reward: { xp: 130, gold: 40 } };

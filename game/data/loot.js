@@ -54,7 +54,7 @@
     // ---- shops: filled once, at load ----
     C.fillShop = function (id) {
       const n = C.NODES[id]; if (!n || !n.shop || n.arena || n.fixedShop || L.fixedShops.includes(id)) return null;
-      const q = L.mix[n.type] || L.mix.village, fav = favSets[n.region] || new Set(), r = rng('shop|' + id), spec = (L.specialty[id] || []).filter(i => G[i]);
+      const q = L.mix[n.type] || L.mix.village, fav = favSets[C.areaOf(id)] || new Set(), r = rng('shop|' + id), spec = (L.specialty[id] || []).filter(i => G[i]);
       const out = n.shop.slice(); spec.forEach(i => { if (!out.includes(i)) out.push(i); });
       const have = new Set(out);
       for (const slot of Object.keys(q)) {
