@@ -1,5 +1,6 @@
-// Node ownership, phase 3c (design/node_ownership_and_land.md section 16): AI attacks. Who may attack what, the margin and war weariness,
-// warning, cooldown and the cap on attacks under way, how an attack is settled, armies moving in, and the player stepping in for either side.
+// Node ownership, phase 3c (design/node_ownership_and_land.md section 16): AI attacks. Who may attack what (marching 3 roads through unclaimed ground),
+// the muster and the margin, war weariness, the defender's answer, weekly redeployment, warning, cooldown and the cap on attacks under way,
+// how an attack is settled, armies moving in, and the player stepping in for either side.
 // Run: cd tests && node t90.js | grep -v ^PASS
 let fails = 0; const ok = (n, c, info) => { console.log((c ? 'PASS ' : 'FAIL ') + n + (c || !info ? '' : '  [' + info + ']')); if (!c) fails++; };
 const w = require(process.env.LD || './real_ld.js')(); const C = w.GAME_CAMPAIGN, S = w.GAME_SAVE, A = C.ATTACK;
@@ -15,9 +16,13 @@ ok('the agreed numbers: 7 days warning, 7 days between attacks, 2 at once, margi
 { const st = fresh(); C.attackTick(st); ok('no war, no attacks', C.attacks(st).length === 0); }
 { const st = fresh(); war(st, 'crown', 'broken_banner'); const o = C.attackOptions(st, 'crown');
   ok('at war, the Crown has targets', o.length > 0);
-  ok('every target is held by the enemy, sits next to a Crown place, and is not a capital', o.every(x => C.ownerOf(st, x.target) === 'broken_banner' && C.supplyNeighbours(x.target).includes(x.from) && C.ownerOf(st, x.from) === 'crown' && C.NODES[x.target].type !== 'capital'));
-  ok('the force is the strongest neighbouring garrison, and beats the target by 1.5x', o.every(x => x.force === Math.max(...C.supplyNeighbours(x.target).filter(y => C.ownerOf(st, y) === 'crown').map(y => C.garrison(st, y))) && x.force >= 1.5 * x.garrison));
+  ok('every target is held by the enemy, within 3 roads of a Crown place, and is not a capital', o.every(x => C.ownerOf(st, x.target) === 'broken_banner' && x.dist <= 3 && C.marchReach(st, 'crown', x.from)[x.target] === x.dist && C.ownerOf(st, x.from) === 'crown' && C.NODES[x.target].type !== 'capital'));
+  const keep = id => Math.ceil(C.garrisonBase(id) / 2), R0 = C.marchReach(st, 'crown', o[0].from), pool0 = Object.keys(R0).filter(y => y !== o[0].from && C.ownerOf(st, y) === 'crown').reduce((n, y) => n + Math.max(0, C.garrison(st, y) - keep(y)), 0);
+  ok('the force is the launch place plus what it can muster within 3 roads, and beats the target by 1.5x', o[0].force === C.garrison(st, o[0].from) + pool0 && o.every(x => x.force >= 1.5 * x.garrison), o[0].force + ' vs ' + (C.garrison(st, o[0].from) + pool0));
   const x = o[0]; ok('an attack can only start from a supplied place', !C.attackOptions(st, 'crown', new Set([x.from])).some(y => y.from === x.from));
+  { const y = C.supplyNeighbours(x.from).find(z => ['neutral', 'monsters', 'crown'].includes(C.ownerOf(st, z))), R1 = C.marchReach(st, 'crown', x.from);
+    if (y) { const o0 = C.ownerOf(st, y); (st.world.nodes[y] = st.world.nodes[y] || {}).owner = 'syndicate'; const R2 = C.marchReach(st, 'crown', x.from), lost = Object.keys(R1).filter(z => !(z in R2));
+      st.world.nodes[y].owner = o0; ok('a march stops at ground held by anyone else (here the Syndicate)', y in R2 && Object.keys(R2).length <= Object.keys(R1).length, lost.join()); } }
   C.setGarrison(st, x.target, Math.ceil(x.force / 1.5) + 1); ok('a garrison the force cannot beat by the margin is left alone', !C.attackOptions(st, 'crown').some(y => y.target === x.target)); }
 { const st = fresh(); war(st, 'crown', 'broken_banner'); const o = C.attackOptions(st, 'crown').find(x => x.force < 2 * x.garrison) || C.attackOptions(st, 'crown')[0];
   C.attackState(st).fails.crown = [1, 1]; ok('each failed attack in the last 60 days adds 0.25 to the margin', C.attackMargin(st, 'crown') === 2);
@@ -30,15 +35,30 @@ ok('the agreed numbers: 7 days warning, 7 days between attacks, 2 at once, margi
 
 // ---- warning, cooldown, two at once ----
 { const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown');
-  ok('an attack is announced 7 days ahead, in the news', a && a.lands === st.world.day + 7 && news(st).some(t => t.includes('massing')));
+  ok('an attack is announced 7 days ahead, in the news', a && a.lands === st.world.day + 7 && news(st).some(t => t.includes('gathering men at') || t.includes('massing at')));
   ok('the target shows as under threat', !!C.attackOn(st, a.target) && C.nodeServices(st, a.target).attack.days === 7);
   for (let i = 0; i < 6; i++) { st.world.day++; C.attackTick(st); }
   ok('no second Crown attack within 7 days', C.attacks(st).filter(x => x.by === 'crown').length === 1);
   st.world.day++; C.supplyTick(st); C.attackTick(st); }
-{ const run = cap => { const st = fresh(); war(st, 'crown', 'broken_banner'); const r = C.attackState(st); let most = 0; A.maxActive = cap;
-    for (let i = 0; i < 40; i++) { day(st); most = Math.max(most, C.attacks(st).filter(x => x.by === 'broken_banner').length); r.list.forEach(a => { a.lands = 1e9; }); }
+{ const run = cap => { const st = fresh(); ['broken_banner', 'syndicate', 'synod'].forEach(g => war(st, 'crown', g)); const r = C.attackState(st); let most = 0; A.maxActive = cap;
+    for (let i = 0; i < 40; i++) { day(st); most = Math.max(most, C.attacks(st).filter(x => x.by === 'crown').length); r.list.forEach(a => { a.lands = 1e9; }); }
     A.maxActive = 2; return most; };
-  ok('with two targets, the Banner has both under way at once', run(2) === 2); ok('and the cap holds (tried at 1)', run(1) === 1); }
+  ok('with several fronts, the Crown has 2 under way at once (counterattacks count)', run(2) === 2); ok('and the cap holds (tried at 1)', run(1) === 1); }
+
+// ---- the muster, the defender's answer, redeployment ----
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackState(st).moved = { crown: 1, broken_banner: 1 };   // no redeployment today, so only the muster moves men
+  const os = C.attackOptions(st, 'crown'), g0s = os.map(o => C.garrison(st, o.from)); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown' && !x.counter), i = os.findIndex(o => o.target === a.target), o = os[i], g0 = g0s[i];
+  ok('launching musters the army into the launch place', C.garrison(st, a.from) === o.force && o.force > g0, g0 + ' -> ' + C.garrison(st, a.from));
+  const keep = id => Math.ceil(C.garrisonBase(id) / 2); const R = C.marchReach(st, 'crown', a.from);
+  ok('no donor is stripped below half its base', Object.keys(R).filter(y => C.ownerOf(st, y) === 'crown' && y !== a.from).every(y => C.garrison(st, y) >= Math.min(keep(y), C.garrisonBase(y))));
+  ok('the defender answers: it calls in men, or strikes back', a.answer === 'hold' || a.answer === 'counter'); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); A.counterOdds = 2; C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown'); A.counterOdds = 0.6;
+  ok('when calling in men is enough, the defender holds', a.answer === 'hold' && !C.attacks(st).some(x => x.counter)); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); A.counterOdds = -1; C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown' && !x.counter), c = C.attacks(st).find(x => x.counter); A.counterOdds = 0.6;
+  ok('when it would not be, the defender strikes back at the attacker instead', a.answer === 'counter' && c && c.by === 'broken_banner' && c.on === 'crown' && news(st).some(t => t.includes('answers by striking')), a.answer); }
+{ const st = fresh(); war(st, 'crown', 'broken_banner'); const r = C.redeploy(st, 'crown');
+  ok('weekly redeployment feeds an outmatched front place from the rear', r && r.men > 0 && C.garrison(st, r.to) > C.garrisonBase(r.to) - 1, JSON.stringify(r));
+  const r2 = C.redeploy(st, 'syndicate'); ok('a faction at peace redeploys nothing', r2 === null); }
 
 // ---- settling ----
 { const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown'), f0 = C.garrison(st, a.from);
@@ -52,7 +72,7 @@ ok('the agreed numbers: 7 days warning, 7 days between attacks, 2 at once, margi
   ok('a winner takes the place: owner, news and a grudge', C.ownerOf(st, a.target) === 'crown' && news(st).some(t => t.includes('fallen')) && !!C.relState(st).grudge['broken_banner|crown']);
   ok('the army moves in: half the force (it may sit above the base), the rest stays, less a man lost', C.garrison(st, a.target) === 4 && C.garrison(st, a.from) === 3, C.garrison(st, a.target) + '/' + C.garrison(st, a.from));
   const g = C.garrison(st, a.target), b = C.garrisonBase(a.target);
-  if (g > b) { day(st, 10); ok('a garrison above its base drains back a man every 10 days', C.garrison(st, a.target) === g - 1, C.garrison(st, a.target)); } }
+  if (g > b) { delete C.relState(st).wars['broken_banner|crown']; day(st, 10); ok('a garrison above its base drains back a man every 10 days', C.garrison(st, a.target) === g - 1, C.garrison(st, a.target)); } }
 { const st = fresh(); war(st, 'crown', 'broken_banner'); C.attackTick(st); const a = C.attacks(st).find(x => x.by === 'crown'), f0 = C.garrison(st, a.from), t0 = C.garrison(st, a.target);
   C.attackSettle(st, a, 'hold');
   ok('beaten off: the place stays, both sides lose a man, and the failure counts toward war weariness', C.ownerOf(st, a.target) === 'broken_banner' && C.garrison(st, a.from) === Math.max(1, f0 - 1) && C.garrison(st, a.target) === Math.max(1, t0 - 1) && C.attackMargin(st, 'crown') === 1.75); }
