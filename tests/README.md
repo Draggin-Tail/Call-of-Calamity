@@ -26,11 +26,11 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 
 `tload.js` starts its own server, so stop `serve.js` first. `GAME_URL` overrides the page address.
 
-## Baseline (game build of 2026-11-23, plus node ownership phases 1 to 4c)
+## Baseline (game build of 2026-11-23, plus node ownership phases 1 to 4d)
 
 | Test | Kind | Result |
 |---|---|---|
-| t83 uniques | node | pass |
+| t83 uniques (40 since phase 4d; the strongholds give their leaders' pieces) | node | pass |
 | t84 spell weapon share | node | pass |
 | t85 node ownership (phase 1) | node | pass |
 | t86 one faction at a time, rival markups, Banner capital (phase 2) | node | pass |
@@ -42,6 +42,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t92 human unification: the Moot's coronation, war victories (alone, with an ally, with the Hearthwatch), flavours, places and capitals, standing carried over, ranks ending, the hand-over, closed quest chains, old saves (phase 4a) | node | pass |
 | t93 the realm's policy dials: taxes on its shops, patrols and road fights, the toll posts, magic law on apprentices, hedge-mages and the boards, war posture; the boards' hand-over to the realm's land (phase 4b) | node | pass |
 | t94 the realm's plotters: cells, finding (rumours, the realm's contract, informers) and clearing them, the reveals, the clock, the rising, the stronghold (shown, foiled, crushed), old saves, sync; the core and flavoured beats (phase 4c) | node | pass |
+| t95 the player's wars: ordering an attack, the motion against the Hearthwatch, the Hearthwatch never an AI target, the Priory as its capital, its fall and the refuges, capital gear, the plotters' leaders' pieces, sync, the united realm (phase 4d) | node | pass |
 | tbands | node | pass |
 | tbench | node | pass |
 | tfight | node | pass |
@@ -63,6 +64,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | t92ui the opening scene and the oath, the realm's colour on the map, the Factions tab after the union (phase 4a) | browser | pass |
 | t93ui the dials in words on the Factions tab, recruit prices per class on the Recruit sheet (phase 4b) | browser | pass |
 | t94ui the Plotters lines on the Factions tab, a cell's scene at its place and its fight (phase 4c) | browser | pass |
+| t95ui Order an attack and Move against the Hearthwatch on the Factions tab, a refuge's shelter after the fall (phase 4d) | browser | pass |
 
 The failing checks look like tests that are older than the game build. They have not been changed.
 

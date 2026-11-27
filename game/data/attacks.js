@@ -55,13 +55,14 @@
       sue: { days: 60, need: 3, warm: 0.02, talks: 60, again: 30 }, // suing for terms
       siege: { stages: { hamlet: 1, village: 2, market: 2, town: 2, castle: 3, capital: 4 }, other: 1, every: 7,
         names: { 1: [null], 2: ['the outer defences', 'the hold-out'], 3: ['the walls', 'the gate', 'the keep'], 4: ['the walls', 'the gate', 'the keep', 'the last stand'] } },
-      leaders: { crown: 'Lord Marshal Voss', syndicate: 'Factor Crane', synod: 'Archon Ilvane', broken_banner: 'Captain Old Standard' },
+      leaders: { crown: 'Lord Marshal Voss', syndicate: 'Factor Crane', synod: 'Archon Ilvane', broken_banner: 'Captain Old Standard', hearthwatch: 'Mother Agathe' },
       value: { castle: 4, town: 3, market: 3, village: 2, hamlet: 1.5 }, other: 1,
       squads: {
         crown: { name: 'Crown soldiers', enemies: [{ primary: 'warrior', name: 'Crown Guard' }, { primary: 'archer', name: 'Crown Bowman' }, { primary: 'squire', name: 'Crown Recruit' }] },
         syndicate: { name: 'Syndicate sellswords', enemies: [{ primary: 'rogue', name: 'Enforcer' }, { primary: 'marksman', name: 'Counting-House Gun' }, { primary: 'warrior', name: 'Hired Blade' }] },
         synod: { name: 'Synod wardens', enemies: [{ primary: 'wizard', name: 'Synod Adept' }, { primary: 'cleric', name: 'Synod Warden' }, { primary: 'apprentice', name: 'Synod Novice' }] },
-        broken_banner: { name: 'Banner riders', enemies: [{ primary: 'scout', name: 'Banner Rider' }, { primary: 'warrior', name: 'Banner Veteran' }, { primary: 'archer', name: 'Banner Bowman' }] }
+        broken_banner: { name: 'Banner riders', enemies: [{ primary: 'scout', name: 'Banner Rider' }, { primary: 'warrior', name: 'Banner Veteran' }, { primary: 'archer', name: 'Banner Bowman' }] },
+        hearthwatch: { name: 'Hearthwatch brothers and sisters', enemies: [{ primary: 'cleric', name: 'Hearthwarden' }, { primary: 'warrior', name: 'Gate Brother' }, { primary: 'archer', name: 'Lamp-Watch' }] }   // 4d: only the player's faction fights them
       }
     };
     const day = st => st.world.day, fname = f => (D.factions[f] && D.factions[f].name) || f, nm = id => C.NODES[id].name;
@@ -73,7 +74,7 @@
       if (day(st) - d < A.newHold.days && C.ownerOf(st, id) === r.heldBy[id]) return true; delete r.held[id]; delete r.heldBy[id]; return false; };
     C.capShare = (st, id) => C.newlyTaken(st, id) ? A.newHold.share : 1;
     // losers rally at home
-    const capOf = f => Object.keys(C.NODES).find(id => (C.NODES[id].type === 'capital' || C.NODES[id].stronghold) && C.NODES[id].capital === f);   // 4c: a risen plotter's stronghold
+    const capOf = f => Object.keys(C.NODES).find(id => (C.NODES[id].type === 'capital' || C.NODES[id].stronghold || C.NODES[id].hearthSeat) && C.NODES[id].capital === f);   // 4c: a risen plotter's stronghold; 4d: the Hearthstone Priory
     const homeDist = {};
     const nearHome = (f, id) => { if (!(f in homeDist)) { const c = capOf(f), d = {}; if (c) { d[c] = 0; const q = [c];
         while (q.length) { const x = q.shift(); if (d[x] >= A.rally.reach) continue; for (const y of C.supplyNeighbours(x)) if (!(y in d)) { d[y] = d[x] + 1; q.push(y); } } }
@@ -128,7 +129,8 @@
     C.siegeStages = id => { const n = C.NODES[id]; return !n ? 1 : isCap(id) ? A.siege.stages.capital : n.formerCapital ? A.siege.stages.castle : (A.siege.stages[n.type] || A.siege.other); };
     C.stageName = (a) => (A.siege.names[a.stages || 1] || [])[a.stage || 0] || null;
     // a capital only once its faction holds nothing else (hidden places and land abroad count)
-    const targetable = (st, id) => { const n = C.NODES[id], o = C.ownerOf(st, id); return !!n && !n.hidden && o !== 'hearthwatch' && (!isCap(id) || !holdsOther(st, o, id)); };
+    // the Hearthwatch only when the player orders it (4d: an attack led by the player's faction)
+    const targetable = (st, id, led) => { const n = C.NODES[id], o = C.ownerOf(st, id); return !!n && !n.hidden && (o !== 'hearthwatch' || !!led) && (!isCap(id) || !holdsOther(st, o, id)); };
     C.attackTargetable = targetable;
     // every place f could attack today, best first: { target, on, from, dist, force (with the muster), garrison, odds, score }
     C.attackOptions = function (st, f, cut, only) {
@@ -155,16 +157,20 @@
       const g = AS(st).grab; if (g && g.by === f) { const way = g.took ? new Set() : grabWay(st, g); return out.filter(o => o.on !== g.on || way.has(o.target)).map(o => (o.target === g.target && (o.score += 3), o)).sort((a, b) => b.score - a.score || (a.target < b.target ? -1 : 1)); }   // a grab war is about one prize and the way to it
       return out.sort((a, b) => b.score - a.score || (a.target < b.target ? -1 : 1));
     };
-    function launch(st, f, o, counter) {
+    function launch(st, f, o, counter, led) {
       const r = AS(st), cut = new Set(C.supplyCut(st)), bz = busy(st); bz.add(o.target);
       const n = muster(st, f, o.from, bz, cut);
       const a = { n: ++r.seq, by: f, on: o.on, target: o.target, from: o.from, day: day(st), lands: day(st) + A.warn, counter: !!counter, stage: 0, stages: C.siegeStages(o.target) };
-      r.list.push(a); if (!counter) r.last[f] = day(st);
+      if (led) a.led = true;   // 4d: ordered by the player; it keeps out of the faction's own count and wait
+      r.list.push(a); if (!counter && !led) r.last[f] = day(st);
       C.relNews(st, counter ? 'The ' + fname(f) + ' answers by striking at ' + nm(o.target) + ', marching from ' + nm(o.from) + '.'
-        : 'The ' + fname(f) + ' is ' + (n ? 'gathering men at ' : 'massing at ') + nm(o.from) + ' to ' + (a.stages > 1 ? 'lay siege to ' : 'take ') + nm(o.target) + ' from the ' + fname(o.on) + '.', 'attack');
+        : (led ? 'On your order, the ' : 'The ') + fname(f) + ' is ' + (n ? 'gathering men at ' : 'massing at ') + nm(o.from) + ' to ' + (a.stages > 1 ? 'lay siege to ' : 'take ') + nm(o.target) + ' from the ' + fname(o.on) + '.', 'attack');
       if (!counter) respond(st, a);
       return a;
     }
+    C.attackLaunch = launch;
+    C.attackBusy = busy;
+    C.attackForce = (st, f, L, bz, cut) => C.garrison(st, L) + pool(st, f, L, bz, cut);   // the army L could gather
     // the defender's answer: call in men to hold the place, or, if that would not be enough, strike back elsewhere
     function respond(st, a) {
       const D0 = a.on; if (!WAR().includes(D0)) return;
@@ -273,15 +279,15 @@
       drop(st, a); bleed(st, a.from);
       let fell = null;
       if (won) { const wasCap = isCap(a.target); take(st, a); C.relNews(st, T + ' has fallen to the ' + by + (side ? ', with your help.' : '.'), 'attack');
-        if (wasCap && !holdsOther(st, a.on, null)) fell = wipeOut(st, a.on, a.by, side === 'attack', a.target); }
+        if (wasCap && !holdsOther(st, a.on, null)) fell = wipeOut(st, a.on, a.by, side === 'attack', a.target, a); }
       else { bleed(st, a.target); (r.fails[a.by] = r.fails[a.by] || []).push(day(st)); ledger(st, 'failed', a.by, a.on); C.relNews(st, 'The ' + on + ' beat off the ' + by + ' at ' + T + (stages > 1 && sn ? ' (' + sn + ')' : '') + (side ? ', with your help.' : '.'), 'attack'); }
       return { won, taken: !!won, stage, stages, stageName: sn, side: side || null, fell };
     }
     C.attackSettle = settle;
     const cap1 = t => t ? t.charAt(0).toUpperCase() + t.slice(1) : '';
     // a faction loses its capital and its last place: it is gone
-    C.capitalGear = function (st, f, by, helped) { return null; };   // hook: the capital's unique gear (decided: built later)
-    function wipeOut(st, f, by, helped, at) {
+    C.capitalGear = function (st, f, by, helped, a) { return null; };   // hook: the capital's unique gear (4d, conquest.js)
+    function wipeOut(st, f, by, helped, at, a) {
       const w = st.world; (w.fallen = w.fallen || {})[f] = { day: day(st), by, helped: !!helped };
       for (const y of Object.keys(C.NODES)) if (C.ownerOf(st, y) === f) { (w.nodes[y] = w.nodes[y] || {}).owner = by; const ss = C.supplyState(st); delete ss.iso[y]; delete ss.cut[y]; }   // hidden places and land abroad go to the taker
       const rs = C.relState(st), r = AS(st);
@@ -295,8 +301,9 @@
       if (r.grab && (r.grab.by === f || r.grab.on === f)) r.grab = null;
       let rank = false; if (S.sworn && S.sworn(st) === f) { delete st.factions.ranks[f]; rank = true; }
       C.relNews(st, 'The ' + fname(f) + ' is no more. ' + nm(at) + ' flies the colours of the ' + fname(by) + '.', 'fallen');
-      const gear = C.capitalGear(st, f, by, helped);
-      return { faction: f, by, rank, gear: gear || null };
+      const gear = C.capitalGear(st, f, by, helped, a || null);
+      const after = C.afterFall ? C.afterFall(st, f, by, at, a || null) : null;   // 4d: the Hearthwatch's refuges
+      return Object.assign({ faction: f, by, rank, gear: gear || null }, after || {});
     }
     C.wipeOut = wipeOut;
     // how a war is going for f against g, over the last 60 days
@@ -378,7 +385,7 @@
         const sv = ns0.apply(this, arguments); if (!sv) return sv; const a = C.attackOn(st, id);
         if (a) sv.attack = { by: a.by, on: a.on, from: a.from, days: Math.max(0, a.lands - day(st)), sides: C.attackSides(st, id), stage: a.stage || 0, stages: a.stages || 1, stageName: C.stageName(a), done: (A.siege.names[a.stages || 1] || []).slice(0, a.stage || 0) };
         return sv; }; }
-    C.validateAttacks = function () { const p = []; WAR().forEach(f => { if (!A.squads[f]) p.push('attacks: no squad for ' + f); (A.squads[f] || { enemies: [] }).enemies.forEach(u => { if (!D.classes[u.primary]) p.push('attacks: unknown class ' + u.primary); }); }); return p; };
+    C.validateAttacks = function () { const p = []; WAR().concat(['hearthwatch']).forEach(f => { if (!A.squads[f]) p.push('attacks: no squad for ' + f); (A.squads[f] || { enemies: [] }).enemies.forEach(u => { if (!D.classes[u.primary]) p.push('attacks: unknown class ' + u.primary); }); }); return p; };
     return true;
   }
   if (!go()) { let n = 0; (function wait() { if (go()) return; if (++n < 400 && typeof setTimeout === 'function') setTimeout(wait, 25); })(); }

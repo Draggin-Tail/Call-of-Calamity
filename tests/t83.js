@@ -3,7 +3,7 @@
 let fails=0;const ok=(n,c)=>{console.log((c?'PASS':'FAIL')+' '+n);if(!c)fails++};
 const w=require(process.env.LD||'./real_ld.js')();const C=w.GAME_CAMPAIGN,D=w.GAME_DATA,G=D.gear,T=D.gearTiers,LO=w.GAME_LOADOUT,S=w.GAME_SAVE,TR=w.GAME_TRIGGERS;
 const ids=Object.keys(D.uniques||{});
-ok('loaded: about 30 uniques (31)',ids.length===31);
+ok('loaded: about 30 uniques (40 since phase 4d: five capitals, four plotter leaders)',ids.length===40);
 ok('every unique is in the gear table and flagged',ids.every(i=>G[i]&&G[i].unique===1));
 ok('every unique has a name, a lore line, an effect line and a description that contains both',ids.every(i=>{const x=G[i];return x.name&&x.lore&&x.effect&&x.desc.includes(x.lore)&&x.desc.includes(x.effect)}));
 ok('names are unique among all gear',(()=>{const n={};Object.keys(G).forEach(i=>{n[G[i].name]=(n[G[i].name]||0)+1});return ids.every(i=>n[G[i].name]===1)})());
@@ -56,8 +56,8 @@ const unit=(n,team,gear)=>{const o={n,team,hp:30,max:40,st:{},tf:{},bf:{},trig:{
   ok('The Last Word refunds 1 AP on the first spell only',log.join()==='refund 1'); }
 // ---- where they are found ----
 ok('every unique has an award, and every award points at a real unique',ids.every(i=>typeof C.UNIQUE_AWARDS[i]==='function')&&Object.keys(C.UNIQUE_AWARDS).every(i=>G[i]&&G[i].unique));
-// the plotters' strongholds (phase 4c, plots.js) are not part of the uniques design; their gear waits for 4d
-ok('every dungeon gives one unique on its first clear, and no two dungeons give the same',(()=>{const seen=new Set();return Object.keys(C.DUNGEONS).filter(d=>!C.DUNGEONS[d].plot).every(d=>{const st=C.newGame({race:'human'});st.world.dungeons={[d]:{stage:3,cleared:true,clearedDay:1,clears:1}};const g=C.checkUniques(st);if(g.length!==1||seen.has(g[0]))return false;seen.add(g[0]);return true})})());
+// the plotters' strongholds (phase 4c) give their leader's piece since phase 4d
+ok('every dungeon gives one unique on its first clear, and no two dungeons give the same',(()=>{const seen=new Set();return Object.keys(C.DUNGEONS).every(d=>{const st=C.newGame({race:'human'});st.world.dungeons={[d]:{stage:3,cleared:true,clearedDay:1,clears:1}};const g=C.checkUniques(st);if(g.length!==1||seen.has(g[0]))return false;seen.add(g[0]);return true})})());
 const fresh=()=>C.newGame({race:'human'});
 { const st=fresh();ok('a new game has none',C.checkUniques(st).length===0&&!ids.some(i=>st.inventory.items[i])); }
 { const st=fresh();const res={won:true,turns:6,kills:[],unitStats:{},factionKills:{}};

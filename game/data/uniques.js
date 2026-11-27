@@ -1,4 +1,4 @@
-/* Uniques (design/gear_tiers.md). About 30 hand-written (31 now) items on top of the seven material tiers. Never sold, never random.
+/* Uniques (design/gear_tiers.md). About 30 hand-written (40 now: 4d added five capital pieces and four plotter leaders' pieces) items on top of the seven material tiers. Never sold, never random.
    Each unique:
    - starts from a tier item (about one tier above the band where it is found, so never ahead of the best shop gear) and adds a `triggers` entry
      (same vocabulary as passives: combatRules.keywords) or hand-set stats for accessories;
@@ -153,6 +153,46 @@
     effect: 'At the start of battle, you and your allies gain Regen: 2 HP for 2 turns.',
     triggers: [T('onBattleStart', null, null, [{ type: 'applyStatus', target: 'self', status: 'regen', payload: [2, 2] }, { type: 'applyStatus', target: ALL, status: 'regen', payload: [2, 2] }])] });
 
+  // ------------------------------------------------------------------ capitals taken, and the plotters' leaders (Phase 4d, conquest.js)
+  // A capital's piece goes to the player who fought at its last stand (on either side) or ordered the attack; a leader's piece is the
+  // first clear of their stronghold.
+  make('keep_wardens_plate', { base: 'plate_armor', tier: 5, name: "Keep-Warden's Plate",
+    lore: 'Worn on the walls of Crown Keep by the man who held the gate. The dents are his; the oath stamped inside is the King\'s.',
+    effect: 'You begin each battle Steeled. When you Guard, you also take half the damage dealt to the allies next to you.',
+    triggers: [T('onBattleStart', null, null, [{ type: 'applyStatus', target: 'self', status: 'steeled', turns: 1 }]), T('onGuard', null, null, [{ type: 'applyStatus', target: 'self', status: 'intercept', turns: 1 }])] });
+  make('gildhaven_key', { equiv: 5, name: 'The Gildhaven Key',
+    lore: 'The key to the deepest vault in Gildhaven. Nobody remembers what was kept there; everybody remembers who held it.',
+    effect: 'A kill gives back 1 AP, once a turn.',
+    acc: { crit: 6, statMods: { spd: 1 }, triggers: [T('onKill', null, 'oncePerTurn', [{ type: 'refundAP', amount: 1 }])] } });
+  make('voldun_canon', { base: 'staff_arcane', tier: 5, name: "The Vol'Dun Canon",
+    lore: "The staff the Synod's readers held while the rules of magic were read aloud. It has heard every one of them.",
+    effect: 'Your first spell hit each turn Marks the target (it takes 25% more damage for a turn) and slows it.',
+    triggers: [T('onHit', { abilityTag: 'spell' }, 'oncePerTurn', [{ type: 'applyStatus', target: 'victim', status: 'marked', turns: 1 }, { type: 'applyStatus', target: 'victim', status: 'slow', turns: 1 }])] });
+  make('outlaws_bell', { equiv: 5, name: "Outlaw's Rest Bell",
+    lore: 'The bell over the gate at Outlaw\'s Rest, rung for every rider who came home. It is small enough to carry, and it still rings.',
+    effect: 'The first time you drop to half health in a battle, you and your allies gain Haste for a turn.',
+    acc: { statMods: { hp: 6, mv: 1 }, triggers: [T('onBloodied', null, 'oncePerBattle', [{ type: 'applyStatus', target: 'self', status: 'haste', turns: 1 }, { type: 'applyStatus', target: ALL, status: 'haste', turns: 1 }])] } });
+  make('priory_hearthstone', { equiv: 5, name: 'The Priory Hearthstone',
+    lore: 'A stone from the Priory hearth, still warm. Whoever took the Priory took this too, and it does not seem to mind who holds it.',
+    effect: 'The first time you drop to half health in a battle, allies within 2 hexes recover 6 HP.',
+    acc: { res: 6, statMods: { hp: 8 }, triggers: [T('onBloodied', null, 'oncePerBattle', [{ type: 'heal', target: 'alliesWithin', radius: 2, amount: 6 }])] } });
+  make('marshals_edge', { base: 'iron_sword', tier: 5, name: "The Marshal's Edge",
+    lore: 'Lord Marshal Voss carried it for the old oath, and drew it last for the old oath too.',
+    effect: 'A kill gives you Haste for a turn, once a turn.',
+    triggers: [T('onKill', null, 'oncePerTurn', [{ type: 'applyStatus', target: 'self', status: 'haste', turns: 1 }])] });
+  make('cranes_tally', { equiv: 5, name: "Crane's Tally",
+    lore: "Factor Crane's counting-beads, one for every debt still owed. Several of the beads are new.",
+    effect: 'The first enemy you hit each battle is Marked for 2 turns.',
+    acc: { crit: 4, statMods: { spd: 1 }, triggers: [T('onHit', null, 'oncePerBattle', [{ type: 'applyStatus', target: 'victim', status: 'marked', turns: 2 }])] } });
+  make('ilvanes_circlet', { equiv: 5, name: "Ilvane's Circlet",
+    lore: 'A plain silver band the Archon wore under her hood. The Inner Circle took its name from it.',
+    effect: 'You begin each battle with a ward of 6.',
+    acc: { res: 6, statMods: { mana: 4 }, triggers: [T('onBattleStart', null, null, [{ type: 'shield', target: 'self', amount: 6 }])] } });
+  make('old_standards_horn', { equiv: 5, name: "Old Standard's Horn",
+    lore: 'A cracked hunting horn that called the Banner home. Captain Old Standard blew it once more, at the end.',
+    effect: 'The first time you drop to half health in a battle, your allies gain Haste for a turn.',
+    acc: { statMods: { hp: 6 }, triggers: [T('onBloodied', null, 'oncePerBattle', [{ type: 'applyStatus', target: ALL, status: 'haste', turns: 1 }])] } });
+
   // ------------------------------------------------------------------ the realm, and places worth the walk
   make('the_last_word', { base: 'staff_arcane', tier: 5, name: 'The Last Word',
     lore: 'The last thing said in the room is the one that counts.',
@@ -196,6 +236,7 @@
     const first = d => st => { const s = st.world.dungeons && st.world.dungeons[d]; return !!(s && s.clears > 0); };
     const rank = (f, n) => st => { const r = S.getRank(st, f); return !!(r && r.rank >= n); };
     const seen = p => st => !!(st.world.nodes && st.world.nodes[p] && st.world.nodes[p].visited);
+    const cap = f => st => !!(st.world.flags && st.world.flags['capgear_' + f]);
     C.UNIQUE_AWARDS = {
       rat_kings_tooth: first('rat_run_warren'), tollkeepers_cudgel: first('old_toll_cellars'), wellwater_charm: first('thistledown_well'),
       rimeheart: first('frozen_falls_cave'), bog_priests_censer: first('drowned_idol_depths'), cantors_lute: first('sunken_cloister_crypt'),
@@ -207,7 +248,10 @@
       hearthwardens_lamp: st => !!(C.jobDone && C.jobDone(st, 'hw_q4')),
       the_last_word: st => !!st.world.realm,
       wayfinders_compass: seen('lantern_point'), wolfmothers_fang: seen('wolfmothers_den'), fen_kings_hood: seen('sinkhole_shrine'),
-      thornmail: seen('reliquary_hill'), emberwick: seen('brimstone_chapel'), runefall_totem: seen('runefall')
+      thornmail: seen('reliquary_hill'), emberwick: seen('brimstone_chapel'), runefall_totem: seen('runefall'),
+      // 4d: capitals (a flag set by conquest.js when one falls with the player there) and the plotters' strongholds
+      keep_wardens_plate: cap('crown'), gildhaven_key: cap('syndicate'), voldun_canon: cap('synod'), outlaws_bell: cap('broken_banner'), priory_hearthstone: cap('hearthwatch'),
+      marshals_edge: first('oath_vault'), cranes_tally: first('second_counting_house'), ilvanes_circlet: first('sealed_scriptorium'), old_standards_horn: first('last_camp')
     };
     // what the player is told when each one turns up (writing pass 4): who gives it, or where it was, in a line or two
     C.UNIQUE_FOUND = {
@@ -241,7 +285,16 @@
       fen_kings_hood: "The sinkhole shrine's king wore this and looked ridiculous. You put it on and do not.",
       thornmail: "On Reliquary Hill, bark-plated steel. It is polite until somebody grabs it.",
       emberwick: "The last candle in the Brimstone Chapel still burns. The wand keeps its flame.",
-      runefall_totem: "At Runefall, a runestone wedged in a stone fist. It holds, whether you do or not."
+      runefall_totem: "At Runefall, a runestone wedged in a stone fist. It holds, whether you do or not.",
+      keep_wardens_plate: "In the gatehouse at Crown Keep, the Keep-Warden's plate hangs on its stand. Nobody stops you taking it down.",
+      gildhaven_key: "A clerk at Gildhaven hands you the key to the deepest vault without being asked. He would rather it was your problem.",
+      voldun_canon: "The readers have fled Vol'Dun. Their staff is still on the lectern, beside the page they stopped at.",
+      outlaws_bell: "You cut the bell down from the gate at Outlaw's Rest. It rings once on the way down, for whoever is still riding.",
+      priory_hearthstone: "In the Priory, the fire has gone out, but one stone of the hearth is still warm. You take it with you.",
+      marshals_edge: "Voss's sword lies where he fell in the Oath Vault. It comes up clean, as if it had been waiting.",
+      cranes_tally: "Crane's counting-beads are still on his desk in the Second Counting-House, every debt in order. You take the lot.",
+      ilvanes_circlet: "The Archon's silver circlet lies on the scriptorium floor. The Inner Circle will have to find another name.",
+      old_standards_horn: "Old Standard's horn hangs from a tent-pole in the Last Camp. Nobody is left to blow it but you."
     };
     // Gives every unique whose condition is now true and that this save has not had. Returns the ids given.
     C.checkUniques = function (st) {
