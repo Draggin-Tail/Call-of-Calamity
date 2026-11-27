@@ -29,6 +29,8 @@
   L('moot_osric', 'crown', 'view', 0, 'The Moot crowned Lord Osric of Aldermere. The Synod will raise its Ward, and the roads get more patrols.');
   L('moot_corisande', 'crown', 'view', 0, 'The Moot crowned Lady Corisande Hale. Aldermere closed its gates the same night.');
   L('moot_wil', 'crown', 'view', 0, 'The Moot crowned Wil Fenn, the prince\'s son. His first order was that everyone go home and eat something.');
+  L('moot_ledger', 'syndicate', 'view', 0, 'The Moot made Harrow Lord Treasurer of the realm, openly this time. Every debt is now owed to the throne, and the throne is a ledger.');
+  L('moot_ilvane', 'synod', 'view', 0, 'The Moot named Archon Ilvane Regent. The Ward will be fed, she says, whatever it eats.');
   L('moot_broken', 'crown', 'view', 0, 'The Moot found no majority. Osric walked out with half the Lords and calls Aldermere a crown of its own.');
 
   // ---- data ----
@@ -37,21 +39,24 @@
       regency: { name: 'The Regency', who: 'Steward Edric Harrow', backer: 'crown' },
       osric: { name: 'Lord Osric of Aldermere', who: 'Lord Osric', backer: 'crown' },
       corisande: { name: 'Lady Corisande Hale', who: 'Lady Corisande', backer: 'hearthwatch' },
-      wil: { name: 'Wil Fenn', who: 'Wil Fenn', backer: 'broken_banner' }
+      wil: { name: 'Wil Fenn', who: 'Wil Fenn', backer: 'broken_banner' },
+      ledger: { name: 'The Long Ledger', who: 'Steward Edric Harrow, openly', backer: 'syndicate' },   // stands if you give Harrow back the Second Book (The Steward's Offer)
+      ilvane: { name: 'Archon Ilvane', who: 'Archon Ilvane', backer: 'synod' }                         // stands if you carry her claim (The Archon's Ward)
     },
     // seat order is the order they declare in
     seats: {
-      lords: { name: 'The Lords', faction: 'crown', votes: 3, prefs: ['regency', 'osric', 'corisande', 'wil'], speaker: 'Lord Marshal Voss', job: 'oath_roll', leverage: 'lev_voss' },
-      syndicate: { name: 'The Syndicate', faction: 'syndicate', votes: 2, prefs: ['regency', 'osric', 'corisande'], cranePrefs: ['osric', 'corisande', 'regency'], speaker: 'Factor Crane', job: 'bad_paper', leverage: 'lev_crane' },
-      synod: { name: 'The Synod', faction: 'synod', votes: 2, prefs: ['osric', 'regency', 'corisande'], speaker: 'Archon Ilvane', job: 'writ_of_wards', leverage: 'lev_ilvane' },
-      hearthwatch: { name: 'The Hearthwatch', faction: 'hearthwatch', votes: 1, prefs: ['corisande', 'wil', 'regency', 'osric'], speaker: 'Mother Agathe', job: 'bread_for_moot', leverage: 'lev_agathe' },
+      lords: { name: 'The Lords', faction: 'crown', votes: 3, prefs: ['regency', 'ilvane', 'osric', 'ledger', 'corisande', 'wil'], speaker: 'Lord Marshal Voss', job: 'oath_roll', leverage: 'lev_voss' },
+      syndicate: { name: 'The Syndicate', faction: 'syndicate', votes: 2, prefs: ['ledger', 'regency', 'osric', 'corisande'], cranePrefs: ['osric', 'corisande', 'regency'], speaker: 'Factor Crane', job: 'bad_paper', leverage: 'lev_crane' },
+      synod: { name: 'The Synod', faction: 'synod', votes: 2, prefs: ['ilvane', 'osric', 'regency', 'corisande'], speaker: 'Archon Ilvane', job: 'writ_of_wards', leverage: 'lev_ilvane' },
+      hearthwatch: { name: 'The Hearthwatch', faction: 'hearthwatch', votes: 1, prefs: ['corisande', 'wil', 'regency', 'osric', 'ledger', 'ilvane'], speaker: 'Mother Agathe', job: 'bread_for_moot', leverage: 'lev_agathe' },
       banner: { name: 'The Broken Banner', faction: 'broken_banner', votes: 2, prefs: ['wil', 'corisande'], seatedOnly: true, speaker: 'Captain Old Standard', job: 'old_standards_price', leverage: 'lev_old_standard' }
     },
     // proofs that can be laid before the Moot (sid -> what it does, for the sheet)
-    testimony: { succession: 'The Lords strike the Regency.', hidden_hand: 'The Regency is struck; the Syndicate abstains; the Lords move Osric down.', forbidden_hoard: 'The Synod abstains.', lost_prince: 'Wil Fenn may stand, and the Banner is seated.' },
+    testimony: { succession: 'The Lords strike the Regency.', hidden_hand: 'The Regency is struck; the Syndicate abstains; the Lords move Osric down.', forbidden_hoard: 'The Synod abstains, and Archon Ilvane\'s claim ends.', lost_prince: 'Wil Fenn may stand, and the Banner is seated.' },
     // the Kingmaker's hold: three places offered by each new ruler
     holds: { regency: ['dunmere_keep', 'applecourt', 'ploughmans_ford'], osric: ['marchwardens_post', 'greywatch_post', 'heralds_cross'],
-      corisande: ['heralds_cross', 'sheepfold', 'wheatvale'], wil: ['widows_barrow', 'heron_hide', 'dunmere_keep'] },
+      corisande: ['heralds_cross', 'sheepfold', 'wheatvale'], wil: ['widows_barrow', 'heron_hide', 'dunmere_keep'],
+      ledger: ['debtors_tower', 'barge_landing', 'brassbell'], ilvane: ['sunwheel_chapel', 'pale_vigil', 'orchard_row'] },
     calls: { writ: 'The Heir\'s Writ has been read aloud. The Lords can no longer pretend the throne is a mystery.', petition: 'As Lord\'s Hand, you have asked Harrow to ring the bell and end the Interval. He cannot refuse the Hand.',
       wil: 'The Banner has ridden to Crown Keep with the prince\'s son, and will not leave until the Lords hear him.', second: 'The Lords have learned that the Steward was the Hidden Hand. They call the Moot again.' },
     hallBacking: 3, pressureCost: 60, loserCost: 80, pledgeCost: 40, holdShopMult: 0.85
@@ -63,6 +68,8 @@
     osric: { ruler: 'King Osric', titles: KING, rivalry: { 'crown|syndicate': 'open', 'crown|synod': 'open', 'synod|hearthwatch': 'opposed', 'crown|broken_banner': 'opposed' }, owners: {}, flags: ['corisande_fled', 'wil_hiding'] },
     corisande: { ruler: 'Queen Corisande', titles: QUEEN, rivalry: { 'crown|syndicate': 'opposed', 'crown|broken_banner': 'uneasy', 'crown|hearthwatch': 'open', 'aldermere|crown': 'opposed' }, owners: { aldermere_hold: 'aldermere' }, flags: ['osric_sulks'] },
     wil: { ruler: 'King Wil', titles: KING, rivalry: { 'crown|broken_banner': 'open', 'crown|synod': 'opposed', 'crown|syndicate': 'uneasy' }, owners: { outlaws_rest: 'crown' }, flags: ['old_standard_marshal'] },
+    ledger: { ruler: 'Lord Treasurer Harrow', rivalry: { 'crown|syndicate': 'open', 'syndicate|synod': 'opposed', 'crown|broken_banner': 'opposed' }, owners: {}, flags: ['crane_heir', 'voss_resigned'] },
+    ilvane: { ruler: 'the Archon-Regent', rivalry: { 'crown|synod': 'open', 'synod|hearthwatch': 'opposed', 'syndicate|synod': 'opposed', 'synod|broken_banner': 'opposed' }, owners: {}, flags: ['thorne_lord_inquisitor', 'hedge_hunt', 'corisande_fled'] },
     broken: { ruler: 'nobody', rivalry: { 'aldermere|crown': 'opposed' }, owners: { aldermere_hold: 'aldermere', heralds_cross: 'aldermere', oath_cairn: 'aldermere', applecourt: 'aldermere' }, flags: ['aldermere_crown'] }
   };
   const REL = { open: 0.2, uneasy: -0.15, opposed: -0.5 };
@@ -90,12 +97,15 @@
   C.leverageList = st => Object.entries(levOf(st)).filter(([, v]) => !v.spent).map(([id, v]) => Object.assign({ id }, C.LEVERAGE[id], v));
   const spendLev = (st, id, how) => { levOf(st)[id].spent = how; };
   const handExposed = st => !!(fl(st).exposed_hidden_hand || M(st).testimony.includes('hidden_hand'));
+  const hoardLaid = st => !!(fl(st).exposed_forbidden_hoard || M(st).testimony.includes('forbidden_hoard'));
   const isOpen = st => { const m = M(st); return m.called !== null && !m.result; };
 
   // ---- who is standing ----
   C.mootStanding = function (st) {
     const f = fl(st), out = [];
-    if (!handExposed(st)) out.push('regency');                    // once the Steward is known to be the Hand, the Regency is finished
+    if (!handExposed(st) && !f.ledger_stands) out.push('regency'); // once the Steward is known to be the Hand, the Regency is finished; standing openly as the Ledger, he drops it
+    if (f.ledger_stands) out.push('ledger');
+    if (f.ilvane_stands && !hoardLaid(st)) out.push('ilvane');     // the Sealed Ledger laid before the Moot ends her claim
     out.push('osric');
     if (!f.corisande_withdrawn) out.push('corisande');
     if (f.wil_proclaimed) out.push('wil');
@@ -111,7 +121,7 @@
   function abstains(st, seat) {
     const m = M(st), f = fl(st);
     if (seat === 'syndicate' && handExposed(st) && !f.crane_hand) return true;
-    if (seat === 'synod' && (m.testimony.includes('forbidden_hoard') || f.exposed_forbidden_hoard)) return true;
+    if (seat === 'synod' && hoardLaid(st)) return true;
     return false;
   }
   // Pure: the current state of the vote. Canvassing moves a seat one step toward your claimant (if it lies further down its list); pressure takes it outright.
@@ -226,7 +236,7 @@
   C.mootResolve = function (st) {
     const m = M(st); if (!m.declared) return { ok: false, reason: 'Declare first' }; if (m.result || m.hall) return { ok: false, reason: 'Already counted' };
     const t = C.mootTally(st), f = fl(st), changes = []; m.tally = t;
-    if (f.pledged_regency && m.declared !== 'regency') changes.push(...S.changeStanding(st, 'crown', -C.MOOT.pledgeCost, { reason: 'broke a promise to the Steward', ripple: false }));
+    if (f.pledged_regency && m.declared !== 'regency' && m.declared !== 'ledger') changes.push(...S.changeStanding(st, 'crown', -C.MOOT.pledgeCost, { reason: 'broke a promise to the Steward', ripple: false }));
     if (t.winner && t.winner !== 'osric' && (t.counts.osric || 0) >= C.MOOT.hallBacking && !f.armoury_burned) {
       m.hall = { pending: true, winner: t.winner }; return { ok: true, tally: t, hall: true, changes };
     }
