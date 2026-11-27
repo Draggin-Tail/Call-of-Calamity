@@ -339,7 +339,8 @@
       c.drawImage(cv, CROP_X, CROP_Y, CROP, CROP, 0, 0, CROP * 3, CROP * 3);
       cache[ck] = o; return o;
     },
-    url(u, team) { const c = PORT.canvas(u, team); return c ? (c.url || (c.url = c.toDataURL())) : ''; },
+    // Safari refuses toDataURL on a canvas it counts as cross-origin (seen on raw.githack previews); show the unit's letters instead of stopping the battle.
+    url(u, team) { const c = PORT.canvas(u, team); if (!c) return ''; if (c.url === undefined) { try { c.url = c.toDataURL(); } catch (e) { c.url = ''; } } return c.url; },
     classes: () => Object.keys(CLS), races: () => Object.keys(RACE)
   };
   window.PORT = PORT;
