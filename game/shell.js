@@ -560,6 +560,9 @@ body.campaign #top .skirm{display:none}
     else if (n.type === 'zone' || n.danger >= 2) out.push(h('div', { style: 'margin:6px 0' }, n.type === 'zone' ? (C.zoneChance(id) ? [h('span', { class: 'shchip', style: 'border-color:var(--foe);color:#ffb0a0', text: '\u2694 Encounter zone' }), h('span', { class: 'shchip', text: 'about ' + Math.round(C.zoneChance(id) * 100) + '% each visit' }), h('div', { class: 'dim', style: 'margin-top:4px', text: 'Walk in and trouble may find you: ' + (nodeRisk(id)) + ' Other roads are nearly quiet.' })] : h('span', { class: 'shchip', text: 'Named area · safe' })) : h('span', { class: 'shchip', text: 'Wild' }), n.type !== 'zone' && n.danger >= 2 ? h('span', { class: 'shchip', text: 'Dangerous country' }) : null));
     { const qm = questMarks()[id]; if (qm) out.push(h('div', { class: 'card', style: 'border-color:' + ({ offer: '#f2c14e', goal: '#59c2ff', report: '#6fd36f', lead: '#c79cff' })[qm.kind] }, h('b', { text: ({ offer: 'Work here', goal: 'Your next step is here', report: 'Report back here', lead: 'Named in a lead' })[qm.kind] }), qm.why.map(t => h('div', { class: 'dim', text: '\u2022 ' + t })))); }
     if (sv.owner) out.push(h('div', { style: 'margin:6px 0' }, h('span', { class: 'shchip', text: 'Held by ' + fname(sv.owner) }), n.faction ? h('span', { class: 'shchip', text: fname(n.faction) + ': ' + tierName(n.faction) + ' (' + fmtStand(n.faction) + ')' }) : null));
+    if (sv.garrison) { const co = sv.cutOff, cap = C.NODES[Object.keys(C.NODES).find(k => C.NODES[k].type === 'capital' && C.NODES[k].capital === sv.owner)];
+      out.push(h('div', { class: 'dim', style: 'margin:0 2px 8px' + (co && co.cut ? ';color:var(--foe)' : '') }, 'Garrison: ' + sv.garrison + (sv.weakened ? ' (below strength)' : '') + '.',
+        co && co.cut ? ' Cut off from ' + (cap ? cap.name : 'its capital') + ' for ' + Math.round(co.days) + ' days.' + (co.stage >= 3 ? ' Its people are talking of opening the gates.' : co.stage >= 2 ? ' Its garrison is dwindling.' : co.stage >= 1 ? ' The shelves are thinning.' : '') : co ? ' Supply has come back; it is still recovering.' : '')); }
     if (!here) {
       const p = pathTo(ST.world.location, id);
       out.push(p ? btn('Travel here (' + pathDays(ST.world.location, p) + ' day' + (pathDays(ST.world.location, p) > 1 ? 's' : '') + (p.length > 1 ? ', ' + p.length + ' stops' : '') + ' · road risk ' + C.routeRisk(p, ST.world.location) + ')', () => travel(p), 'pri full') : h('div', { class: 'dim', text: 'No known road leads here yet.' }));
@@ -1036,6 +1039,7 @@ body.campaign #top .skirm{display:none}
       C.bounties(ST).length ? [h('div', { class: 'sh-h', text: 'Wanted' }), C.bounties(ST).map(b => h('div', { class: 'card badc' }, h('b', { text: fname(b.faction) + ' have put a price on you' }), h('div', { class: 'dim', text: 'Hunters can find you anywhere. It lapses in ' + b.daysLeft + ' days, or settle it at a Syndicate place or a Hearthwatch chapel.' })))] : null,
       ranks.length ? [h('div', { class: 'sh-h', text: 'Your rank' }), ranks.map(rankCard)] : null,
       noticed.length ? [h('div', { class: 'sh-h', text: 'Noticed' }), noticed.map(f => h('div', { class: 'dim', text: fname(f) + ': they have noticed you. Keep helping them and someone will ask you to prove yourself.' }))] : null,
+      C.relReport ? realmBlock() : null,
       hearthCard(),
       ranks.length ? null : h('div', { class: 'card' }, h('b', { text: 'You serve no faction' }), h('div', { class: 'dim', text: 'Do good work for a faction and they will notice you. Pass their try-out and someone of theirs will offer you a place. You serve one faction at a time.' })),
       fs.length ? null : h('div', { class: 'dim', style: 'margin:10px 0', text: 'You have not met any of the great powers yet. Walk the roads and they will find you.' }),
@@ -1045,6 +1049,28 @@ body.campaign #top .skirm{display:none}
       }),
       SS() ? SS().you(ST) : null,
       h('div', { class: 'sh-h', text: 'Recent changes' }), ST.factions.history.filter(x => S.isMet(ST, x.faction) || x.faction === 'hearthwatch').slice(-8).reverse().map(x => h('div', { class: 'dim', text: 'Day ' + x.day + ' · ' + fname(x.faction) + (x.delta ? ' ' + (x.delta > 0 ? '+' : '') + x.delta : '') + ' · ' + x.reason })), ST.factions.history.length ? null : h('div', { class: 'dim', text: 'Nothing yet.' })));
+  }
+  // The realm: wars, alliances, truces, your faction's council, and arguing for peace or an alliance (Phase 3a). Words only, never numbers.
+  const MOOD = { close: 'close', friendly: 'friendly', cool: 'cool', hostile: 'hostile', bitter: 'bitter' };
+  function realmBlock() {
+    const R = C.relReport(ST), met = f => f === 'hearthwatch' || S.isMet(ST, f) || S.getRank(ST, f), out = [];
+    const p = R.pending;
+    if (p) out.push(h('div', { class: 'card urg' }, h('b', { text: 'The ' + fname(p.faction) + ' has called its council' }),
+      h('div', { class: 'dim', text: (p.kind === 'war' ? 'They mean to go to war with the ' : 'They have been offered an alliance with the ') + fname(p.with) + ', and will not do it without your word. Go to one of their halls. If you stay away, they will do nothing.' })));
+    const lines = [].concat(R.wars.filter(x => met(x.a) || met(x.b)).map(x => 'At war: the ' + fname(x.a) + ' against the ' + fname(x.b) + ', since day ' + x.since),
+      R.allies.filter(x => met(x.a) || met(x.b)).map(x => 'Allies: the ' + fname(x.a) + ' and the ' + fname(x.b)),
+      R.truces.filter(x => met(x.a) || met(x.b)).map(x => 'Truce: the ' + fname(x.a) + ' and the ' + fname(x.b)));
+    const mine = S.sworn && S.sworn(ST), moods = mine ? R.pairs.filter(x => (x.a === mine || x.b === mine) && !x.status).map(x => { const o = x.a === mine ? x.b : x.a; return met(o) ? 'The ' + fname(o) + ': ' + MOOD[x.mood] + ' toward the ' + fname(mine) : null; }).filter(Boolean) : [];
+    if (lines.length || moods.length || R.news.length) out.push(h('div', { class: 'card' }, h('b', { text: 'The state of the realm' }),
+      lines.length ? lines.map(t => h('div', { text: t })) : h('div', { class: 'dim', text: 'No wars and no alliances, for now.' }),
+      moods.length ? [h('div', { class: 'dim', style: 'margin-top:6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em', text: 'Toward your faction' }), moods.map(t => h('div', { class: 'dim', text: t }))] : null,
+      R.news.length ? [h('div', { class: 'dim', style: 'margin-top:6px;font-size:12px;text-transform:uppercase;letter-spacing:.04em', text: 'Word on the roads' }), R.news.slice(0, 5).map(n => h('div', { class: 'dim', text: 'Day ' + n.day + ' · ' + n.text }))] : null));
+    const opts = C.relArgueOptions(ST).filter(o => met(o.faction));
+    if (opts.length) out.push(h('div', { class: 'card' }, h('b', { text: 'Speak in council' }), h('div', { class: 'dim', text: 'As one of their officers you can argue for peace or for an alliance. Your name counts for more with a faction whose ideals you share.' }),
+      opts.map(o => h('div', { class: 'row', style: 'margin-top:6px' }, h('div', { class: 'grow', text: 'The ' + fname(o.faction) + (o.wait ? ' (heard you recently)' : '') }),
+        o.peace ? btn('For peace', () => { const r = C.relArgue(ST, o.faction, 'peace'); toast(r.ok ? r.text : r.reason, !r.ok); autosave(); render(); }, 'sm', !!o.wait) : null,
+        o.ally ? btn('For alliance', () => { const r = C.relArgue(ST, o.faction, 'ally'); toast(r.ok ? r.text : r.reason, !r.ok); autosave(); render(); }, 'sm', !!o.wait) : null))));
+    return out.length ? [h('div', { class: 'sh-h', text: 'The realm' }), out] : null;
   }
   const KIND_LABEL = { ideal: 'Ideals', strength: 'Strengths', weakness: 'Weaknesses', figure: 'Important figures', view: 'How others see them', secret: 'Secrets' };
   function dossierBlock(f) {
@@ -1152,6 +1178,6 @@ body.campaign #top .skirm{display:none}
       h('div', { class: 'dim', style: 'margin-top:14px', text: S.storageOk() ? 'Saves are kept in this browser. Download a file to keep a backup.' : 'Browser storage is blocked here: saves last only until you close this page. Download a file to keep your progress.' })));
   }
 
-  window.GAME_SHELL = { state: () => ST, render, _ownerField: () => ({ builds: ownerField.builds, key: ownerField.key }), showOnMap, openJournal: sub => { if (window.GAME_STORY_SCREENS) window.GAME_STORY_SCREENS.close(); jTab = sub || 'quests'; tab = 'quests'; render(); }, pathTo, travelPath: p => travel(p), open: () => { showShell(true); }, _set: s => { ST = s; view = 'game'; } };
+  window.GAME_SHELL = { state: () => ST, render, _ownerField: () => ({ builds: ownerField.builds, key: ownerField.key }), showOnMap, nodeSheet: id => nodeSheet(id), openJournal: sub => { if (window.GAME_STORY_SCREENS) window.GAME_STORY_SCREENS.close(); jTab = sub || 'quests'; tab = 'quests'; render(); }, pathTo, travelPath: p => travel(p), open: () => { showShell(true); }, _set: s => { ST = s; view = 'game'; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
 })();
