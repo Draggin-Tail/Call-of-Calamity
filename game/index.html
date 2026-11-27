@@ -104,20 +104,103 @@ label{display:block;font-size:12px;color:var(--dim);margin-top:6px}
 label select{margin-top:2px;margin-bottom:0}
 .cols{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
 select{background:var(--t2);color:var(--ink);border:1px solid var(--line);border-radius:8px;padding:10px;font:inherit;width:100%;margin-bottom:8px}
+
+/* ---- Full-screen battle (UI pass, FFT style): the board fills the screen and the HUD floats over it. ---- */
+:root{--frame:rgba(16,24,34,.93);--fline:rgba(226,178,76,.55);--padT:108px;--padB:300px;--padL:0px;--padR:0px}
+html,body{height:100%;overflow:hidden;overscroll-behavior:none}
+body{display:block}
+#app{position:fixed;inset:0;max-width:none;width:auto;padding:0;display:block;pointer-events:none}
+#app>*{pointer-events:auto}
+.fr,#bar,#obj,#info,#top>span{background:var(--frame);border:1px solid var(--fline);border-radius:7px;box-shadow:inset 0 0 0 2px rgba(12,19,27,.9),inset 0 0 0 3px rgba(226,178,76,.18),0 4px 14px rgba(0,0,0,.45)}
+#bwo{position:absolute;inset:0;z-index:0}
+#bw{position:absolute;inset:0;max-height:none;overflow:auto;overscroll-behavior:contain;scrollbar-width:none}#bw::-webkit-scrollbar{display:none}
+#bwi{display:flex;min-width:100%;min-height:100%;width:max-content;padding:calc(var(--padT) + env(safe-area-inset-top)) var(--padR) calc(var(--padB) + env(safe-area-inset-bottom)) var(--padL)}
+#cv{margin:auto;flex:none}
+#top{position:absolute;z-index:7;top:calc(6px + env(safe-area-inset-top));right:8px;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+#top h1{display:none}
+#mnb{width:40px;height:40px;min-height:0;padding:0;border-radius:50%;justify-content:center;font:700 18px system-ui;background:var(--frame);border-color:var(--fline)}
+#top>span{display:none;flex-direction:column;align-items:stretch;gap:6px;padding:6px;max-width:220px}
+#top.open>span{display:flex}
+#top>span button{min-height:38px;justify-content:center;white-space:normal;text-align:center}
+#bar{position:absolute;z-index:6;top:calc(6px + env(safe-area-inset-top));left:8px;max-width:calc(100% - 66px);padding:4px 6px;gap:4px;align-items:center}
+#bar:empty{display:none}
+.chip{width:34px;height:34px;overflow:hidden;padding:0;font-size:12px}
+.chip img{display:block;width:100%;height:100%}
+.chip.now{width:40px;height:40px;background:var(--gold);box-shadow:0 0 8px rgba(226,178,76,.8)}
+.chip.again{margin-left:7px;overflow:visible}.chip.again::after{left:-7px;top:2px;bottom:2px}
+.chip.again img{border-radius:4px}
+#obj{position:absolute;z-index:6;top:calc(56px + env(safe-area-inset-top));left:8px;padding:3px 9px;min-height:0;font-size:11.5px}
+#obj:empty{display:none}
+#log{position:absolute;z-index:5;top:calc(84px + env(safe-area-inset-top));left:10px;right:60px;min-height:0;pointer-events:none;font-size:12px;text-shadow:0 1px 2px #000,0 0 4px #000}
+#log div:not(:first-child){display:none}
+.zm{position:absolute;z-index:6;top:calc(112px + env(safe-area-inset-top));right:8px;display:flex;flex-direction:column;gap:7px}
+.zm button,.zm .vt,.zm .rot{position:static;width:40px;height:40px;min-width:0;border-radius:50%;border:1px solid var(--fline);background:rgba(16,24,34,.82);color:var(--ink);font:700 17px system-ui;padding:0;display:grid;place-items:center}
+.zm .vt{font-size:12px}
+#hud{position:absolute;z-index:5;left:0;right:0;bottom:0;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,200px);grid-template-areas:"hint hint" "cards info";gap:6px;align-items:end;padding:28px 6px calc(6px + env(safe-area-inset-bottom));background:linear-gradient(rgba(12,19,27,0),rgba(12,19,27,.88) 34px);pointer-events:none}
+#hud>*{pointer-events:auto}
+#hint{grid-area:hint;font-size:12px;line-height:1.3;color:#d5dde3;text-shadow:0 1px 2px #000;min-height:0;padding:0 2px}
+#hint:empty{display:none}
+#cards{grid-area:cards;display:flex;flex-direction:column;gap:5px;min-width:0}
+#cards .uc.empty{display:none}
+.uc{border-color:var(--fline);background:linear-gradient(100deg,rgba(22,34,47,.95),rgba(30,48,64,.95));padding:5px}
+.uc.E{background:linear-gradient(100deg,rgba(42,28,30,.95),rgba(70,40,42,.95))}
+.uc .pt{flex-basis:56px;width:56px;height:56px}
+#info{grid-area:info;padding:6px;gap:5px;max-height:calc(100vh - var(--padT) - 20px - env(safe-area-inset-top) - env(safe-area-inset-bottom));overflow-y:auto}
+#who{font-size:12px;gap:6px;padding:0 2px 5px;border-bottom:1px solid rgba(226,178,76,.25)}
+#who>span:first-child small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold)}
+#who .pips{flex-wrap:nowrap;gap:3px}#who .pip{width:11px;height:11px;border-width:2px}
+#who button.a.tb{padding:6px 10px;font-size:13px}
+#acts{display:flex;flex-direction:column;gap:3px}
+#acts button.a{min-height:38px;padding:5px 8px;border-radius:5px;background:transparent;border-color:transparent;font:600 15px Palatino,Georgia,serif}
+#acts button.a small{font:10.5px/1.2 system-ui}
+#acts button.a b{font:700 11px system-ui;padding:1px 7px}
+#acts button.a.sel{background:rgba(226,178,76,.16);border-color:var(--gold);box-shadow:none}
+#acts button.a:not(.dis):not(.cf):active{background:rgba(226,178,76,.1)}
+#acts button.a.back{border-bottom:1px solid rgba(226,178,76,.3);border-radius:5px 5px 0 0;color:var(--gold);font-size:13px;letter-spacing:.04em;text-transform:uppercase}
+#acts button.a.rep{border-color:rgba(226,178,76,.35);background:rgba(58,58,42,.6)}
+#acts button.a.cf{justify-content:center;font-family:system-ui}
+#acts button.a.cf{background:var(--ally);border-color:var(--ally)}#acts button.a.cf.no{background:var(--t2);border-color:var(--line)}
+#acts button.end{background:var(--ally)}
+#cards .pred{background:var(--frame);border-color:var(--fline)}
+#app.placing{--padB:330px}
+#app.confirming #hud{grid-template-columns:minmax(0,1fr);grid-template-areas:"hint" "cards" "info"}
+#app.confirming #cards{display:grid;grid-template-columns:1fr 1fr}
+#app.confirming #cards>.pred,#app.confirming #cards>.uc.empty+*{grid-column:1/-1}
+#app.confirming #acts{display:grid;grid-template-columns:1fr 1fr}
+#app.placing #hud{grid-template-columns:minmax(0,1fr);grid-template-areas:"hint" "cards" "info"}
+#app.placing #acts{display:grid;grid-template-columns:1fr 1fr 1fr}
+#app.placing #acts button.a{background:var(--t2);border-color:var(--line);justify-content:center;font:600 13px system-ui}
+#app.placing #acts button.end{background:var(--ally)}
+@media (orientation:landscape){
+  :root{--padT:52px;--padB:8px;--padL:236px;--padR:236px}
+  #hud{grid-template-columns:228px minmax(0,1fr) 228px;grid-template-areas:"cards hint info";background:none;padding-top:0}
+  #hint{align-self:end;text-align:center;padding-bottom:4px}
+  .zm{top:calc(6px + env(safe-area-inset-top));right:56px;flex-direction:row}
+  #bar{max-width:calc(100% - 340px)}
+  #log{right:auto;max-width:40%;left:auto;right:300px;text-align:right;top:calc(56px + env(safe-area-inset-top))}
+  #info{max-height:calc(100vh - 60px - env(safe-area-inset-top) - env(safe-area-inset-bottom))}
+  #app.confirming #hud{grid-template-columns:228px minmax(0,1fr) 228px;grid-template-areas:"cards hint info"}
+  #app.confirming #cards{display:flex}
+  #app.confirming #acts{display:flex}
+  #app.placing #hud{grid-template-columns:minmax(0,300px) minmax(0,1fr) 228px;grid-template-areas:"cards hint info"}
+  #app.placing #acts{grid-template-columns:1fr}
+  #app.placing{--padB:8px}
+}
+
 </style>
 
 <div id="app">
-  <div id="top"><h1>Tactics Prototype</h1><span><button class="a sm" id="fxb" onclick="this.textContent=FX.cycle()">FX</button> <button class="a sm" onclick="openLog()">Log</button> <button class="a sm skirm" onclick="showSetup()">Parties</button></span></div>
-  <div id="obj"></div>
+  <div id="top"><h1>Tactics Prototype</h1><button class="a sm" id="mnb" aria-label="Battle menu" data-d="Menu: effects, the combat log and leaving the battle." onclick="this.parentNode.classList.toggle('open')">⋯</button><span><button class="a sm" id="fxb" onclick="this.textContent=FX.cycle()">FX</button> <button class="a sm" onclick="openLog()">Log</button> <button class="a sm skirm" onclick="showSetup()">Parties</button></span></div>
   <div id="bar"></div>
-  <div id="bwo"><div id="bw"><canvas id="cv"></canvas></div>
+  <div id="obj"></div>
+  <div id="bwo"><div id="bw"><div id="bwi"><canvas id="cv"></canvas></div></div></div>
+  <div class="zm">
+    <button class="vt" id="vtb" data-d="Switch between the angled 3D view and a flat top-down view. Top-down shows heights as shading and numbers, and nothing can hide behind a hill." onclick="toggleView()">3D</button>
     <button class="rot l" data-d="Rotate the view 60° counter-clockwise. You can also swipe across the board." onclick="rotateView(-1)">↺</button>
     <button class="rot r" data-d="Rotate the view 60° clockwise. You can also swipe across the board." onclick="rotateView(1)">↻</button>
-    <button class="vt" id="vtb" data-d="Switch between the angled 3D view and a flat top-down view. Top-down shows heights as shading and numbers, and nothing can hide behind a hill." onclick="toggleView()">3D</button>
-    <div class="zm"><button data-d="Zoom in. Drag the board to look around when zoomed." onclick="zoomBy(1.25)">+</button><button data-d="Zoom out." onclick="zoomBy(.8)">−</button><button data-d="Centre on the active unit." onclick="focusActive(true)">◎</button></div></div>
-  <div id="cards"></div>
-  <div id="info"><div id="who"></div><div id="hint"></div><div id="acts"></div></div>
+    <button data-d="Zoom in. Drag the board to look around when zoomed; pinch to zoom too." onclick="zoomBy(1.25)">+</button><button data-d="Zoom out." onclick="zoomBy(.8)">−</button><button data-d="Centre on the active unit." onclick="focusActive(true)">◎</button></div>
   <div id="log"></div>
+  <div id="hud"><div id="hint"></div><div id="cards"></div><div id="info"><div id="who"></div><div id="acts"></div></div></div>
 </div>
 <div id="logp"><div><div id="lph"><h2>Combat log</h2><button id="tabL" class="on" onclick="lpTab('L')">Log</button><button id="tabS" onclick="lpTab('S')">Stats</button><button onclick="closeLog()">✕</button></div>
   <div id="lpf"></div><div id="lpb"></div></div></div>
@@ -451,7 +534,7 @@ function rosterCard(e,i){
   return `<button class="rc ${e.u?'':'off'} ${e.u&&PL.sel===e.u?'sel':''}" onclick="cardTap(${i})"><div class="pt">${portraitHTML({build:b,primary:b.primary,name:nm,g:J.g},'P')}${e.u?'<i class="tick">In</i>':''}</div><b>${esc(nm)}</b><small>${esc(rn+J.name)} · Lv ${b.level||1}</small></button>`;
 }
 function renderPlace(){
-  $('bar').innerHTML='';$('obj').textContent=units?objText():'';drawBoard(new Map(),[],[],null);if(FOCUSED!=='pl'){FOCUSED='pl';focusActive()}
+  $('app').classList.add('placing');$('bar').innerHTML='';$('obj').textContent=units?objText():'';drawBoard(new Map(),[],[],null);if(FOCUSED!=='pl'){FOCUSED='pl';focusActive()}
   const n=plN(),f=FOCUS&&units.includes(FOCUS)?FOCUS:null; // a foe you tapped; your own selection is shown on the strip
   $('cards').innerHTML=(f?`<div style="grid-column:1/-1">${unitCard(f)}</div>`:'')+`<div id="deploy"><div class="hd"><span>Your party</span><span>Deployed <b>${n}/${PL.limit}</b></span></div><div class="strip">${PL.pool.map(rosterCard).join('')}</div></div>`;
   $('who').innerHTML='<span>Place your party</span>';
@@ -1088,9 +1171,9 @@ const hpNote=X=>(X.hpCostPct?` Costs ${Math.round(X.hpCostPct*100)}% of your cur
 const calcNote=(u,A,a)=>{const t=u&&LO.skillCalcText(u,A,a);return t?` ${LO.typeLabel(A)}${A.k==='dmg'?' skill':''}. YOUR NUMBERS: ${t.head}${t.detail?' ('+t.detail+')':''}.${t.extra.length?' '+t.extra.join('. ')+'.':''}${A.k==='dmg'?' Enemy armor and resistance reduce damage.':''}`:''};
 const sum=(A,u,a)=>[LO.typeLabel(A),(A.p||LO.weaponSkill(A))?(u?(LO.skillCalc(u,A,a)||{total:effP(u,A,a)}).total:A.p)+(A.k==='heal'?' heal':' dmg'):'',LO.manaCost(A)?LO.manaCost(A)+' mana':'',A.r?'r'+A.r:'',A.fx?Object.keys(A.fx).join('/'):'',A.area||'',A.flank?'flank · ambush':'',A.ignore?'pierce':'',A.stagger?'stagger':'',A.drain?'drain':'',A.charge?'+1 pt next turn':'',A.cd?'cd '+A.cd:'',A.ct?'cast '+Math.min(CR.cast.maxCt,A.ct)+'%':'',A.hpCostPct?'-'+Math.round(A.hpCostPct*100)+'% HP':'',A.bloodied?'bloodied':'',A.mv?'dash '+A.mv+' to foe':'',A.k==='summon'?'1 pet':''].filter(Boolean).join(' · ');
 
-function render(){if(PL)return renderPlace();if(LOGOPEN)setTimeout(drawLog,0);const ob=$('obj');if(ob)ob.textContent=units?objText():'';
+function render(){if(PL)return renderPlace();$('app').classList.remove('placing');if(LOGOPEN)setTimeout(drawLog,0);const ob=$('obj');if(ob)ob.textContent=units?objText():'';
   hideTip();
-  $('bar').innerHTML=queue().map(q=>q.cast?`<div class="chip cast ${q.u.team}" ${dd(`${q.u.n}'s ${AB[q.cast].n} resolves here.`)}><span>✦</span><small>${q.u.g}</small></div>`:`<div class="chip ${q.u.team} ${q.now?'now':''} ${q.again?'again':''}" ${dd(unitTip(q.u))}>${q.u.g}</div>`).join('');
+  $('bar').innerHTML=queue().map(q=>q.cast?`<div class="chip cast ${q.u.team}" ${dd(`${q.u.n}'s ${AB[q.cast].n} resolves here.`)}><span>✦</span><small>${q.u.g}</small></div>`:`<div class="chip ${q.u.team} ${q.now?'now':''} ${q.again?'again':''}" ${dd(unitTip(q.u))}>${portraitHTML(q.u,q.u.baseTeam)}</div>`).join('');
   const mine=!over&&!isAI(active)&&!busy,A=mode&&!isMove(mode)?AB[mode]:null;
   PREV=null;
   if(preview&&A){ // a pending target: self, one unit, a ground tile or a summon tile. Area skills also draw their footprint.
@@ -1132,13 +1215,15 @@ function render(){if(PL)return renderPlace();if(LOGOPEN)setTimeout(drawLog,0);co
   const cmds=[{k:'p',cls:active.build.primary,abs:JOBS[active.build.primary].ab.filter(a=>active.ab.includes(a)&&!active.secAbs.has(a))}]; // only skills this unit actually has (campaign units know just what they learned)
   const secList=active.ab.filter(a=>active.secAbs.has(a));
   if(active.build.secondary&&secList.length)cmds.push({k:'s',cls:active.build.secondary,abs:secList});
+  let list=null;
   for(const C of cmds){
     const J=JOBS[C.cls],open=menu===C.k,picked=C.abs.find(a=>a===mode),nm=J.command||J.name;
     b+=`<button class="a cmd ${open||picked?'sel':''}" ${dd(`${nm}: ${J.name} skills`+(C.k==='s'?` (secondary class${BLD.secondaryCostPenalty?', +'+BLD.secondaryCostPenalty+' point each':''})`:'')+'. Tap to open the list.')} onclick="toggleMenu('${C.k}')"><span>${nm}<small>${picked?AB[picked].n:C.abs.length+' skill'+(C.abs.length>1?'s':'')}</small></span><b>${open?'▴':'▾'}</b></button>`;
-    if(open)b+=`<div class="sub">${C.abs.map(a=>abBtn(a)).join('')}</div>`;
+    if(open)list=`<button class="a cmd back sel" ${dd('Back to the command list.')} onclick="toggleMenu('${C.k}')"><span>◂ ${nm}</span></button>`+C.abs.map(a=>abBtn(a)).join(''); // an open list replaces the commands, FFT style
   }
   b+=`<button class="a ${mine&&gc!==null&&!gBlock&&L>=gc&&!active.guard?'':'dis'}" ${dd(gc===null?(JOBS[active.job].guard===null?'This class cannot Guard.':'Guard needs a shield (or the Weapon Block passive).'):gBlock?gBlock+': cannot Guard.':`Guard (${gc} pt): halves damage taken until your next turn. Pierce attacks ignore it.`+(counters?` Counters melee attackers for ${GC.damage} damage.`:''))} onclick="guard()"><span>Guard<small>${counters?'halve dmg · counter':'halve dmg'}</small></span><b>${gc===null?'—':gc}</b></button>`;
-  $('acts').innerHTML=(mine&&preview&&(A||(mode&&isMove(mode))))?`<button class="a cf" onclick="confirmAct()"><span>Confirm</span></button><button class="a cf no" onclick="cancelAct()"><span>Cancel</span></button>`:b;
+  const cfm=!!(mine&&preview&&(A||(mode&&isMove(mode))));$('app').classList.toggle('confirming',cfm);
+  $('acts').innerHTML=cfm?`<button class="a cf" onclick="confirmAct()"><span>Confirm</span></button><button class="a cf no" onclick="cancelAct()"><span>Cancel</span></button>`:(list||b);
   $('log').innerHTML=logs.map(l=>`<div>${l}</div>`).join('');
 }
 let KY=.6,LV=.55,CEN={x:(W-1+.5)/2*SQ3,y:(H-1)*.75},VMODE='iso',ZOOM=null,ZEFF=1,FOCUSED=null;try{if(localStorage.getItem('coc_view')==='top'){VMODE='top';KY=1;LV=0}}catch(e){}
@@ -1167,7 +1252,8 @@ function zoomBy(f){ZOOM=Math.min(4,Math.max(1,ZEFF*f));if(units)render()}
 function focusActive(force){ // scroll the zoomed board so the active unit (or your deployment area) is in the middle
   const bw=$('bw');if(!bw||bw.scrollWidth<=bw.clientWidth+2&&bw.scrollHeight<=bw.clientHeight+2)return;
   const u=PL?null:active,t=u?HITS.find(h=>h.x===u.x&&h.y===u.y):(PL?HITS.find(h=>POS.P[0]&&h.x===POS.P[0][0]&&h.y===POS.P[0][1]):null);if(!t)return;
-  bw.scrollTo({left:Math.max(0,t.cx-bw.clientWidth/2),top:Math.max(0,t.cy-bw.clientHeight/2),behavior:force?'smooth':'auto'});
+  const cv=$('cv'),bi=getComputedStyle($('bwi')),pT=parseFloat(bi.paddingTop)||0,pB=parseFloat(bi.paddingBottom)||0,pL=parseFloat(bi.paddingLeft)||0,pR=parseFloat(bi.paddingRight)||0; // aim at the middle of the free area, not of the whole screen
+  bw.scrollTo({left:Math.max(0,cv.offsetLeft+t.cx-pL-(bw.clientWidth-pL-pR)/2),top:Math.max(0,cv.offsetTop+t.cy-pT-(bw.clientHeight-pT-pB)/2),behavior:force?'smooth':'auto'});
 }
 function rotateView(dir){VIEW.t+=60*dir;if(!rotRaf)rotRaf=requestAnimationFrame(stepRot)}
 function stepRot(){
@@ -1206,8 +1292,16 @@ function drawProp(g,k,cx,cy,R,sd){
   else if(k==='u'){fillP([[cx-R*.6,cy-R*.75],[cx-R*.5,cy],[cx+R*.5,cy],[cx+R*.6,cy-R*.75]],'#4a4640','#1c1a16');g.beginPath();g.ellipse(cx,cy-R*.75,R*.6,R*.6*KY*.6+R*.05,0,0,7);g.fillStyle='#5fbf3a';g.fill();g.strokeStyle='#1c1a16';g.lineWidth=1;g.stroke();ln(cx-R*.55,cy-R*.35,cx+R*.55,cy-R*.35,'#2a2722',R*.08);const bb=(Date.now()/350+sd)%3;circ(cx-R*.2+bb*R*.1,cy-R*.8,R*.08,'#9cf06a');circ(cx+R*.18,cy-R*.72-bb*R*.04,R*.06,'#c6ff92')}
 }
 function ell0(g,cx,cy,rx,f){g.beginPath();g.ellipse(cx,cy,rx,rx*KY,0,0,7);g.fillStyle=f;g.fill()}
+// The board's width at zoom 1: as wide as the free area between the HUD panels, but no taller than it (so landscape fits too).
+function boardBase(){
+  const bw=$('bw'),bi=$('bwi');if(!bw||!bi)return 460;
+  const cs=getComputedStyle(bi),px=k=>parseFloat(cs[k])||0;
+  const aw=Math.max(200,bw.clientWidth-px('paddingLeft')-px('paddingRight')),ah=Math.max(160,bw.clientHeight-px('paddingTop')-px('paddingBottom'));
+  const {mx,my}=extent(),byH=(ah-8)*(2*mx+.3)/(2*my*KY+MAXH*LV);
+  return Math.max(200,Math.min(aw,byH));
+}
 function drawBoard(mm,tg,stl,A){
-  const cv=$('cv'),bww=$('bw').clientWidth||460,dpr=window.devicePixelRatio||1,th=VIEW.a,{mx,my}=extent();
+  const cv=$('cv'),bww=boardBase(),dpr=window.devicePixelRatio||1,th=VIEW.a,{mx,my}=extent();
   const zmin=Math.max(1,mx/EXT8.mx),zoom=Math.min(4,ZOOM===null?zmin:Math.max(1,ZOOM)),w=Math.round(bww*zoom);ZEFF=zoom;cv.style.width=w+'px';
   const R=w/(2*mx+.3),cys=my*R*KY+MAXH*LV*R+4,hh=Math.ceil(cys+my*R*KY+4);
   cv.width=Math.round(w*dpr);cv.height=Math.round(hh*dpr);cv.style.height=hh+'px';
@@ -1536,6 +1630,7 @@ document.addEventListener('pointerdown',e=>{
   },350);
 });
 let sw=null;
+$('bw').addEventListener('pointerdown',()=>$('top').classList.remove('open'));
 $('cv').addEventListener('pointerdown',e=>{sw={x:e.clientX,done:false}});
 $('cv').addEventListener('pointermove',e=>{
   if(!sw||sw.done||ZEFF>1.02)return;const dx=e.clientX-sw.x;
