@@ -283,8 +283,8 @@ const fmtH=h=>Number.isInteger(h)?String(h):(Math.floor(h)||'')+'½';
 function applySlopes(bf){SLOPE=new Map();const ss=bf.slopes||[];if(!ss.length)return;HT=HT.map(r=>r.slice());for(const [x,y,h,deg] of ss){HT[y][x]=h;SLOPE.set(x+','+y,deg)}}
 function applyBuildings(bf){BLDG=new Map();const bs=bf.buildings||[];if(!bs.length)return;HT=HT.map(r=>r.slice());for(const b of bs){const base=Math.min(...b.tiles.map(([x,y])=>HT[y][x]));b._wall=base+Math.min(...b.tiles.map(t=>t[2]));for(const [x,y,h] of b.tiles){HT[y][x]=base+h;BLDG.set(x+','+y,b)}}}
 if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp)GD.maps.thornfield_camp.buildings=[
-  {kind:'cottage',tiles:[[8,8,3],[9,8,3],[7,9,4],[8,9,4],[9,9,4],[8,10,3],[9,10,3]],door:[9,10,2]},
-  {kind:'shed',tiles:[[7,10,2]]},{kind:'crates',tiles:[[6,10,1]]}];
+  {kind:'cottage',tiles:[[8,8,2],[9,8,2],[7,9,3],[8,9,3],[9,9,3],[8,10,2],[9,10,2]],door:[9,10,2]},
+  {kind:'shed',tiles:[[7,10,1.5]]},{kind:'crates',tiles:[[6,10,.5]]}];
 if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp){const m=GD.maps.thornfield_camp,S=[];
   for(const x of [1,2,3,4])S.push([x,7,.5,-90]); // a ramp up the terrace
   const wp=(x,y)=>[(x+.5*(y&1))*Math.sqrt(3),y*1.5],nb=(x,y)=>(y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]]).filter(([a,b])=>a>=0&&b>=0&&a<12&&b<12);
@@ -1362,7 +1362,8 @@ function render(){if(SCENE){LAST=[new Map(),[],[],null];drawBoard(new Map(),[],[
   $('acts').innerHTML=cfm?`<button class="a cf" onclick="confirmAct()"><span>Confirm</span></button><button class="a cf no" onclick="cancelAct()"><span>Cancel</span></button>`:(list||b);
   $('log').innerHTML=logs.map(l=>`<div>${l}</div>`).join('');
 }
-let KY=.6,LV=.55,CEN={x:(W-1+.5)/2*SQ3,y:(H-1)*.75},VMODE='iso',ZOOM=null,ZEFF=1,FOCUSED=null;try{if(localStorage.getItem('coc_view')==='top'){VMODE='top';KY=1;LV=0}}catch(e){}
+const LV_ISO=1.1; // screen height of one level, in hex radii: about a unit's height, so a Jump 1 step is a body tall
+let KY=.6,LV=LV_ISO,CEN={x:(W-1+.5)/2*SQ3,y:(H-1)*.75},VMODE='iso',ZOOM=null,ZEFF=1,FOCUSED=null;try{if(localStorage.getItem('coc_view')==='top'){VMODE='top';KY=1;LV=0}}catch(e){}
 const VIEW={a:0,t:0}; // current and target view angle in degrees
 let HITS=[],LAST=null,EXT=null,rotRaf=0,FXP=null;
 const wpos=(x,y)=>[(x+.5*(y&1))*SQ3,y*1.5]; // hex centre in flat world space (odd-r rows)
@@ -1383,7 +1384,7 @@ function pickTile(e){
   for(let i=HITS.length-1;i>=0;i--)if(HITS[i].polys.some(P=>inPoly(px,py,P)))return HITS[i];
   return null;
 }
-function toggleView(){VMODE=VMODE==='top'?'iso':'top';KY=VMODE==='top'?1:.6;LV=VMODE==='top'?0:.55;try{localStorage.setItem('coc_view',VMODE)}catch(e){}const b=$('vtb');if(b)b.textContent=VMODE==='top'?'2D':'3D';if(units)render()}
+function toggleView(){VMODE=VMODE==='top'?'iso':'top';KY=VMODE==='top'?1:.6;LV=VMODE==='top'?0:LV_ISO;try{localStorage.setItem('coc_view',VMODE)}catch(e){}const b=$('vtb');if(b)b.textContent=VMODE==='top'?'2D':'3D';if(units)render()}
 function zoomBy(f){ZOOM=Math.min(4,Math.max(1,ZEFF*f));if(units)render()}
 function focusActive(force){ // scroll the zoomed board so the active unit (or your deployment area) is in the middle
   const bw=$('bw');if(!bw||bw.scrollWidth<=bw.clientWidth+2&&bw.scrollHeight<=bw.clientHeight+2)return;
