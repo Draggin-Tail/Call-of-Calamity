@@ -821,6 +821,7 @@ function hurt(u,t,p,A,aid){
   if(d>=t.hp&&t.hp>0&&t.st.deathSave>0){const keep=t.st.deathSave;t.st.deathSave=0;t.hp=keep;d=0;say(`${t.n} is saved by a Death Ward`)}
   if(d>=t.hp&&t.hp>0){const lc={attacker:u,victim:t,subject:u,damage:d,ability:aid||null,preventDeath:false,keepHp:1};fire('onLethalDamage',t,lc);if(lc.preventDeath){d=Math.max(0,Math.min(d,t.hp-lc.keepHp));say(`${t.n} refuses to fall`)}}
   const prev=t.hp;t.hp=Math.max(0,t.hp-d);
+  if(u.uid!=null&&u.team!==t.team&&prev>t.hp){const T=u.tally||(u.tally={uses:0,helps:0});T.dmg=(T.dmg||0)+prev-t.hp} // damage dealt, for the victory screen
   {const ls=LO.lifesteal(u),act0=prev-t.hp;if(ls&&act0>0&&u.hp>0){const g=Math.floor(act0*ls/100);if(g>0){u.hp=Math.min(u.max,u.hp+g);say(`${u.n} drinks ${g} (Bloodthirst)`,{dup:1})}}} // Bloodthirst
   EV({ev:'dmg',src:u.n,st:tm(u),tgt:t.n,tt:tm(t),ab:aid||null,base:hc?hc.p0:p,bonus:hc?hc.bonus:0,fl:hc?hc.fl:'',mods:M,pre:PRE,shield:SHD,icpt:ICP,hp:d,hp0:prev,hp1:t.hp,hid:hidE(u)&&false});
   if(window.FX&&(d>0||SHD>0))FX.num(t,d,{crit:M.some(m=>m.startsWith('Crit')),el:FX.elementOf(AB[aid]||A),absorbed:SHD})
@@ -1046,7 +1047,7 @@ function finishBattle(won){
   const info=u=>({id:u.uid,name:u.n,job:u.job,faction:u.faction,hp:Math.max(0,u.hp),max:u.max});
   const mine=units.filter(u=>u.baseTeam==='P'),fk={};
   KILLS.forEach(k=>{if(k.victimTeam==='E'&&k.victimFaction)fk[k.victimFaction]=(fk[k.victimFaction]||0)+1});
-  const ustats={};mine.forEach(u=>{ustats[u.uid]={uses:u.tally?u.tally.uses:0,helps:u.tally?u.tally.helps:0,kills:KILLS.filter(k=>k.killer===u.uid&&k.victimTeam==='E').length,alive:u.hp>0}});
+  const ustats={};mine.forEach(u=>{ustats[u.uid]={uses:u.tally?u.tally.uses:0,helps:u.tally?u.tally.helps:0,dmg:u.tally&&u.tally.dmg||0,kills:KILLS.filter(k=>k.killer===u.uid&&k.victimTeam==='E').length,alive:u.hp>0}});
   const res={won:!!won,draw:!!DRAW,unitStats:ustats,mapKey:MAPKEY,turns:TURN,rounds:ROUND(),objective:OBJ?OBJ.type:'rout',survivors:mine.filter(u=>u.hp>0).map(info),fallen:mine.filter(u=>u.hp<=0).map(info),kills:KILLS.slice(),factionKills:fk,log:LOG.slice()};
   window.Battle.last=res;
   if(BATTLE&&BATTLE.onEnd){const cb=BATTLE.onEnd;setTimeout(()=>cb(res),0)}
