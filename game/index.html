@@ -1412,6 +1412,12 @@ function boardBase(){
   const {mx,my}=extent(),byH=(ah-8)*(2*mx+.3)/(2*my*KY+MAXH*LV);
   return Math.max(200,Math.min(aw,byH));
 }
+// Board textures: tile tops, cliff faces, walls, water and lava (Screaming Brain Studios Tiny Texture Packs, CC0; game/tex/).
+// Each theme names [top, side] textures; the theme's hue is laid over them and height shades the tops. ?tex=0 draws the old flat colours.
+const TEX=!/[?&]tex=0/.test(location.search),TEXI={};
+const TEXF={plains:['grass','dirt'],meadow:['grass','dirt'],forest:['grass','dirt'],highland:['grass','cliff_stone'],wheat:['grass_dry','dirt'],camp:['grass_dry','dirt'],deepwood:['grass_dark','dirt_dark'],marsh:['grass_wet','mud'],fen:['grass_wet','mud'],swamp:['mud','dirt_dark'],
+  ash:['ash','cliff_stone'],salt:['sand','sand'],quarry:['sand','cliff_stone'],volcanic:['dirt_dark','stone_dark'],stone:['stone','cliff_stone'],ruins:['stone','cliff_stone'],crypt:['stone_dark','stone_dark'],cave:['stone_dark','stone_dark'],obsidian:['stone_dark','stone_dark'],glass:['stone','cliff_stone',.38],snow:['snow','cliff_stone'],steel:['stone','cliff_stone']};
+function texImg(n){let i=TEXI[n];if(!i){i=TEXI[n]=new Image();i.onload=()=>{i.ok=1;if(units&&LAST)drawBoard(...LAST)};i.src='tex/'+n+'.png'}return i.ok?i:null}
 function drawBoard(mm,tg,stl,A){
   const cv=$('cv'),bww=boardBase(),dpr=window.devicePixelRatio||1,th=VIEW.a,{mx,my}=extent();
   const zmin=Math.max(1,mx/EXT8.mx),zoom=Math.min(4,ZOOM===null?zmin:Math.max(1,ZOOM)),w=Math.round(bww*zoom);ZEFF=zoom;cv.style.width=w+'px';
@@ -1428,6 +1434,10 @@ function drawBoard(mm,tg,stl,A){
   if(window.SPR)SPR.frame((x,y)=>{const [wx,wy]=wpos(x,y);return P2(wx,wy,ht(x,y)*LV*R)});
   const poly=(P,fill,stroke,lw=1)=>{g.beginPath();P.forEach(([x,y],i)=>i?g.lineTo(x,y):g.moveTo(x,y));g.closePath();if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.strokeStyle=stroke;g.lineWidth=lw;g.stroke()}};
   const ell=(cx,cy,rx,fill,stroke,lw,dash)=>{g.beginPath();g.ellipse(cx,cy,rx,rx*KY,0,0,7);if(fill){g.fillStyle=fill;g.fill()}if(stroke){g.setLineDash(dash||[]);g.strokeStyle=stroke;g.lineWidth=lw;g.stroke();g.setLineDash([])}};
+  const TXF=TEX&&(TEXF[THEME]||TEXF.stone),PAT={},TS=2.4/128; // texture: one 128px image spans 2.4 hex widths
+  const pat=n=>{if(n in PAT)return PAT[n];const im=texImg(n);return PAT[n]=im?g.createPattern(im,'repeat'):null};
+  const texTop=(P,n,d,dark)=>{const pt=pat(n);if(!pt)return false;pt.setTransform(new DOMMatrix().translateSelf(w/2,cys-d).scaleSelf(R,R*KY).rotateSelf(th).translateSelf(-CEN.x,-CEN.y).scaleSelf(TS));poly(P,pt);if(dark)poly(P,dark);return true};
+  const texSide=(P,n,ox,oy,dark)=>{const pt=pat(n);if(!pt)return false;pt.setTransform(new DOMMatrix().translateSelf(ox,oy).scaleSelf(R*TS*1.4));poly(P,pt,null);poly(P,dark,'rgba(8,12,16,.55)',.8);return true};
   const TH=THEMES[THEME]||THEMES.steel,DEP=PL?new Set(POS.P.map(([a,b])=>a+','+b)):null;
   const tiles=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const [wx,wy]=wpos(x,y);tiles.push({x,y,wx,wy,depth:P2(wx,wy,0)[2]})}
@@ -1442,12 +1452,15 @@ function drawBoard(mm,tg,stl,A){
       const al=-60+60*i+th,facing=Math.sin(al*Math.PI/180);
       if(facing<=.02)continue;
       const a=C[i],b=C[(i+1)%6],W4=[a,b,[b[0],b[1]+d],[a[0],a[1]+d]];
-      if(PROPS[k]==='h'){const sh=46-14*(Math.cos((al-45)*Math.PI/180)+1)/2;poly(W4,`hsl(38 8% ${sh}%)`,'#1c1a16');g.strokeStyle='rgba(20,18,14,.55)';g.lineWidth=1;const n=Math.max(2,Math.round(h*2));for(let m=1;m<n;m++){const f=m/n;g.beginPath();g.moveTo(a[0],a[1]+d*f);g.lineTo(b[0],b[1]+d*f);g.stroke();for(let jx=0;jx<2;jx++){const u=(jx+.5+(m%2?0:.35))/2.2,px=a[0]+(b[0]-a[0])*u,py=a[1]+(b[1]-a[1])*u;g.beginPath();g.moveTo(px,py+d*f);g.lineTo(px,py+d*(f-1/n));g.stroke()}}polys.push(W4)}
+      const fdk=(Math.cos((al-45)*Math.PI/180)+1)/2;if(TXF&&texSide(W4,PROPS[k]==='h'?'wall':TXF[1],wx*R,0,`rgba(0,0,0,${.12+.4*fdk})`)){polys.push(W4)}
+      else if(PROPS[k]==='h'){const sh=46-14*(Math.cos((al-45)*Math.PI/180)+1)/2;poly(W4,`hsl(38 8% ${sh}%)`,'#1c1a16');g.strokeStyle='rgba(20,18,14,.55)';g.lineWidth=1;const n=Math.max(2,Math.round(h*2));for(let m=1;m<n;m++){const f=m/n;g.beginPath();g.moveTo(a[0],a[1]+d*f);g.lineTo(b[0],b[1]+d*f);g.stroke();for(let jx=0;jx<2;jx++){const u=(jx+.5+(m%2?0:.35))/2.2,px=a[0]+(b[0]-a[0])*u,py=a[1]+(b[1]-a[1])*u;g.beginPath();g.moveTo(px,py+d*f);g.lineTo(px,py+d*(f-1/n));g.stroke()}}polys.push(W4)}
       else{poly(W4,`hsl(${TH.h} ${Math.max(5,TH.s-4)}% ${lt+TH.l-6-10*(Math.cos((al-45)*Math.PI/180)+1)/2}%)`,'#0c141b');polys.push(W4)}
     }
     const pk=PROPS[k];
     const NBR=y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]];
-    poly(C,pk==='w'?`hsl(205 45% ${22+((x+y)%2?3:0)}%)`:pk==='y'?`hsl(${62+((x*5+y)%3)*5} 68% ${34+((x+y)%2?4:0)}%)`:pk==='l'?`hsl(${14+((x*3+y)%3)*4} 90% ${34+((x+y)%2?4:0)}%)`:pk==='h'?`hsl(40 10% ${(x+y)%2?60:57}%)`:`hsl(${TH.h} ${TH.s}% ${lt+TH.l}%)`,'#0c141b');
+    const tdone=TXF&&texTop(C,pk==='w'?'water':pk==='l'?'lava':pk==='h'?'wall':TXF[0],d,pk==='l'?null:pk==='w'?'rgba(14,44,78,.5)':`hsla(${TH.h} ${TH.s}% 45% / ${TXF[2]||.16})`);
+    if(tdone&&pk!=='w'&&pk!=='l'){const lite=['snow','salt','quarry'].includes(THEME),sh=(h-2)*.06+((x+y)%2?.025:0)-(lite?.12:0);poly(C,sh<0?`rgba(0,0,0,${Math.min(.4,-sh)})`:`rgba(255,240,210,${Math.min(.18,sh)})`)} // height reads as light: low ground darker, high ground brighter
+    if(tdone)poly(C,null,'rgba(8,12,16,.45)',.8);else poly(C,pk==='w'?`hsl(205 45% ${22+((x+y)%2?3:0)}%)`:pk==='y'?`hsl(${62+((x*5+y)%3)*5} 68% ${34+((x+y)%2?4:0)}%)`:pk==='l'?`hsl(${14+((x*3+y)%3)*4} 90% ${34+((x+y)%2?4:0)}%)`:pk==='h'?`hsl(40 10% ${(x+y)%2?60:57}%)`:`hsl(${TH.h} ${TH.s}% ${lt+TH.l}%)`,'#0c141b');
     if(VMODE==='top')NBR.forEach(([a,b],i)=>{if(!inb(a,b))return;const dh=h-ht(a,b);if(dh>0){g.beginPath();g.moveTo(C[i][0],C[i][1]);g.lineTo(C[(i+1)%6][0],C[(i+1)%6][1]);g.strokeStyle=dh>1?'#04070a':'rgba(4,7,10,.75)';g.lineWidth=1.5+dh*1.4;g.stroke()}});
     if(pk==='w'){g.strokeStyle='rgba(160,210,240,.35)';g.lineWidth=1;for(let q=-1;q<=1;q+=2){g.beginPath();g.moveTo(cx-R*.4,cy+q*R*.12);g.quadraticCurveTo(cx,cy+q*R*.12-R*.1,cx+R*.4,cy+q*R*.12);g.stroke()}}
     else if(pk==='l'){g.strokeStyle='rgba(255,220,120,.5)';g.lineWidth=1.2;g.beginPath();g.moveTo(cx-R*.45,cy);g.lineTo(cx-R*.1,cy-R*.08);g.lineTo(cx+R*.1,cy+R*.08);g.lineTo(cx+R*.45,cy);g.stroke()}
