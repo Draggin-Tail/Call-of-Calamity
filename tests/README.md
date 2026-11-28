@@ -58,6 +58,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | tparty_ui | browser | 2 fail: the outnumbered warning in the briefing |
 | thud the full-screen battle HUD, portrait and landscape: no page scrolling, panels on screen, zoom, pan, rotate, skill lists, the ⋯ menu | browser | pass |
 | tstatus the Status and Equip screens, portrait and landscape: fit with no scrolling, item icons, tap to select then tap to edit, long press details, the equip preview, Equip, Remove, Best gear, paging | browser | pass |
+| tclasses the class tree, portrait and landscape: fit with no scrolling, ? ? ? for classes out of reach, silhouettes, requirement lines, the detail panel, set primary or secondary, long press for the kit, paging, Rename from the name | browser | pass |
 | t86ui phase 2 screens | browser | pass |
 | t88ui the realm on the Factions tab, speaking in council, the council scene (phase 3a) | browser | pass |
 | t89ui the garrison and a cut-off line on the place sheet (phase 3b) | browser | pass |
