@@ -1,0 +1,2 @@
+icons.png: item art from "Items" by Glionox (glionox.itch.io), free for commercial use, modified (tinted per tier) and packed by tools/icons/build.py.
+Only the icons the game uses are included; the pack itself may not be redistributed.

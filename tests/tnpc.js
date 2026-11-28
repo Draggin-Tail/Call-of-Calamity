@@ -11,9 +11,9 @@ const IDS=['voss','harrow','osric','corisande','ilvane','thorne','crane','agathe
     await p.goto('http://localhost:8766/index.html');await p.waitForTimeout(2500);
     if(o==='portrait'){
       const m=await p.evaluate(()=>({voss:PORT.npcSrc('Lord Marshal Voss'),os:PORT.npcSrc('Captain Old Standard'),th:PORT.npcSrc('Brannoc Thorne'),wil:PORT.npcSrc('Wil Fenn'),tobb:PORT.npcSrc('Tobb the Pedlar'),
-        farms:PORT.npcSrc('Harrow Farms'),steward:PORT.npcSrc('Steward Harrow'),nobody:PORT.npcSrc('Raider Bowman'),will:PORT.npcSrc('Willow')}));
+        farms:PORT.npcSrc('Harrow Farms'),steward:PORT.npcSrc('Steward Harrow'),nobody:PORT.npcSrc('Raider Bowman'),will:PORT.npcSrc('Willow'),ald:PORT.npcSrc('Aldric'),nov:PORT.npcSrc('Novice Aldric')}));
       ok(/voss\.png$/.test(m.voss)&&/old_standard\.png$/.test(m.os)&&/thorne\.png$/.test(m.th)&&/wil\.png$/.test(m.wil)&&/tobb\.png$/.test(m.tobb),'names find their bust ('+[m.voss,m.os,m.th,m.wil,m.tobb].join(' ')+')');
-      ok(!m.farms&&/harrow\.png$/.test(m.steward)&&!m.nobody&&!m.will,'places and ordinary units do not ('+[m.farms,m.nobody,m.will]+')');
+      ok(!m.farms&&!m.ald&&/aldric\.png$/.test(m.nov)&&/harrow\.png$/.test(m.steward)&&!m.nobody&&!m.will,'places and ordinary units do not, nor a recruit called Aldric ('+[m.farms,m.nobody,m.will]+')');
       // a battle unit named for an NPC shows the bust once it has loaded; an ordinary unit keeps the drawn face
       const same=await p.evaluate(async()=>{PORT.canvas({name:'Captain Old Standard',primary:'warlord'},'E');await new Promise(r=>setTimeout(r,600));
         const a=PORT.canvas({name:'Captain Old Standard',primary:'warlord'},'E'),c=PORT.canvas({name:'Raider',primary:'warlord'},'E');

@@ -330,7 +330,7 @@
   const NPC = { voss: /\bVoss\b/, harrow: /\bHarrow\b(?! Farms)/, osric: /\bOsric\b/, corisande: /\bCorisande\b/, ilvane: /\bIlvane\b/, thorne: /\bThorne\b/, crane: /\bCrane\b/,
     agathe: /\bAgathe\b/, old_standard: /\bOld Standard\b/, hask: /\bHask\b/, wil: /\bWil( Fenn)?\b|\bKing Wil\b/, brielle: /\bBrielle\b/, harte: /\bHarte\b/, teodor: /\bTeodor\b/,
     marsh: /\bHester Marsh\b|\bAgent Marsh\b/, vell: /\bCassia Vell\b|\bWarden Vell\b/, rook: /\bMags Rook\b|\bSergeant Rook\b/, kit: /\bKit Ashby\b/, nell: /^Nell\b/, tobin: /\bTobin Reed\b|^Tobin\b/,
-    aldo: /\bBrother Aldo\b/, aldric: /\bAldric\b/, corley: /\bCorley\b/, maren: /\bMaren\b/, tobb: /\bTobb\b/, wen: /\bOld Wen\b/, dov: /\bDov Quill\b/, ysolde: /\bYsolde\b/ };
+    aldo: /\bBrother Aldo\b/, aldric: /\bNovice Aldric\b/, corley: /\bCorley\b/, maren: /\bMaren\b/, tobb: /\bTobb\b/, wen: /\bOld Wen\b/, dov: /\bDov Quill\b/, ysolde: /\bYsolde\b/ };
   const NIMG = {};
   const npcOf = name => { if (!name) return null; for (const k in NPC) if (NPC[k].test(name)) return k; return null; };
   function npcImg(k) {

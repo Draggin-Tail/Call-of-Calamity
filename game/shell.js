@@ -1013,7 +1013,7 @@ body.campaign #top .skirm{display:none}
       return out;
     });
   }
-  function itemRow(g, action, count) { const it = D.gear[g]; return h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: it.name + (count > 1 ? ' ×' + count : '') }), h('div', { class: 'dim', text: SLOT_NAME[it.slot] + (it.weapon ? ' · ' + it.weapon.family + (it.weapon.hands === 2 ? ' (2h)' : '') : it.weight ? ' · ' + it.weight : '') }), h('div', { class: 'dim', text: it.desc })), action)); }
+  function itemRow(g, action, count) { const it = D.gear[g]; return h('div', { class: 'card' }, h('div', { class: 'row' }, slotIcon(g), h('div', { class: 'grow' }, h('b', { text: it.name + (count > 1 ? ' ×' + count : '') }), h('div', { class: 'dim', text: SLOT_NAME[it.slot] + (it.weapon ? ' · ' + it.weapon.family + (it.weapon.hands === 2 ? ' (2h)' : '') : it.weight ? ' · ' + it.weight : '') }), h('div', { class: 'dim', text: it.desc })), action)); }
   function recruitSheet(id) {
     sheet('Recruit', () => {
       const sv = C.nodeServices(ST, id), cost = S.recruitCost(ST), price = cl => Math.round(cost * (C.recruitMult ? C.recruitMult(ST, id, cl) : 1)); if (!sv.recruit) return [h('div', { class: 'dim', text: 'No one is taking on recruits here right now.' })];
