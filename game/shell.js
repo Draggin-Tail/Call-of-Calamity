@@ -270,6 +270,57 @@ body.campaign #top .skirm{display:none}
   .stv-tier.t1 .g{grid-template-columns:1fr;padding:0}
   .stv-legend{gap:2px 8px;font-size:9px}
 }
+/* ---- Victory (UI pass phase 4) ---- */
+#vic{position:absolute;inset:0;z-index:14;background:radial-gradient(ellipse at 50% 0%,#2a2414,#0a0f15 70%);color:var(--ink);font:13px/1.3 system-ui,sans-serif;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;--sg:#e2b24c;--sl:rgba(217,178,90,.55);--serif:'Cardo','Palatino Linotype',Palatino,Georgia,serif}
+#vic.lost{background:radial-gradient(ellipse at 50% 0%,#2a1616,#0a0f15 70%)}
+#vic *{box-sizing:border-box}#vic .dim{color:#9aa3ad}
+.vic-screen{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;padding:calc(env(safe-area-inset-top) + 8px) calc(env(safe-area-inset-right) + 8px) calc(env(safe-area-inset-bottom) + 8px) calc(env(safe-area-inset-left) + 8px);max-width:560px;margin:0 auto}
+.vic-l,.vic-r{display:flex;flex-direction:column;gap:6px;min-height:0;min-width:0}.vic-r{flex:1}
+.vic-ban{text-align:center;flex:none;padding:2px 0 4px}
+.vic-ban h1{margin:0;font:700 23px/1.1 var(--serif);letter-spacing:.08em;text-transform:uppercase;color:#f3d27e;text-shadow:0 2px 0 #000,0 0 14px rgba(226,178,76,.45)}
+.vic-ban h1::before,.vic-ban h1::after{content:'❖';font-size:.7em;margin:0 .4em;vertical-align:.12em;color:var(--sg)}
+#vic.lost .vic-ban h1{color:#e8a49a;text-shadow:0 2px 0 #000,0 0 14px rgba(226,102,90,.45)}#vic.lost .vic-ban h1::before,#vic.lost .vic-ban h1::after{color:#c0574c}
+.vic-tag{font:italic 600 15px var(--serif);color:var(--sg);margin:1px 0}#vic.lost .vic-tag{color:#e2665a}
+.vic-ban .dim{font-size:11px}.vic-lead{font-size:11px;color:#e8c8a0;margin-top:2px}
+.vic-top{display:grid;grid-template-columns:1.6fr 1fr;gap:6px;flex:none}
+.vic-sp,.vic-best,.vic-co,.vic-rf{padding:5px 7px 6px;min-height:0;overflow:hidden}
+#vic h3{margin:0 0 4px;padding:0 2px 3px;font:700 9.5px system-ui;letter-spacing:.16em;color:var(--sg);border-bottom:1px solid rgba(217,178,90,.25);text-align:center;display:block}
+.vic-li{display:flex;align-items:center;gap:7px;padding:2px 0;min-width:0}.vic-li b{font:600 12px system-ui;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.vic-li .stv-slot{width:28px;height:28px}.vic-li .stv-slot img{width:24px;height:24px}.vic-coin{--tc:#e2b24c}.vic-coin b{font-size:14px!important}
+.vic-sp .vic-li:nth-of-type(n+5){display:none}
+.vic-none{text-align:center;padding:8px 0}
+.vic-best{display:flex;flex-direction:column;align-items:center;text-align:center;gap:2px}.vic-best h3{align-self:stretch}
+.vic-bp{width:52px;height:52px;image-rendering:pixelated;border:1px solid #000;border-radius:3px;background:#0b1118}.vic-best b{font-size:15px;color:var(--ink)}.vic-best .dim{font-size:10px}
+.vic-co{flex:1;display:flex;flex-direction:column}
+.vic-rows{flex:1;display:grid;grid-auto-rows:auto;gap:2px;min-height:0;align-content:space-evenly}
+.vic-u{display:flex;gap:8px;align-items:center;min-height:0;min-width:0;padding:2px;border-radius:4px;cursor:pointer;max-height:62px}
+.vic-p{width:42px;height:42px;flex:none;image-rendering:pixelated;border:1px solid #000;border-radius:3px;background:#0b1118;display:grid;place-items:center}
+.vic-ut{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.vic-un{display:flex;align-items:baseline;gap:6px;min-width:0;white-space:nowrap}.vic-un b{font-size:14px}.vic-un .dim{font-size:11px;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.vic-un .xp{margin-left:auto;font:700 11px system-ui;color:var(--sg);flex:none}
+.vic-lv{font:800 9px system-ui;font-style:normal;background:var(--sg);color:#10161d;border-radius:3px;padding:1px 5px;flex:none;animation:vicpulse 1.2s ease-in-out 3}
+@keyframes vicpulse{50%{box-shadow:0 0 10px #ffd77a}}
+.vic-bar{position:relative;height:6px;border-radius:2px;background:#0008;border:1px solid #0009;overflow:hidden}
+.vic-bar i{position:absolute;top:0;bottom:0;left:0}.vic-bar .old{background:#9b7424}.vic-bar .gain{background:linear-gradient(90deg,#f3d27e,#fff1c4);transition:width 1.1s cubic-bezier(.2,.7,.2,1) .25s}
+.vic-sub{display:flex;gap:4px 10px;font:500 10.5px system-ui;white-space:nowrap;overflow:hidden}.vic-sub span{font-size:10.5px!important}.vic-sub .jp{color:#8fd0ff}.vic-sub .new{color:#9be08f;overflow:hidden;text-overflow:ellipsis}
+.vic-foot{display:flex;flex-direction:column;gap:6px;flex:none}.vic-bench{text-align:center;font-size:11px}
+.vic-foot .sb{min-height:44px}.vic-go{font-weight:700}
+.vic-rep .vic-foot{flex-direction:row}.vic-rep .vic-foot .sb{flex:1}
+.vic-rf{flex:1;display:flex;flex-direction:column}.vic-rl{flex:1;overflow:auto;display:flex;flex-direction:column;gap:6px}
+.vic-rl .card{margin:0}
+#vic.n5 .vic-rows,#vic.n6 .vic-rows{grid-template-columns:1fr 1fr;gap:4px 8px}
+#vic.n5 .vic-sub,#vic.n6 .vic-sub{flex-direction:column;gap:0}#vic.n5 .vic-p,#vic.n6 .vic-p{width:34px;height:34px}
+@media (orientation:landscape){
+  .vic-screen{max-width:none;display:grid;grid-template-columns:minmax(250px,.85fr) 1.15fr;grid-template-rows:auto 1fr;gap:6px 8px;padding-top:calc(env(safe-area-inset-top) + 4px);padding-bottom:calc(env(safe-area-inset-bottom) + 4px)}
+  .vic-ban{grid-column:1/-1;padding:0}.vic-ban h1{font-size:20px}.vic-tag{font-size:13px;display:inline;margin-right:8px}.vic-ban .dim{display:inline}
+  .vic-l .vic-top{grid-template-columns:1fr;grid-template-rows:auto auto;flex:1}
+  .vic-best{display:grid;grid-template-columns:auto 1fr;grid-template-areas:"h h" "p n" "p d";text-align:left;gap:0 8px;align-items:center}.vic-best h3{grid-area:h}.vic-best .vic-bp{grid-area:p;width:44px;height:44px}.vic-best b{grid-area:n;align-self:end}.vic-best .dim{grid-area:d;align-self:start}.vic-best{align-content:start}
+  .vic-sp .vic-li:nth-of-type(n+4){display:none}
+  .vic-u{max-height:54px}.vic-p{width:36px;height:36px}
+  #vic.n4 .vic-rows,#vic.n5 .vic-rows,#vic.n6 .vic-rows{grid-template-columns:1fr 1fr;gap:2px 8px}
+  #vic.n4 .vic-sub{flex-direction:column;gap:0}
+  .vic-rep{grid-template-columns:1fr}.vic-rep .vic-rf{grid-column:1/-1}.vic-rep .vic-foot{grid-column:1/-1}
+}
 /* equip, portrait: the slot list is replaced by the strip */
 .stv-equip .stv-eq{display:none}
 .stv-equip .stv-a{flex:none}.stv-equip .stv-b{flex:1}
@@ -1005,17 +1056,18 @@ body.campaign #top .skirm{display:none}
   function addRetreat() { const top = document.querySelector('#top span'); if (!top || document.getElementById('sh-retreat')) return; const b = h('button', { id: 'sh-retreat', class: 'a sm', text: 'Retreat', onclick: e => { const b = e.currentTarget; if (b.dataset.arm) { window.Battle.abort(); return; } b.dataset.arm = '1'; b.textContent = 'Tap again to retreat (counts as a defeat)'; setTimeout(() => { if (b.isConnected) { delete b.dataset.arm; b.textContent = 'Retreat'; } }, 3000); } }); top.appendChild(b); }
   function removeRetreat() { const b = document.getElementById('sh-retreat'); if (b) b.remove(); }
   function afterBattle(encId, optId, res) {
-    const wasRep = !!(C.ENCOUNTERS[encId] && C.ENCOUNTERS[encId].arena && C.arenaBoutWon(ST, encId)), before = ST.roster.map(u => ({ id: u.id, level: u.level }));
+    const wasRep = !!(C.ENCOUNTERS[encId] && C.ENCOUNTERS[encId].arena && C.arenaBoutWon(ST, encId));
+    // a snapshot of every unit before the result is applied, for the XP bars, level-up gains and newly learnable skills
+    const can = u => { const L = S.learnable(u); return new Set(L.skills.concat(L.passives).filter(x => x.affordable).map(x => x.id)); };
+    const before = {}; ST.roster.forEach(u => { const t = statsOf(u, u.gear); before[u.id] = { level: u.level, xp: u.xp, hp: t.hp, mp: t.mp, can: can(u), cls: u.primary }; });
     const r = C.applyEncounterResult(ST, encId, optId, res), aw = r.awards || {};
     if (!res.won) { S.advanceDay(ST, 1); }
     autosave(); showShell(true); tab = 'map'; render(); guideCheck();
-    const e = C.ENCOUNTERS[encId], stand = S.visibleChanges(ST, aw.standingChanges);
-    sheet(res.draw ? 'Draw' : res.won ? 'Victory' : 'Defeat', () => [
-      h('div', { class: res.won ? 'good' : 'badc', text: res.draw ? 'Both sides went down together. No purse, and the gate keeps your fee.' : res.won ? (e ? e.name : 'The fight') + ' is won in ' + (res.rounds || res.turns) + ' rounds.' : ((e && e.arena) ? 'Your party was beaten. The gate keeps your fee. ' : res.objective && res.objective !== 'rout' && res.survivors && res.survivors.length ? 'The objective slipped away. ' : 'Your party was beaten. ') + 'A day passes while you recover.' }),
-      (aw.xpAwards || []).length ? [h('div', { class: 'sh-h', text: 'Experience and JP' }), aw.xpAwards.map(x => { const u = unit(x.unit), jp = (aw.jpAwards || []).find(j => j.unit === x.unit); return h('div', { class: 'card' }, h('div', { class: 'row' }, h('b', { class: 'grow', text: u.name }), h('span', { class: x.levelUps ? 'good' : 'dim', text: x.levelUps ? 'Level ' + x.from + ' → ' + x.to + '!' : 'Lv ' + x.to })), h('div', { class: 'dim', text: '+' + x.gained + ' XP · +' + (jp ? jp.jp : 0) + ' JP in ' + cname(u.primary) })); })] : (aw.jpAwards || []).length ? aw.jpAwards.map(j => h('div', { class: 'dim', text: unit(j.unit).name + ' +' + j.jp + ' JP' })) : null,
-      (aw.benchAwards || []).length ? h('div', { class: 'card' }, h('b', { text: 'Resting at camp' }), aw.benchAwards.map(b => { const u = unit(b.unit); return u ? h('div', { class: 'dim', text: u.name + ': +' + (b.xp ? b.xp + ' XP · ' : '') + '+' + b.jp + ' JP in ' + cname(u.primary) + (b.levelUps ? ' · level up' : '') }) : null; })) : null,
+    const e = C.ENCOUNTERS[encId], stand = S.visibleChanges(ST, aw.standingChanges), info = C.encounterBuilds(encId, optId);
+    const lead = res.draw ? 'Both sides went down together. No purse, and the gate keeps your fee.' : res.won ? '' : ((e && e.arena) ? 'Your party was beaten. The gate keeps your fee. ' : res.objective && res.objective !== 'rout' && res.survivors && res.survivors.length ? 'The objective slipped away. ' : 'Your party was beaten. ') + 'A day passes while you recover.';
+    // everything that is not spoils or the company goes on a second page, Reports
+    const reports = [
       r.dungeon ? dungeonResult(r.dungeon, res.won) : null,
-      (r.uniques || []).length ? h('div', { class: 'card good' }, h('b', { text: 'A rare find' }), r.uniques.map(i => h('div', { class: 'dim', text: D.gear[i].name + ': ' + D.gear[i].effect }))) : null,
       r.attack && r.attack.won && !r.attack.taken ? h('div', { class: 'card good', text: 'The ' + fname(r.attack.by) + ' takes ' + r.attack.stageName + ' at ' + C.NODES[r.attack.target].name + '. The siege goes on.' }) : null,
       r.attack && r.attack.fell ? h('div', { class: 'card good', text: 'The ' + fname(r.attack.fell.faction) + ' is no more.' + (r.attack.fell.rank ? ' Your rank went with it.' : '') }) : null,
       r.attack && (r.attack.taken || !r.attack.won) ? h('div', { class: 'card good', text: r.attack.won ? C.NODES[r.attack.target].name + ' falls to the ' + fname(r.attack.by) + '. They will not forget who opened the way.' : 'The ' + fname(r.attack.by) + ' falls back from ' + C.NODES[r.attack.target].name + '. The ' + fname(r.attack.on) + ' will not forget who held the line.' }) : null,
@@ -1023,10 +1075,69 @@ body.campaign #top .skirm{display:none}
       r.wager ? h('div', { class: 'card ' + (r.wager.result === 'won' ? 'good' : 'dim'), text: r.wager.result === 'won' ? 'Your wager came in: ' + C.ARENA_BETS[r.wager.type].name + '. The bookmaker pays ' + r.wager.payout + ' g.' : r.wager.result === 'draw' ? 'A draw: the bookmaker returns your ' + r.wager.stake + ' g.' : 'Your wager on ' + C.ARENA_BETS[r.wager.type].name.toLowerCase() + ' lost (' + r.wager.why + '). The stake is gone.' }) : null,
       r.tourney ? h('div', { class: 'card ' + (r.tourney.out || r.tourney.draw ? 'dim' : 'good') }, h('b', { text: r.tourney.draw ? 'A draw' : r.tourney.out ? 'Out of the Tourney' : r.tourney.champion ? 'Champions of the Sandring' : 'Through to round ' + r.tourney.next }), h('div', { class: 'dim', text: r.tourney.draw ? 'Nobody wins a draw. The round is fought again.' : r.tourney.out ? 'The other teams carry on without you.' : r.tourney.champion ? 'The crowd is on its feet.' : 'The crowd will see you again.' }), r.tourney.stake ? h('div', { class: 'dim', text: r.tourney.stake.payout ? 'Your stake pays ' + r.tourney.stake.payout + ' g.' : 'Your stake on the run is lost.' }) : null) : null,
       (r.bestiary || []).length ? h('div', { class: 'card' }, h('b', { text: 'Bestiary updated' }), r.bestiary.map(x => h('div', { class: 'dim', text: C.BEASTS[x.id].name + ': ' + (x.tier === 1 ? 'now known' : x.tier === 2 ? 'you have seen how it fights' : 'you have learned what hurts it') }))) : null,
-      ((r.drops || []).length || r.purse) ? h('div', { class: 'card good' }, h('b', { text: 'Found' }), (r.drops || []).map(i => h('div', { class: 'dim', text: iname(i) })), r.purse ? h('div', { class: 'dim', text: r.purse + ' gold in a dead foe\'s purse' }) : null) : null,
-      res.won && (res.won) ? h('div', { class: 'card' }, h('b', { text: 'Rewards' }), h('div', { class: 'dim', text: [Math.floor((C.encounterBuilds(encId, optId).reward.gold || 0) / (wasRep ? 2 : 1)) + ' gold', ...Object.keys(C.encounterBuilds(encId, optId).reward.items || {}).map(iname)].join(', ') })) : null,
-      stand.length ? [h('div', { class: 'sh-h', text: 'Reputation' }), stand.map(c => h('div', { class: 'row' }, h('span', { class: 'grow', text: fname(c.faction) }), h('span', { class: c.delta > 0 ? 'good' : 'badc', text: (c.delta > 0 ? '+' : '') + c.delta + ' (' + S.tierOf(c.to).name + ')' })))] : null,
-      h('div', { style: 'height:12px' }), btn('Continue', () => { if (r.dungeon) { sheetFn = null; render(); nodeSheet(ST.world.location); return; } if (e && e.arena) { sheetFn = null; render(); nodeSheet(ST.world.location); return; } if (encId !== 'wander') { closeSheet(); return; } if (res.won) resume(); else { C.turnBack(ST, trip && trip.from); pending = null; autosave(); sheetFn = null; render(); } }, 'pri full')], encId === 'wander');
+      stand.length ? h('div', { class: 'card' }, h('b', { text: 'Reputation' }), stand.map(c => h('div', { class: 'row' }, h('span', { class: 'grow', text: fname(c.faction) }), h('span', { class: c.delta > 0 ? 'good' : 'badc', text: (c.delta > 0 ? '+' : '') + c.delta + ' (' + S.tierOf(c.to).name + ')' })))) : null
+    ].filter(Boolean);
+    const spoils = [];
+    if (res.won) { const g = Math.floor((info.reward.gold || 0) / (wasRep ? 2 : 1)); if (g) spoils.push({ gold: g, text: g + ' gold' }); Object.keys(info.reward.items || {}).forEach(i => spoils.push({ item: i })); }
+    (r.drops || []).forEach(i => spoils.push({ item: i }));
+    (r.uniques || []).forEach(i => spoils.push({ item: i, unique: true }));
+    if (r.purse) spoils.push({ gold: r.purse, text: 'Purse: ' + r.purse + ' gold' });
+    const goOn = () => { VIC = null; drawVictory(); if (r.dungeon) { sheetFn = null; render(); nodeSheet(ST.world.location); return; } if (e && e.arena) { sheetFn = null; render(); nodeSheet(ST.world.location); return; } if (encId !== 'wander') { closeSheet(); return; } if (res.won) resume(); else { C.turnBack(ST, trip && trip.from); pending = null; autosave(); sheetFn = null; render(); } };
+    const company = (aw.xpAwards || []).map(x => { const u = unit(x.unit), b = before[x.unit] || {}, jp = (aw.jpAwards || []).find(j => j.unit === x.unit), t = u ? statsOf(u, u.gear) : {};
+        const nowCan = u ? [...can(u)].filter(i => !(b.can || new Set()).has(i)) : [];
+        return u && { u, x, jp: jp ? jp.jp : 0, b, dhp: t.hp - (b.hp || t.hp), dmp: t.mp - (b.mp || t.mp), learn: nowCan.map(i => aname(i) || (D.passives[i] || {}).name || i) }; }).filter(Boolean);
+    (aw.jpAwards || []).forEach(j => { if (!company.some(c => c.u.id === j.unit) && unit(j.unit)) company.push({ u: unit(j.unit), x: null, jp: j.jp, b: before[j.unit] || {}, dhp: 0, dmp: 0, learn: [] }); });
+    const st = res.unitStats || {}, score = id => { const k = st[id] || {}; return (k.kills || 0) * 1000 + (k.dmg || 0) * 3 + (k.helps || 0) * 25 + (k.uses || 0); };
+    const best = company.map(c => c.u.id).sort((a, b) => score(b) - score(a))[0];
+    VIC = { won: res.won, draw: res.draw, title: res.draw ? 'A Draw' : res.won ? 'The Enemy Is Vanquished' : 'Defeat', tag: res.draw ? 'Neither side stands' : res.won ? 'Victory is yours!' : 'The field is lost', lead,
+      line: [(e ? e.name : 'The fight'), res.won ? 'won in round ' + (res.rounds || res.turns) : 'round ' + (res.rounds || res.turns), (res.fallen || []).length ? (res.fallen || []).length + ' fell' : 'no one fell'].join(' · '),
+      spoils, company, best: best && score(best) > 0 ? { u: unit(best), s: st[best] || {} } : null,
+      bench: (aw.benchAwards || []).map(b => unit(b.unit)).filter(Boolean), reports, page: 0, goOn, anim: true };
+    drawVictory();
+  }
+
+  // ---------- victory screen (UI pass phase 4) ----------
+  let VIC = null;
+  function drawVictory() {
+    let root = document.getElementById('vic');
+    if (!VIC) { if (root) root.remove(); return; }
+    if (!root) { root = h('div', { id: 'vic' }); lpBind(root); document.getElementById('shell').appendChild(root); }
+    root.innerHTML = ''; root.className = (VIC.won ? 'won' : 'lost') + ' n' + VIC.company.length;
+    root.appendChild(VIC.page ? vicReports() : vicMain());
+    if (VIC.anim && !VIC.page) { VIC.anim = false; requestAnimationFrame(() => requestAnimationFrame(() => root.querySelectorAll('[data-to]').forEach(i => { i.style.width = i.dataset.to; }))); }
+    else root.querySelectorAll('[data-to]').forEach(i => { i.style.transition = 'none'; i.style.width = i.dataset.to; });
+  }
+  const portOf = u => window.PORT && PORT.url ? PORT.url({ name: u.name, race: u.race, primary: u.primary }, 'P') : '';
+  const portImg = (u, cls) => { const s = portOf(u); return s ? h('img', { class: cls, alt: '', src: s }) : h('div', { class: cls, text: u.name[0] }); };
+  function vicBanner() {
+    return h('div', { class: 'vic-ban' }, h('h1', { text: VIC.title }), h('div', { class: 'vic-tag', text: VIC.tag }), h('div', { class: 'dim', text: VIC.line }), VIC.lead ? h('div', { class: 'vic-lead', text: VIC.lead }) : null);
+  }
+  function vicMain() {
+    const sp = frame('vic-sp', colHead('SPOILS OF WAR'), VIC.spoils.length ? VIC.spoils.map(x => {
+      const ic = x.item ? slotIcon(x.item) : h('span', { class: 'stv-slot vic-coin' }, h('b', { text: '◎' }));
+      const r = h('div', { class: 'vic-li' }, ic, h('b', { text: x.item ? iname(x.item) : x.text }), x.unique ? h('span', { class: 'stv-e', text: 'RARE' }) : null);
+      return x.item ? lp(r, () => itemDetail(x.item)) : r; }) : h('div', { class: 'dim vic-none', text: VIC.won ? 'Nothing taken this time.' : 'Nothing taken.' }));
+    const b = VIC.best, best = frame('vic-best', colHead('GREATEST CONTRIBUTION'), b ? [portImg(b.u, 'vic-bp'), h('b', { class: 'stv-serif', text: b.u.name }),
+      h('div', { class: 'dim', text: [b.s.kills ? b.s.kills + (b.s.kills === 1 ? ' foe' : ' foes') + ' felled' : '', b.s.dmg ? b.s.dmg + ' damage dealt' : '', b.s.helps ? b.s.helps + ' aid' + (b.s.helps === 1 ? '' : 's') + ' to allies' : ''].filter(Boolean).join(' · ') })] : h('div', { class: 'dim vic-none', text: '—' }));
+    const co = frame('vic-co', colHead('THE COMPANY'), h('div', { class: 'vic-rows' }, VIC.company.map(vicRow)));
+    const benchN = VIC.bench.map(u => u.name), share = Math.round(100 * S.RULES.bench.rate);
+    return h('div', { class: 'vic-screen' }, vicBanner(), h('div', { class: 'vic-l' }, h('div', { class: 'vic-top' }, sp, best)), h('div', { class: 'vic-r' }, co,
+      h('div', { class: 'vic-foot' }, benchN.length ? h('div', { class: 'dim vic-bench', text: 'On the bench: ' + (benchN.length > 3 ? benchN.slice(0, 3).join(', ') + ' and ' + (benchN.length - 3) + ' more' : benchN.join(benchN.length === 2 ? ' and ' : ', ')) + (benchN.length === 1 ? ' takes' : ' take') + ' a ' + share + '% share.' }) : null,
+        btn(VIC.reports.length ? 'Next: reports (' + VIC.reports.length + ')' : 'Continue', () => { if (VIC.reports.length) { VIC.page = 1; drawVictory(); } else VIC.goOn(); }, 'pri vic-go'))));
+  }
+  function vicRow(c) {
+    const u = c.u, x = c.x, lv = x && x.levelUps, a = LO.xpForLevel(u.level), nb = LO.xpForLevel(u.level + 1), cap = u.level >= LO.levelMods(999).level;
+    const pct = v => Math.max(0, Math.min(100, Math.round(100 * (v - a) / Math.max(1, nb - a)))) + '%', from = lv ? '0%' : pct(c.b.xp || u.xp), to = cap ? '100%' : pct(u.xp);
+    const subs = [h('span', { class: 'jp', text: '+' + c.jp + ' JP in ' + cname(u.primary) }), lv && (c.dhp || c.dmp) ? h('span', { class: 'dim', text: [c.dhp ? 'HP +' + c.dhp : '', c.dmp ? 'MP +' + c.dmp : ''].filter(Boolean).join(' · ') }) : null,
+      c.learn.length ? h('span', { class: 'new', text: '✦ ' + c.learn[0] + (c.learn.length > 1 ? ' +' + (c.learn.length - 1) : '') + ' can be learned' }) : null];
+    const r = h('div', { class: 'vic-u' + (lv ? ' up' : ''), role: 'button', onclick: () => openStatus(u.id) }, portImg(u, 'vic-p'),
+      h('div', { class: 'vic-ut' }, h('div', { class: 'vic-un' }, h('b', { class: 'stv-serif', text: u.name }), h('span', { class: 'dim', text: cname(u.primary) + ' · Lv ' + (lv ? x.from + ' → ' + x.to : u.level) }), lv ? h('em', { class: 'vic-lv', text: 'LEVEL UP' }) : null, h('span', { class: 'xp', text: x ? '+' + x.gained + ' XP' : '' })),
+        h('div', { class: 'vic-bar' }, h('i', { class: 'old', style: 'width:' + from }), h('i', { class: 'gain', style: 'left:' + from + ';width:0', 'data-to': 'calc(' + to + ' - ' + from + ')' })),
+        h('div', { class: 'vic-sub' }, subs)));
+    return c.learn.length ? lp(r, () => [h('b', { class: 'stv-serif', text: u.name + ' can now learn' }), c.learn.map(n => h('div', { text: '✦ ' + n })), h('div', { class: 'dim', text: 'Spend JP with Learn on the Status screen (tap the unit).' })]) : r;
+  }
+  function vicReports() {
+    return h('div', { class: 'vic-screen vic-rep' }, vicBanner(), frame('vic-rf', colHead('REPORTS'), h('div', { class: 'vic-rl' }, VIC.reports)), h('div', { class: 'vic-foot' }, btn('Back', () => { VIC.page = 0; drawVictory(); }), btn('Continue', () => VIC.goOn(), 'pri vic-go')));
   }
 
   function dungeonResult(d, won) {
@@ -1177,7 +1288,7 @@ body.campaign #top .skirm{display:none}
   }
   const lp = (el, fn) => { el.setAttribute('data-lp', ''); el._lp = fn; return el; };
   function detail(content) {
-    const root = document.getElementById('stv'); if (!root) return;
+    const root = document.getElementById('stv') || document.getElementById('vic'); if (!root) return;
     const old = root.querySelector('.stv-det'); if (old) old.remove();
     const box = h('div', { class: 'stv-det', onclick: () => box.remove() }, h('div', { class: 'stv-frame stv-detb', onclick: e => e.stopPropagation() }, content, h('div', { class: 'stv-close' }, btn('Close', () => box.remove(), 'sm'))));
     root.appendChild(box);
