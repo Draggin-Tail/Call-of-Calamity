@@ -19,7 +19,7 @@ ok(n+' dungeon floor maps ('+nAsym+' hand-drawn asymmetric): size, heights, step
 ok('C.validate empty',C.validate().length===0);
 process.stdout.write("");const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:420,height:860}});const errs=[];p.on('pageerror',e=>errs.push(String(e)));
-await p.goto('http://localhost:8766/index.html');await p.waitForTimeout(2500);await p.click('text=New campaign');await p.waitForTimeout(400);await p.click('button:has-text("Begin")',{force:true});await p.waitForTimeout(1000);
+await p.goto('http://localhost:8766/index.html');await p.waitForTimeout(2500);await p.click('text=New campaign');await p.waitForTimeout(400);await p.click('button:has-text("Begin")',{force:true});await p.evaluate(()=>window.Battle&&Battle.skipScene&&Battle.skipScene());await p.waitForTimeout(1000);
 await p.evaluate(()=>{const C=GAME_CAMPAIGN,s=GAME_SHELL.state(),L=GAME_LOADOUT;s.world.flags.guide_off=1;for(let f=1;f<4;f++)C.ENCOUNTERS['dg_rat_run_warren_'+f].rec=35;s.roster.forEach(u=>{u.xp=L.xpForLevel(35);u.level=35});s.inventory.gold=9000;for(let k=0;k<8&&s.roster.length<6;k++)GAME_SAVE.recruit(s,"squire",{race:"human"});s.party=s.roster.slice(0,6).map(u=>u.id);s.world.location='rat_run_warren';C.discover(s,'rat_run');C.discover(s,'rat_run_warren');GAME_SHELL.render()});
 await p.evaluate(()=>[...document.querySelectorAll('#sh-col button')].find(x=>x.innerText.trim()==='Map').click());await p.waitForTimeout(400);
 await p.evaluate(()=>document.querySelector('button.n[aria-label="Rat Run Warren"]').click());await p.waitForTimeout(500);

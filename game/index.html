@@ -1,4 +1,26 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}/* ---- Scenes (design/cinematics.md): letterbox, dialogue box with a tail to the speaker, Log / Auto / Skip ---- */
+#app.scene #top,#app.scene #bar,#app.scene #obj,#app.scene .zm,#app.scene #log,#app.scene #hud{display:none!important}
+#app.scene{--padT:64px;--padB:40px;--padL:0px;--padR:0px}
+#scn{position:fixed;inset:0;z-index:40;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;--sg:#e2b24c;--serif:'Cardo','Palatino Linotype',Palatino,Georgia,serif;color:#e9e4d3}
+#scn .lbt,#scn .lbb{position:absolute;left:0;right:0;background:#000;z-index:1}
+#scn .lbt{top:0;height:calc(58px + env(safe-area-inset-top));padding:calc(env(safe-area-inset-top) + 8px) 10px 8px 16px;display:flex;align-items:center;gap:6px;box-shadow:0 2px 12px #000}
+#scn .lbb{bottom:0;height:calc(34px + env(safe-area-inset-bottom));box-shadow:0 -2px 12px #000}
+#scn .pl{flex:1;min-width:0;display:flex;flex-direction:column}#scn .pl i{font:italic 600 17px var(--serif);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}#scn .pl small{font:700 9px system-ui;letter-spacing:.16em;text-transform:uppercase;color:#9aa3ad}
+#scn .lbt .sb{background:#0c131b;border:1px solid rgba(226,178,76,.7);color:#e9e4d3;border-radius:6px;font:700 12px system-ui;min-height:34px;padding:4px 10px}#scn .lbt .sb.on{background:var(--sg);color:#10161d}
+#scn .dlg{position:absolute;z-index:2;display:none;width:min(94vw,460px);gap:10px;padding:10px 12px;background:rgba(16,24,34,.96);border:1px solid rgba(217,178,90,.7);border-radius:6px;box-shadow:inset 0 0 0 3px rgba(12,19,27,.9),inset 0 0 0 4px rgba(217,178,90,.22),0 8px 22px rgba(0,0,0,.6)}
+#scn .dlg.on{display:flex}#scn .dlg.nar{background:rgba(6,9,13,.94);text-align:center}
+#scn .dlg .pt img,#scn .dlg .pt span{width:64px;height:64px;display:grid;place-items:center;image-rendering:pixelated;border:1px solid #000;border-radius:3px;background:#0b1118;font:700 22px var(--serif)}
+#scn .dlg .tx{flex:1;min-width:0}#scn .dlg b{display:block;font:700 10px system-ui;letter-spacing:.16em;text-transform:uppercase;color:var(--sg);margin-bottom:2px}
+#scn .dlg p{margin:0;font:500 16px/1.35 var(--serif);white-space:pre-line}#scn .dlg.nar p{font-style:italic;font-size:15px}
+#scn .dlg .more{position:absolute;right:10px;bottom:6px;color:var(--sg);font-style:normal;font-size:12px;animation:scb 1s ease-in-out infinite}@keyframes scb{50%{transform:translateY(3px)}}
+#scn .dlg .ch{display:flex;flex-direction:column;gap:6px;margin-top:8px}#scn .dlg .ch .sb{min-height:42px;font:700 14px system-ui}
+#scn .tail{position:absolute;width:14px;height:14px;background:rgba(16,24,34,.96);border:1px solid rgba(217,178,90,.7);transform:rotate(45deg)}
+#scn .dlg[data-t=t] .tail{top:-8px;margin-left:-7px;border-right:0;border-bottom:0}#scn .dlg[data-t=b] .tail{bottom:-8px;margin-left:-7px;border-left:0;border-top:0}
+#scn .dlg[data-t=l] .tail{left:-8px;margin-top:-7px;border-right:0;border-top:0}#scn .dlg[data-t=r] .tail{right:-8px;margin-top:-7px;border-left:0;border-bottom:0}
+#scn .slog{position:absolute;z-index:3;left:8px;right:8px;top:calc(64px + env(safe-area-inset-top));bottom:calc(40px + env(safe-area-inset-bottom));display:none;overflow:auto;padding:12px 14px;background:rgba(10,15,21,.97);border:1px solid rgba(217,178,90,.6);border-radius:6px;font:14px/1.4 var(--serif)}
+#scn .slog.on{display:block}#scn .slog>b{display:block;font:700 10px system-ui;letter-spacing:.16em;color:var(--sg);margin-bottom:6px}#scn .slog em{font-style:normal;color:var(--sg);font-weight:700}#scn .slog .sb{margin-top:8px}
+@media (orientation:landscape){#app.scene{--padT:44px;--padB:22px}#scn .lbt{height:calc(40px + env(safe-area-inset-top));padding-top:calc(env(safe-area-inset-top) + 3px);padding-bottom:3px}#scn .lbb{height:calc(18px + env(safe-area-inset-bottom))}#scn .pl{flex-direction:row;align-items:baseline;gap:10px}#scn .dlg{width:min(52vw,440px)}#scn .slog{top:46px;bottom:20px}#scn .dlg .pt img,#scn .dlg .pt span{width:54px;height:54px}#scn .dlg p{font-size:15px}}
+</style></head><body>
 <title>Call of Calamity</title>
 <style>
 :root{--bg:#121c26;--panel:#1b2a38;--t1:#27394a;--t2:#2c4054;--rock:#0d141b;--ink:#e9e4d3;--dim:#8da1af;--gold:#e2b24c;--ally:#4ea5cc;--foe:#cc6150;--ok:#7cc480;--line:#3a5266}
@@ -231,6 +253,7 @@ body{display:block}
 <script src="data/places.js"></script>
 <script src="data/roads_gen.js"></script>
 <script src="data/encounters.js"></script>
+<script src="data/scenes.js"></script>
 <script src="data/campaign.js"></script>
 <script src="shell.js"></script>
 <script src="fx.js"></script>
@@ -1052,6 +1075,92 @@ function finishBattle(won){
   window.Battle.last=res;
   if(BATTLE&&BATTLE.onEnd){const cb=BATTLE.onEnd;setTimeout(()=>cb(res),0)}
 }
+// ---- Scenes (design/cinematics.md): a story beat played out on the board, with scripted movement and in-scene choices.
+// Battle.scene(script, {onChoose(id) -> {text}|string, onDone(choice)}). script = {map, place, time, zoom, cast:[{id, name, race, primary, team:'P'|'E', at:[x,y], face, off}], steps:[...]}.
+// Steps: {say:who, text} {narrate:text} {walk:who, to:[x,y], wait:false} {face:who, to:who|dir} {enter:who, at, from} {exit:who, to}
+//        {emote:who, mark:'!'} {wait:ms} {choose:[{id,label}], who} ; a choose's result is shown as a line from {who} or as narration.
+let SCENE=null;
+const scU=id=>SCENE&&SCENE.cast[id];
+function sceneStart(sc,cb){
+  setMap(sc.map);units=[];active=null;PL=null;OBJ=null;HZ=null;traps=[];over=true;busy=true;ENDED=true;LOG=[];logs=[];
+  SCENE={sc,cb:cb||{},cast:{},i:0,log:[],auto:false,fast:false,speaker:null,emote:null,pts:new Map(),wake:null,choice:null};
+  (sc.cast||[]).forEach(c=>{const u=mk({primary:c.primary,race:c.race,name:c.name,level:1},c.team==='P'?'P':'E',c.at?c.at[0]:0,c.at?c.at[1]:0);u.cid=c.id;u.inScene=true;u.sceneFace=c.face||null;u.title=c.title||'';u.portrait={name:c.name,race:c.race||'human',primary:c.primary};SCENE.cast[c.id]=u;if(!c.off)units.push(u)});
+  ZOOM=sc.zoom||(innerHeight>innerWidth?1.8:null);if(window.FX)FX.clear();$('setup').style.display='none';$('over').style.display='none';
+  $('app').classList.add('scene');sceneUI();render();setTimeout(()=>{if(!SCENE)return;sceneFocus(null);sceneRun()},60);
+}
+function sceneUI(){
+  let o=$('scn');if(o)o.remove();
+  o=document.createElement('div');o.id='scn';
+  o.innerHTML=`<div class="lbt"><div class="pl"><i>${esc(SCENE.sc.place||'')}</i><small>${esc(SCENE.sc.time||'')}</small></div><button class="sb" id="scLog">Log</button><button class="sb" id="scAuto">Auto</button><button class="sb" id="scSkip">Skip ▸▸</button></div><div class="lbb"></div><div class="dlg" id="scDlg"></div><div class="slog" id="scLogP"></div>`;
+  document.body.appendChild(o);
+  o.addEventListener('click',e=>{if(e.target.closest('button')||e.target.closest('.slog'))return;sceneTap()});
+  $('scLog').onclick=()=>{const p=$('scLogP');p.classList.toggle('on');p.innerHTML='<b>Log</b>'+SCENE.log.map(l=>`<p>${l.who?'<em>'+esc(l.who)+'</em> ':''}${esc(l.text)}</p>`).join('')+'<button class="sb" onclick="this.parentNode.classList.remove(\'on\')">Close</button>';p.scrollTop=p.scrollHeight};
+  $('scAuto').onclick=e=>{SCENE.auto=!SCENE.auto;e.currentTarget.classList.toggle('on',SCENE.auto);if(SCENE.auto)sceneTap()};
+  $('scSkip').onclick=()=>{SCENE.fast=true;sceneTap()};
+}
+function sceneTap(){if(SCENE&&SCENE.wake){const w=SCENE.wake;SCENE.wake=null;w()}}
+const scWait=ms=>new Promise(r=>{if(SCENE.fast)return r();const t=setTimeout(()=>{SCENE.wake=null;r()},ms);SCENE.wake=()=>{clearTimeout(t);r()}});
+const scTapWait=(len)=>new Promise(r=>{if(SCENE.fast)return r();let t=null;const go=()=>{clearTimeout(t);SCENE.wake=null;r()};SCENE.wake=go;SCENE.autoArm=()=>{clearTimeout(t);if(SCENE.auto)t=setTimeout(go,1300+len*28)};SCENE.autoArm()});
+async function sceneWalk(u,to){
+  if(!u||!to)return;u.sceneFace=null;u.faceAt=null;sceneFocus({tx:to[0],ty:to[1]});
+  if(SCENE.fast){u.x=to[0];u.y=to[1];render();return}
+  const p=reach(u,99,9).get(to[0]+','+to[1])||[[to[0],to[1]]];
+  for(const [x,y] of p){u.x=x;u.y=y;render();await sleep(CR.ai.moveStepMs+40)}
+}
+function sceneFocus(u){
+  const bw=$('bw');if(!bw||bw.scrollWidth<=bw.clientWidth+2&&bw.scrollHeight<=bw.clientHeight+2)return;
+  const t=u?HITS.find(h=>h.x===(u.tx!==undefined?u.tx:u.x)&&h.y===(u.ty!==undefined?u.ty:u.y)):null,cv=$('cv');const cx=t?t.cx:cv.width/(window.devicePixelRatio||1)/2,cy=t?t.cy:cv.height/(window.devicePixelRatio||1)/2;
+  bw.scrollTo({left:Math.max(0,cv.offsetLeft+cx-bw.clientWidth/2),top:Math.max(0,cv.offsetTop+cy-bw.clientHeight/2),behavior:SCENE&&SCENE.fast?'auto':'smooth'});
+}
+function sceneLine(who,text,opts){
+  const u=who?scU(who):null,d=$('scDlg');SCENE.speaker=u;SCENE.log.push({who:u?u.n:'',text});render();
+  const port=u?portraitHTML(u.portrait,u.team):'';
+  d.className='dlg on'+(u?'':' nar');
+  d.innerHTML=(u?`<div class="pt">${port}</div>`:'')+`<div class="tx">${u?`<b>${esc(u.n)}</b>`:''}<p>${esc(text)}</p>${opts&&opts.length?'<div class="ch">'+opts.map(o=>`<button class="sb pri" data-c="${esc(o.id)}">${esc(o.label)}</button>`).join('')+'</div>':'<i class="more">▼</i>'}</div><span class="tail"></span>`;
+  scenePlace();
+}
+function scenePlace(){ // the dialogue box sits under or over the speaker in portrait, beside in landscape, with a tail pointing at them
+  const d=$('scDlg');if(!d||!SCENE)return;const u=SCENE.speaker,tail=d.querySelector('.tail'),land=innerWidth>innerHeight;
+  const top=$('scn').querySelector('.lbt').getBoundingClientRect().bottom+6,bot=$('scn').querySelector('.lbb').getBoundingClientRect().top-6;
+  d.style.left=d.style.top=d.style.right=d.style.bottom='';d.removeAttribute('data-t');
+  const p=u&&SCENE.pts.get(u),cr=$('cv').getBoundingClientRect();
+  const W=d.offsetWidth,Hh=d.offsetHeight;
+  if(!p){d.style.left=Math.round((innerWidth-W)/2)+'px';d.style.top=Math.round(bot-Hh)+'px';if(tail)tail.style.display='none';return}
+  const sx=cr.left+p.x,sy=cr.top+p.y,fy=cr.top+p.foot;if(tail)tail.style.display='';
+  let L,T;
+  if(land){const right=sx<innerWidth/2;L=right?sx+34:sx-34-W;T=Math.max(top,Math.min(bot-Hh,sy-Hh/2));d.dataset.t=right?'l':'r';if(tail)tail.style.top=Math.max(10,Math.min(Hh-10,sy-T))+'px'}
+  else{const below=sy<(top+bot)/2;T=below?fy+12:sy-14-Hh;T=Math.max(top,Math.min(bot-Hh,T));L=(innerWidth-W)/2;d.dataset.t=below?'t':'b';if(tail)tail.style.left=Math.max(14,Math.min(W-14,sx-L))+'px'}
+  d.style.left=Math.round(Math.max(6,Math.min(innerWidth-W-6,L)))+'px';d.style.top=Math.round(T)+'px';
+}
+async function sceneRun(){
+  const S=SCENE,steps=S.sc.steps||[];
+  for(S.i=0;S.i<steps.length&&SCENE===S;S.i++){
+    const st=steps[S.i];
+    if(st.say!==undefined){const u=scU(st.say);if(u)sceneFocus(u);sceneLine(st.say,st.text);await scTapWait(st.text.length)}
+    else if(st.narrate!==undefined){sceneLine(null,st.narrate);await scTapWait(st.narrate.length)}
+    else if(st.walk){const u=scU(st.walk);hideDlg();const p=sceneWalk(u,st.to);if(st.wait!==false)await p}
+    else if(st.face){const u=scU(st.face),t=scU(st.to);if(u){u.sceneFace=t?null:st.to;u.faceAt=t||null;render()}}
+    else if(st.enter){const u=scU(st.enter);if(u&&!units.includes(u)){const f=st.from||st.at;u.x=f[0];u.y=f[1];units.push(u);render();if(st.from){const p=sceneWalk(u,st.at);if(st.wait!==false)await p}}}
+    else if(st.exit){const u=scU(st.exit);if(u){hideDlg();if(st.to)await sceneWalk(u,st.to);units=units.filter(x=>x!==u);render()}}
+    else if(st.emote){const u=scU(st.emote);S.emote={u,mark:st.mark||'!',until:performance.now()+900};render();await scWait(900);S.emote=null;render()}
+    else if(st.wait){hideDlg();await scWait(st.wait)}
+    else if(st.choose){
+      S.fast=false;const opts=st.choose;const u=st.who?scU(st.who):null;if(u)sceneFocus(u);
+      sceneLine(st.who||null,st.text||'What do you do?',opts);S.log.pop();
+      const id=await new Promise(r=>$('scDlg').querySelectorAll('.ch button').forEach(b=>b.onclick=e=>{e.stopPropagation();r(b.dataset.c)}));
+      S.choice=id;S.log.push({who:'',text:'▸ '+(opts.find(o=>o.id===id)||{}).label});
+      let res=S.cb.onChoose?S.cb.onChoose(id):null;if(typeof res==='string')res={text:res};
+      if(res&&res.text){sceneLine(st.resultBy||null,res.text);await scTapWait(res.text.length)}
+      if(res&&res.end)break;
+    }
+  }
+  if(SCENE===S)sceneEnd();
+}
+function hideDlg(){const d=$('scDlg');if(d)d.className='dlg';if(SCENE)SCENE.speaker=null}
+function sceneEnd(){
+  const S=SCENE;if(!S)return;SCENE=null;const o=$('scn');if(o)o.remove();$('app').classList.remove('scene');units=[];ZOOM=null;
+  if(S.cb.onDone)S.cb.onDone(S.choice);
+}
 window.Battle={
   start(o){
     BATTLE=o||{};setMap(BATTLE.map);if(BATTLE.swapSides)POS={P:POS.E,E:POS.P}; // zone and random encounters: half the time the party starts on the map's far side
@@ -1060,6 +1169,7 @@ window.Battle={
     if(window.FX)FX.clear();$('setup').style.display='none';start();
   },
   abort(){if(!ENDED){PL=null;over=true;finishBattle(false)}}, // retreat: counts as a loss
+  scene(sc,cb){sceneStart(sc,cb)},skipScene(){if(SCENE)sceneEnd()},sceneState:()=>SCENE&&{i:SCENE.i,speaker:SCENE.speaker&&SCENE.speaker.cid,choice:SCENE.choice,log:SCENE.log.slice(),units:units.map(u=>({id:u.cid,x:u.x,y:u.y}))},
   last:null
 };
 // ---- Traps: hidden hex state. Only the owner's team sees them; the first enemy to end a step on one springs it (area effect around the tile).
@@ -1173,7 +1283,7 @@ const hpNote=X=>(X.hpCostPct?` Costs ${Math.round(X.hpCostPct*100)}% of your cur
 const calcNote=(u,A,a)=>{const t=u&&LO.skillCalcText(u,A,a);return t?` ${LO.typeLabel(A)}${A.k==='dmg'?' skill':''}. YOUR NUMBERS: ${t.head}${t.detail?' ('+t.detail+')':''}.${t.extra.length?' '+t.extra.join('. ')+'.':''}${A.k==='dmg'?' Enemy armor and resistance reduce damage.':''}`:''};
 const sum=(A,u,a)=>[LO.typeLabel(A),(A.p||LO.weaponSkill(A))?(u?(LO.skillCalc(u,A,a)||{total:effP(u,A,a)}).total:A.p)+(A.k==='heal'?' heal':' dmg'):'',LO.manaCost(A)?LO.manaCost(A)+' mana':'',A.r?'r'+A.r:'',A.fx?Object.keys(A.fx).join('/'):'',A.area||'',A.flank?'flank · ambush':'',A.ignore?'pierce':'',A.stagger?'stagger':'',A.drain?'drain':'',A.charge?'+1 pt next turn':'',A.cd?'cd '+A.cd:'',A.ct?'cast '+Math.min(CR.cast.maxCt,A.ct)+'%':'',A.hpCostPct?'-'+Math.round(A.hpCostPct*100)+'% HP':'',A.bloodied?'bloodied':'',A.mv?'dash '+A.mv+' to foe':'',A.k==='summon'?'1 pet':''].filter(Boolean).join(' · ');
 
-function render(){if(PL)return renderPlace();$('app').classList.remove('placing');if(LOGOPEN)setTimeout(drawLog,0);const ob=$('obj');if(ob)ob.textContent=units?objText():'';
+function render(){if(SCENE){LAST=[new Map(),[],[],null];drawBoard(new Map(),[],[],null);scenePlace();return}if(PL)return renderPlace();$('app').classList.remove('placing');if(LOGOPEN)setTimeout(drawLog,0);const ob=$('obj');if(ob)ob.textContent=units?objText():'';
   hideTip();
   $('bar').innerHTML=queue().map(q=>q.cast?`<div class="chip cast ${q.u.team}" ${dd(`${q.u.n}'s ${AB[q.cast].n} resolves here.`)}><span>✦</span><small>${q.u.g}</small></div>`:`<div class="chip ${q.u.team} ${q.now?'now':''} ${q.again?'again':''}" ${dd(unitTip(q.u))}>${portraitHTML(q.u,q.u.baseTeam)}</div>`).join('');
   const mine=!over&&!isAI(active)&&!busy,A=mode&&!isMove(mode)?AB[mode]:null;
@@ -1356,7 +1466,7 @@ function drawBoard(mm,tg,stl,A){
     if(castFp.has(k)&&!castAt.has(k))poly(C,'rgba(168,120,255,.16)','#a878ff',1.5);
     if(castAt.has(k))poly(C,'rgba(168,120,255,.32)','#a878ff',3);
     if(PREV&&PREV.tiles.has(k)){const hit=PREV.hit.has(k);poly(C,PREV.ally?(hit?'rgba(90,200,150,.5)':'rgba(90,200,150,.2)'):(hit?'rgba(255,110,60,.5)':'rgba(255,140,60,.2)'),PREV.ally?'#5ac896':'#ff8c3c',hit?3:2)} // targeting preview
-    if(h>0&&!here.length){g.fillStyle='rgba(255,255,255,.35)';g.font=`${Math.round(R*.34)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(h,cx,cy)}
+    if(h>0&&!here.length&&!SCENE){g.fillStyle='rgba(255,255,255,.35)';g.font=`${Math.round(R*.34)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(h,cx,cy)}
     const trp=traps.find(q=>q.x===x&&q.y===y&&q.team===VIEWER);
     if(trp){g.fillStyle='rgba(226,178,76,.9)';g.font=`700 ${Math.round(R*.62)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(AB[trp.a].persist?'▲':'⚠',cx,cy+R*.05)} // only the owner's team can see a trap
     const hit={x,y,polys,cx,cy};HITS.push(hit);
@@ -1364,7 +1474,7 @@ function drawBoard(mm,tg,stl,A){
       const r=R*.5,team=u.team==='P',spr=window.SPR&&SPR.ready(u),liv=u.hp>0;
       let by=cy-r*(VMODE==='top'?.15:1.1),topY=by-r;
       ell(cx,cy,R*.55,'rgba(0,0,0,.35)');
-      if(spr&&liv)ell(cx,cy,R*.62,team?'rgba(61,107,224,.24)':'rgba(204,70,58,.24)',team?'#3d6be0':'#cc463a',2.5); // team ring at the unit's feet
+      if(spr&&liv&&(!SCENE||team))ell(cx,cy,R*.62,team?'rgba(61,107,224,.24)':'rgba(204,70,58,.24)',team?'#3d6be0':'#cc463a',2.5); // team ring at the unit's feet
       if(u===active&&liv)ell(cx,cy,R*.74,null,'#e2b24c',2.5);
       if(u.guard&&liv)ell(cx,cy,R*.84,null,'#8da1af',2,[4,3]);
       g.globalAlpha=u.st.vanish?.5:1;
@@ -1374,7 +1484,9 @@ function drawBoard(mm,tg,stl,A){
         g.fillStyle='#fff';g.font=`700 ${Math.round(R*.4)}px Palatino,Georgia,serif`;g.textAlign='center';g.textBaseline='middle';g.fillText(u.g,cx,by);
       }
       const bw=r*1.9,bx=cx-bw/2,bY=topY-7;
-      if(liv){
+      if(SCENE){SCENE.pts.set(u,{x:cx,y:topY,foot:cy});if(SCENE.speaker===u){g.fillStyle='#e2b24c';g.strokeStyle='#000';g.lineWidth=1.5;const ty=topY-6-Math.abs(Math.sin(performance.now()/260))*4;g.beginPath();g.moveTo(cx-6,ty-9);g.lineTo(cx+6,ty-9);g.lineTo(cx,ty);g.closePath();g.fill();g.stroke()}
+        if(SCENE.emote&&SCENE.emote.u===u){g.font=`800 ${Math.round(R*.7)}px system-ui`;g.textAlign='center';g.textBaseline='bottom';g.lineWidth=4;g.strokeStyle='#000';g.strokeText(SCENE.emote.mark,cx,topY-4);g.fillStyle='#fff';g.fillText(SCENE.emote.mark,cx,topY-4)}}
+      else if(liv){
         g.fillStyle='#000a';g.fillRect(bx,bY,bw,4);g.fillStyle='#7cc480';g.fillRect(bx,bY,bw*u.hp/u.max,4);
         if(u.leader){g.fillStyle='#ffd24c';g.font=`700 ${Math.round(R*.5)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText('♛',cx,bY-R*.3)}
         const bd=badge(u);if(bd){g.font='10px system-ui';g.fillStyle='#e9e4d3';g.textAlign='left';g.fillText(bd,cx+r*.6,topY+r*.1)}

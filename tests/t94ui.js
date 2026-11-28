@@ -5,7 +5,7 @@ const {chromium}=require('playwright');
 let fails=0;const ok=(n,c,info)=>{console.log((c?'PASS ':'FAIL ')+n+(c||!info?'':'  ['+info+']'));if(!c)fails++};
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:420,height:860}});const errs=[];p.on('pageerror',e=>errs.push(String(e)));
 await p.goto(process.env.GAME_URL||'http://localhost:8766/index.html');await p.waitForTimeout(2500);
-await p.click('text=New campaign');await p.waitForTimeout(400);await p.click('button:has-text("Begin")',{force:true});await p.waitForTimeout(1000);
+await p.click('text=New campaign');await p.waitForTimeout(400);await p.click('button:has-text("Begin")',{force:true});await p.evaluate(()=>window.Battle&&Battle.skipScene&&Battle.skipScene());await p.waitForTimeout(1000);
 const text=sel=>p.evaluate(sel=>{const e=document.querySelector(sel);return e?e.innerText.replace(/\n+/g,' | '):''},sel);
 const closeAll=()=>p.evaluate(()=>{for(const sel of ['#ss-sheet','#sh-sheet']){const x=document.querySelector(sel)&&[...document.querySelectorAll(sel+' button')].find(x=>/Close|Continue/.test(x.innerText));if(x)x.click()}});
 await closeAll();await p.waitForTimeout(300);await closeAll();

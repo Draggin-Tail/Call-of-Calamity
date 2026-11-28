@@ -60,6 +60,7 @@ NODE_PATH=$(npm root -g) node tparty_ui.js
 | tstatus the Status and Equip screens, portrait and landscape: fit with no scrolling, item icons, tap to select then tap to edit, long press details, the equip preview, Equip, Remove, Best gear, paging | browser | pass |
 | tclasses the class tree, portrait and landscape: fit with no scrolling, ? ? ? for classes out of reach, silhouettes, requirement lines, the detail panel, set primary or secondary, long press for the kit, paging, Rename from the name | browser | pass |
 | tvictory the victory screen after a real campaign fight, portrait and landscape, plus a defeat: fit with no scrolling, spoils, greatest contribution (kills and damage), XP bars, level-ups with HP gain, newly learnable skills, long press, Status from a unit, Reports, Continue | browser | pass |
+| tscene the scene engine (phase 5a): the human opening plays after New campaign in portrait and landscape (letterbox, HUD hidden, walking, speaker marker, dialogue box with a tail, Log, Auto, Skip), and a test script checks enter, exit, facing and an in-scene choice | browser | pass |
 | t86ui phase 2 screens | browser | pass |
 | t88ui the realm on the Factions tab, speaking in council, the council scene (phase 3a) | browser | pass |
 | t89ui the garrison and a cut-off line on the place sheet (phase 3b) | browser | pass |
