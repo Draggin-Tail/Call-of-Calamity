@@ -347,6 +347,33 @@ body.campaign #top .skirm{display:none}
   .stv-equip .stv-screen{grid-template-columns:minmax(220px,.9fr) 1.1fr minmax(220px,.9fr)}
   .stv-cg{grid-template-columns:1fr}
 }
+/* Remaster theme for the world screens: gold-framed dark panels, serif titles (matches Status, victory and the battle HUD) */
+#shell,#ss-sheet{--sg:#e2b24c;--sl:rgba(217,178,90,.55);--serif:'Cardo','Palatino Linotype',Palatino,Georgia,serif}
+body #shell{background:radial-gradient(ellipse at 50% 15%,#1c2530,#0a0f15 75%)}
+body :is(#shell,#ss-sheet) .card{background:rgba(16,24,34,.92);border:1px solid rgba(217,178,90,.42);border-radius:6px;box-shadow:inset 0 0 0 3px rgba(12,19,27,.9),inset 0 0 0 4px rgba(217,178,90,.16),0 4px 12px rgba(0,0,0,.35)}
+body :is(#shell,#ss-sheet) .card.sel,body :is(#shell,#ss-sheet) .card.urg{border-color:var(--sg);box-shadow:inset 0 0 0 3px rgba(12,19,27,.9),inset 0 0 0 4px rgba(217,178,90,.4),0 0 0 1px rgba(226,178,76,.35)}
+body :is(#shell,#ss-sheet) .card>b:first-child,body :is(#shell,#ss-sheet) .card .row>.grow>b:first-child,body :is(#shell,#ss-sheet) .card .grow>b{font-family:var(--serif);font-size:16px;font-weight:700;color:#f1e7cf}
+body :is(#sh-sheet,#ss-sheet){background:rgba(3,6,10,.62)}
+body :is(#sh-sheet,#ss-sheet) .p{background:radial-gradient(ellipse at 50% 0%,#1c2530,#0b1118 80%);border:1px solid var(--sl);border-bottom:0;border-radius:10px 10px 0 0;box-shadow:inset 0 0 0 3px rgba(12,19,27,.95),inset 0 0 0 4px rgba(217,178,90,.25),0 -8px 24px rgba(0,0,0,.5)}
+body :is(#sh-sheet,#ss-sheet) .ph{border-bottom:1px solid rgba(217,178,90,.3);padding:12px 14px 10px}
+body :is(#sh-sheet,#ss-sheet) .ph h2{font-family:var(--serif);font-size:21px;color:var(--sg);letter-spacing:.01em}
+body .sh-hud{background:rgba(10,15,21,.96);border-bottom:1px solid var(--sl);box-shadow:0 1px 0 rgba(217,178,90,.15)}
+body .sh-tabs{background:rgba(10,15,21,.97);border-top:1px solid var(--sl)}
+body .sh-tabs button{font:600 14px var(--serif);letter-spacing:.06em;font-variant:small-caps}
+body .sh-tabs button.on{color:var(--sg);box-shadow:inset 0 2px 0 var(--sg);background:linear-gradient(rgba(226,178,76,.12),transparent 70%)}
+body :is(#shell,#ss-sheet) .sb{border-radius:6px;border-color:rgba(217,178,90,.35);background:linear-gradient(#2a3d52,#1d2c3c)}
+body :is(#shell,#ss-sheet) .sb.pri{background:linear-gradient(#f0c35e,#c99632);border-color:#f3d07a;color:#241a05}
+body :is(#shell,#ss-sheet) .sb.bad{background:linear-gradient(#6a2f28,#4a201b);border-color:var(--foe)}
+body :is(#shell,#ss-sheet) .sb:disabled{opacity:.5}
+body #shell .sh-h,body #ss-sheet .sh-h{font:700 11px system-ui;letter-spacing:.2em;text-transform:uppercase;color:var(--sg)}
+body .sh-rh{font:600 19px var(--serif);color:var(--sg)}
+body .sh-tbg{background:radial-gradient(ellipse 75% 22% at 50% 13%,rgba(10,15,21,.9),rgba(10,15,21,.55) 70%,transparent),linear-gradient(rgba(10,15,21,.72),rgba(10,15,21,.92) 40%,#0a0f15 80%),url(art/world.jpg) 50% 78%/cover no-repeat}
+body .sh-title h1{font:700 38px/1.05 var(--serif);letter-spacing:.03em;color:#f0c35e;text-shadow:0 2px 0 #3a2a0a,0 0 18px rgba(226,178,76,.35)}
+body .sh-title .orn{color:var(--sg);opacity:.8;letter-spacing:.3em;margin-bottom:6px}
+body .sh-title .dim{font-family:var(--serif);font-style:italic;font-size:15px;color:#c9c0a8}
+body .sh-menu{margin:6px 14px 20px;padding:4px 14px 14px;background:rgba(12,18,26,.86);border:1px solid var(--sl);border-radius:8px;box-shadow:inset 0 0 0 3px rgba(12,19,27,.95),inset 0 0 0 4px rgba(217,178,90,.22),0 8px 24px rgba(0,0,0,.5)}
+body .sh-nh h2{font:700 22px var(--serif);color:var(--sg)}
+body :is(#shell,#ss-sheet) .sh-sub .sb.on{background:linear-gradient(#f0c35e,#c99632);border-color:#f3d07a;color:#241a05}
 `;
 
   // ---------- state helpers ----------
@@ -423,9 +450,9 @@ body.campaign #top .skirm{display:none}
   // ---------- title ----------
   function titleScreen(c) {
     const slots = S.listSlots().filter(s => !s.empty && !s.error);
-    const wrap = h('div', { class: 'sh-main' },
-      h('div', { class: 'sh-title' }, h('h1', { text: 'Call of Calamity' }), h('div', { class: 'dim', text: 'A tactics campaign across the Realm of Aethelgard' })),
-      h('div', { class: 'pad' },
+    const wrap = h('div', { class: 'sh-main sh-tbg' },
+      h('div', { class: 'sh-title' }, h('div', { class: 'orn', text: '\u2014 \u2756 \u2014' }), h('h1', { text: 'Call of Calamity' }), h('div', { class: 'dim', text: 'A tactics campaign across the Realm of Aethelgard' })),
+      h('div', { class: 'pad sh-menu' },
         slots.length ? [h('div', { class: 'sh-h', text: 'Continue' }), slots.sort((a, b) => b.updated - a.updated).map(s => h('div', { class: 'card' },
           h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: s.name }), h('div', { class: 'dim', text: (D.races[s.race] ? D.races[s.race].name : '') + ' · day ' + s.day + ' · party ' + s.party + ' · ' + (s.slot === 'auto' || s.slot === undefined ? '' : 'slot ' + s.slot) + (s.slot ? '' : '') + (s.warning ? ' · ' + s.warning : '') }),
             h('div', { class: 'dim', text: new Date(s.updated).toLocaleString() })), btn('Load', () => loadSlot(s.slot), 'pri sm'))))] : null,
@@ -466,7 +493,7 @@ body.campaign #top .skirm{display:none}
     const input = h('input', { type: 'text', maxlength: 16, placeholder: R.names[0], value: newName, oninput: e => { newName = e.target.value; } });
     const dice = () => { const pool = R.names.filter(n => n !== newName); newName = pool[Math.floor(Math.random() * pool.length)] || R.names[0]; render(); };
     const main = h('div', { class: 'sh-main pad' },
-      h('div', { class: 'row', style: 'margin-bottom:8px' }, btn('Back', () => { view = 'title'; render(); }, 'sm'), h('h2', { style: 'margin:0', text: 'New campaign' })),
+      h('div', { class: 'row sh-nh', style: 'margin-bottom:8px' }, btn('Back', () => { view = 'title'; render(); }, 'sm'), h('h2', { style: 'margin:0', text: 'New campaign' })),
       h('div', { class: 'sh-h', text: 'Your name' }), h('div', { class: 'row' }, h('div', { class: 'grow' }, input), btn('Random', dice, 'sm')),
       h('div', { class: 'sh-h', text: 'Your people' }),
       opts.map(o => h('div', { class: 'card' + (o.race === newRace ? ' sel' : ''), onclick: () => { newRace = o.race; newClass = null; render(); } },
@@ -1166,7 +1193,7 @@ body.campaign #top .skirm{display:none}
     if (back.length) { toast(back.map(b => b.name + ' is back from ' + S.RULES.dispatch.kinds[b.kind].name.toLowerCase() + ': +' + b.xp + ' XP, +' + b.jp + ' JP' + (b.gold ? ', +' + b.gold + ' g' : '') + (b.levelUps ? ' (level up)' : '')).join(' · ')); autosave(); }
     const stashN = Object.values(ST.inventory.items).reduce((a, b) => a + b, 0), away = S.dispatchState(ST).out, awayOf = id => away.find(e => e.unit === id);
     main.appendChild(h('div', { class: 'pad' },
-      h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: 'Roster' }), h('div', { class: 'dim', text: 'Roster ' + ST.roster.length + '/' + S.RULES.rosterCap + ' · away ' + away.length + '/' + S.RULES.dispatch.maxOut + ' · stash ' + stashN + ' item' + (stashN === 1 ? '' : 's') })), btn('Stash', stashSheet, 'sm')),
+      h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { class: 'sh-rh', text: 'Roster' }), h('div', { class: 'dim', text: 'Roster ' + ST.roster.length + '/' + S.RULES.rosterCap + ' · away ' + away.length + '/' + S.RULES.dispatch.maxOut + ' · stash ' + stashN + ' item' + (stashN === 1 ? '' : 's') })), btn('Stash', stashSheet, 'sm')),
       h('div', { style: 'height:8px' }),
       ST.roster.map((u, i) => { const aw = awayOf(u.id), cu = S.catchUp(ST, u);
         return h('div', { class: 'card', onclick: () => openStatus(u.id) },
@@ -1194,75 +1221,16 @@ body.campaign #top .skirm{display:none}
     const d = LO.derive(u.primary, u.gear, u.passives, u.race), cls = D.classes[u.primary], lm = LO.levelMods(u.level), hp = Math.round((cls.hp + d.stat.hp) * lm.hp);
     return h('div', { class: 'dim', text: 'HP ' + hp + ' · armor ' + Math.round(d.armor) + '% · res ' + Math.round(d.res) + '% · move ' + (cls.mv + d.stat.mv) + ' · jump ' + (cls.jump + d.stat.jump) + ' · mana ' + d.manaMax + (u.level > 1 ? ' · power ×' + lm.power.toFixed(2) : '') });
   }
-  let uTab = 'class';
-  function unitSheet(id, t) {
-    if (t) uTab = t;
-    const u0 = unit(id); sheet(u0.name + ' · Lv ' + u0.level, () => {
-      const u = unit(id), subs = [['class', 'Class'], ['skills', 'Skills'], ['passives', 'Passives'], ['gear', 'Gear']];
-      const nameIn = document.createElement('input'); nameIn.type = 'text'; nameIn.maxLength = 20; nameIn.value = u.name; nameIn.setAttribute('aria-label', 'Name'); nameIn.style.cssText = 'flex:1;min-width:0;padding:8px;border-radius:8px;border:1px solid var(--line,#555);background:rgba(0,0,0,.25);color:inherit;font:inherit';
-      const doRename = () => { const v = nameIn.value.replace(/\s+/g, ' ').trim().slice(0, 20); if (!v) { toast('A name cannot be empty.', true); return; } u.name = v; if (ST.roster[0] === u) { if (ST.player) ST.player.name = v; if (ST.meta) ST.meta.name = v + ' \u00b7 ' + ((D.races[u.race] || {}).name || ''); } autosave(); toast('Renamed to ' + v + '.'); render(); unitSheet(id); };
-      nameIn.addEventListener('keydown', e => { if (e.key === 'Enter') doRename(); });
-      const out = [h('div', { class: 'row', style: 'gap:6px;margin-bottom:8px' }, nameIn, btn('Rename', doRename, 'sm')), unitSummary(u), h('div', { style: 'height:8px' }), h('div', { class: 'sh-sub' }, subs.map(([k, l]) => btn(l, () => { uTab = k; refreshSheet(); }, 'sm ' + (uTab === k ? 'on' : '')))) ];
-      out.push(uTab === 'class' ? classTab(u) : uTab === 'skills' ? skillsTab(u) : uTab === 'passives' ? passivesTab(u) : gearTab(u));
-      return out;
-    });
-  }
-  function classTab(u) {
-    const un = u.unlocked.slice().sort((a, b) => D.classes[a].tier - D.classes[b].tier || cname(a).localeCompare(cname(b)));
-    const opt = (v, sel, label) => h('option', { value: v, selected: sel, text: label });
-    const pSel = h('select', { onchange: e => changeClass(u.id, e.target.value, u.secondary) }, un.map(c => opt(c, c === u.primary, cname(c) + ' (tier ' + D.classes[c].tier + ')')));
-    const sSel = h('select', { onchange: e => changeClass(u.id, u.primary, e.target.value || null) }, opt('', !u.secondary, 'None'), un.filter(c => c !== u.primary).map(c => opt(c, c === u.secondary, cname(c) + ' (' + S.knownSkills(u, c).length + '/' + D.classes[c].ab.length + ' skills)')));
-    const locked = Object.keys(D.classes).filter(c => D.classes[c].selectable !== false && !u.unlocked.includes(c)).sort((a, b) => D.classes[a].tier - D.classes[b].tier);
-    return [h('div', { class: 'sh-h', text: 'Primary class' }), pSel, h('div', { class: 'sh-h', text: 'Secondary kit (only skills you have learned)' }), sSel,
-      h('div', { class: 'sh-h', text: 'Mastery' }), un.map(c => h('span', { class: 'shchip' + (S.isMastered(u, c) ? ' ok' : ''), text: cname(c) + ' ' + S.knownSkills(u, c).length + '/' + D.classes[c].ab.length })),
-      h('div', { class: 'sh-h', text: 'Locked classes' }), h('details', {}, h('summary', { class: 'dim', text: locked.length + ' to unlock by mastering other classes' }),
-        locked.map(c => h('div', { class: 'card' }, h('b', { text: cname(c) }), ' ', h('span', { class: 'dim', text: 'tier ' + D.classes[c].tier }), h('div', {}, D.classes[c].requires.map(r => h('span', { class: 'shchip' + (S.isMastered(u, r) ? ' ok' : ''), text: cname(r) + ' ' + S.knownSkills(u, r).length + '/' + D.classes[r].ab.length }))))))];
-  }
-  function changeClass(id, p, s) {
-    const r = S.setClass(ST, id, p, s || null); if (!r.ok) { toast(r.reason, true); refreshSheet(); return; }
-    toast(r.needsWeapon ? 'No weapon this class can wield: buy or equip one' : r.returned.length ? 'Unusable gear went to the stash' : 'Class changed'); autosave(); render(); refreshSheet();
-  }
   // The skill's real numbers for this unit's gear and level (enemy armor and resistance not included).
   function calcLines(cu, A, a) {
     const t = LO.skillCalcText(cu, A, a); if (!t) return null;
     return h('div', { style: 'margin-top:4px' }, h('div', { class: 'gold', text: t.head }), t.detail ? h('div', { class: 'dim', text: t.detail }) : null, t.extra.map(x => h('div', { class: 'dim', text: x })));
   }
-  function skillsTab(u) {
-    const cls = D.classes[u.primary], known = new Set(S.knownSkills(u, u.primary)), pool = S.jpOf(u, u.primary), L = S.learnable(u);
-    const dv = LO.derive(u.primary, u.gear, u.passives, u.race), cu = { wpn: dv.wpn, spellPow: dv.spellPow, healPow: dv.healPow, armor: dv.armor, mods: { power: dv.power }, lvPow: LO.levelMods(u.level).power };
-    return [h('div', { class: 'row' }, h('b', { class: 'grow', text: cname(u.primary) + (S.isMastered(u, u.primary) ? ' · mastered' : '') }), h('b', { class: 'gold', text: pool + ' JP' })),
-      cls.ab.map(a => { const A = D.abilities[a] || {}, ok = known.has(a), cost = S.skillCost(u.primary, a);
-        return h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: aname(a) }), A.c !== undefined ? h('span', { class: 'dim', text: '  ' + A.c + ' AP' }) : null, h('div', { class: 'dim', text: A.desc || '' }), h('div', { class: A.tags && A.tags.includes('spell') ? 'gold' : 'dim', style: 'font-size:11px' + (A.k === 'heal' ? ';color:var(--ok)' : ''), text: LO.typeLabel(A) }), calcLines(cu, A, a)),
-          ok ? h('span', { class: 'good', text: 'Known' }) : btn(cost + ' JP', () => learn(u.id, a), 'sm pri', pool < cost))); }),
-      L.skills.length ? null : h('div', { class: 'dim', text: 'Every skill of this class is learned.' })];
-  }
-  function learn(id, a) {
-    const r = S.learnSkill(ST, id, a); if (!r.ok) { toast(r.reason, true); return; }
-    autosave(); render(); refreshSheet();
-    if (r.unlocked.length) toast('Unlocked: ' + r.unlocked.map(cname).join(', ')); else if (r.mastered) toast(cname(unit(id).primary) + ' mastered!'); else toast('Learned ' + aname(a));
-  }
-  function passivesTab(u) {
-    const known = u.passivesKnown, P = D.passives, pool = S.jpOf(u, u.primary), L = S.learnable(u);
-    const slot = i => h('select', { onchange: e => { const ids = [u.passives[0], u.passives[1]]; ids[i] = e.target.value || null; const r = S.setPassives(ST, u.id, ids); if (!r.ok) toast(r.reason, true); else { toast(r.returned && r.returned.length ? 'Gear the unit can no longer wear went to the stash' : 'Passives set'); autosave(); render(); } refreshSheet(); } },
-      h('option', { value: '', text: '— empty —', selected: !u.passives[i] }), known.map(p => h('option', { value: p, selected: u.passives[i] === p, text: nm(P, p) })));
-    return [h('div', { class: 'sh-h', text: 'Equipped (2 slots)' }), slot(0), h('div', { style: 'height:6px' }), slot(1),
-      u.passives.filter(Boolean).map(p => h('div', { class: 'dim', text: nm(P, p) + ': ' + P[p].desc })),
-      h('div', { class: 'row', style: 'margin-top:12px' }, h('div', { class: 'sh-h grow', text: 'Learn from ' + cname(u.primary) }), h('b', { class: 'gold', text: pool + ' JP' })),
-      L.passives.length ? L.passives.map(p => h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: nm(P, p.id) }), h('div', { class: 'dim', text: P[p.id].desc })), btn(p.cost + ' JP', () => { const r = S.learnPassive(ST, u.id, p.id); if (!r.ok) toast(r.reason, true); else { toast('Learned ' + nm(P, p.id)); autosave(); render(); refreshSheet(); } }, 'sm pri', pool < p.cost)))) : h('div', { class: 'dim', text: 'You know every passive this class teaches.' }),
-      known.length ? [h('div', { class: 'sh-h', text: 'Known passives' }), known.map(p => h('span', { class: 'shchip', text: nm(P, p) }))] : null];
-  }
-  function gearTab(u) {
-    return SLOTS.map(sl => {
-      const cur = u.gear[sl], options = Object.keys(ST.inventory.items).filter(g => D.gear[g].slot === sl && LO.canEquip(u.primary, g, u.passives));
-      return h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'dim', text: SLOT_NAME[sl] }), h('b', { text: cur ? iname(cur) : '—' }), cur ? h('div', { class: 'dim', text: D.gear[cur].desc }) : null), cur ? btn('Remove', () => { S.unequip(ST, u.id, sl); autosave(); render(); refreshSheet(); }, 'sm') : null),
-        options.length ? h('select', { onchange: e => { if (!e.target.value) return; const r = S.equip(ST, u.id, e.target.value); if (!r.ok) toast(r.reason, true); else { toast('Equipped'); autosave(); render(); } refreshSheet(); } }, h('option', { value: '', text: 'Change… (' + options.length + ' in stash)' }), options.map(g => h('option', { value: g, text: iname(g) }))) : h('div', { class: 'dim', text: 'Nothing wearable in the stash.' }));
-    });
-  }
 
   // ---------- status and equip screens (UI pass phase 2, FFT style) ----------
   // Full-screen views over the shell: Status (stats, equipment with item icons, abilities, a help box) and Equip (slots, the items this unit can wear, what changes).
   // Tap a row to read about it in the help box; tap it again to change it. Hold any item, skill or passive for its full details.
-  // Editing classes, learning and passives still happens in the unit sheet (Classes and Learn open it on top).
+  // Classes, Learn (skills and passives) and Equip are full screens here; only Rename is a small sheet.
   let SV = null;   // { id, mode: 'status' | 'equip', sel, slot, pick }
   const II = () => window.ITEM_ICON;
   const TIER_NAME = t => t ? 'Tier ' + t : 'Unique';
@@ -1330,15 +1298,15 @@ body.campaign #top .skirm{display:none}
     return [h('b', { class: 'stv-serif', text: nm(D.passives, p) }), h('div', { class: 'dim', text: 'Passive' + (P.teacher ? ' · taught by ' + cname(P.teacher) : '') + (P.jp ? ' · ' + P.jp + ' JP' : '') }), h('div', { text: P.desc || '' })];
   }
 
-  function openStatus(id, mode, slot) { SV = { id, mode: mode || 'status', sel: SV && SV.id === id ? SV.sel : 'primary', slot: slot || 'MainHand', pick: null }; drawStatus(); }
+  function openStatus(id, mode, slot) { SV = { id, mode: mode || 'status', sel: SV && SV.id === id ? SV.sel : 'primary', slot: slot || 'MainHand', pick: null, lt: mode === 'learn' ? slot || 'skills' : null }; drawStatus(); }
   addEventListener('resize', () => { if (SV && SV.mode === 'classes') drawStatus(); });
   function closeStatus() { SV = null; drawStatus(); render(); }
   function drawStatus() {
     let root = document.getElementById('stv');
     if (!SV || !ST || !unit(SV.id)) { if (root) root.remove(); SV = null; return; }
     if (!root) { root = h('div', { id: 'stv' }); lpBind(root); document.getElementById('shell').appendChild(root); }
-    root.innerHTML = ''; root.className = 'stv-' + SV.mode;
-    root.appendChild(SV.mode === 'equip' ? equipView(unit(SV.id)) : SV.mode === 'classes' ? classesView(unit(SV.id)) : statusView(unit(SV.id)));
+    root.innerHTML = ''; root.className = SV.mode === 'learn' ? 'stv-equip stv-learn' : 'stv-' + SV.mode;
+    root.appendChild(SV.mode === 'learn' ? learnView(unit(SV.id)) : SV.mode === 'equip' ? equipView(unit(SV.id)) : SV.mode === 'classes' ? classesView(unit(SV.id)) : statusView(unit(SV.id)));
   }
   const frame = (cls, ...kids) => h('div', { class: 'stv-frame ' + (cls || '') }, ...kids);
   const colHead = (t, r) => h('h3', {}, h('span', { text: t }), r ? h('span', { class: 'dim', text: r }) : null);
@@ -1353,7 +1321,7 @@ body.campaign #top .skirm{display:none}
     const L = S.learnable(u), jp = S.jpOf(u, u.primary), next = L.skills.concat(L.passives).reduce((m, x) => Math.min(m, x.cost), Infinity);
     const port = window.PORT && PORT.url ? PORT.url({ name: u.name, race: u.race, primary: u.primary }, 'P') : '';
     return frame('stv-id', port ? h('img', { class: 'stv-port', alt: '', src: port }) : h('div', { class: 'stv-port' }),
-      h('div', { class: 'stv-bars' }, h('div', { class: 'stv-nm', role: 'button', title: 'Rename', onclick: () => unitSheet(u.id, 'class') }, h('span', { text: u.name }), h('small', { text: 'Lv ' + u.level }), h('em', { class: 'stv-pen', text: '✎' })),
+      h('div', { class: 'stv-bars' }, h('div', { class: 'stv-nm', role: 'button', title: 'Rename', onclick: () => renameSheet(u.id) }, h('span', { text: u.name }), h('small', { text: 'Lv ' + u.level }), h('em', { class: 'stv-pen', text: '✎' })),
         h('div', { class: 'stv-cl' }, (D.races[u.race] ? D.races[u.race].name + ' · ' : '') + cname(u.primary), u.secondary ? h('span', { class: 'sec', text: ' · ' + (D.classes[u.secondary].command || cname(u.secondary)) }) : null),
         bar('hp', 'HP', 100, s.hp + '/' + s.hp), bar('mp', 'MP', 100, s.mp + '/' + s.mp), bar('xp', 'EXP', xp, capped ? 'max' : xp + '%'), bar('jp', 'JP', next === Infinity ? 100 : 100 * jp / next, String(jp))));
   }
@@ -1375,10 +1343,10 @@ body.campaign #top .skirm{display:none}
     const ab = frame('stv-col stv-ab', colHead('ABILITIES'),
       row(abIcon('✦', 'k'), 'Primary', pc.command || cname(u.primary), cname(u.primary) + ' · ' + S.knownSkills(u, u.primary).length + ' of ' + pc.ab.length, 'primary', () => openStatus(u.id, 'classes'), () => kitDetail(u, u.primary, 'Primary')),
       row(abIcon('✧', 's'), 'Secondary', sc ? sc.command || cname(u.secondary) : 'None', sc ? cname(u.secondary) + (S.isMastered(u, u.secondary) ? ' · mastered' : ' · ' + S.knownSkills(u, u.secondary).length + ' learned') : 'Pick one in Classes', 'secondary', () => openStatus(u.id, 'classes'), sc ? () => kitDetail(u, u.secondary, 'Secondary') : null),
-      [0, 1].map(i => { const p = u.passives[i]; return row(abIcon('◆', 'p'), 'Passive', p ? nm(D.passives, p) : 'Empty', null, 'pas' + i, () => unitSheet(u.id, 'passives'), p ? () => passiveDetail(p) : null); }),
-      row(abIcon('+', 'k'), null, 'Learn skills', S.jpOf(u, u.primary) + ' JP', 'learn', () => unitSheet(u.id, 'skills')));
+      [0, 1].map(i => { const p = u.passives[i]; return row(abIcon('◆', 'p'), 'Passive', p ? nm(D.passives, p) : 'Empty', null, 'pas' + i, () => openStatus(u.id, 'learn', 'passives'), p ? () => passiveDetail(p) : null); }),
+      row(abIcon('+', 'k'), null, 'Learn skills', S.jpOf(u, u.primary) + ' JP', 'learn', () => openStatus(u.id, 'learn', 'skills')));
     const help = frame('stv-help', helpFor(u));
-    const acts = h('div', { class: 'stv-acts' }, btn('Classes', () => openStatus(u.id, 'classes')), btn('Equip', () => openStatus(u.id, 'equip', 'MainHand'), 'pri'), btn('Learn', () => unitSheet(u.id, 'skills')));
+    const acts = h('div', { class: 'stv-acts' }, btn('Classes', () => openStatus(u.id, 'classes')), btn('Equip', () => openStatus(u.id, 'equip', 'MainHand'), 'pri'), btn('Learn', () => openStatus(u.id, 'learn', 'skills')));
     return h('div', { class: 'stv-screen' }, statusHeader('Status', u, true),
       h('div', { class: 'stv-a' }, idCard(u, s), statGrid(s), acts), h('div', { class: 'stv-b' }, eq), h('div', { class: 'stv-c' }, ab, help));
   }
@@ -1413,6 +1381,51 @@ body.campaign #top .skirm{display:none}
     const mini = frame('stv-mini', window.PORT && PORT.url ? h('img', { class: 'stv-port', alt: '', src: PORT.url({ name: u.name, race: u.race, primary: u.primary }, 'P') }) : null,
       h('div', {}, h('div', { class: 'stv-nm' }, h('span', { text: u.name }), h('small', { text: 'Lv ' + u.level })), h('div', { class: 'stv-cl', text: cname(u.primary) + ' · can use ' + canUse(u) })));
     return h('div', { class: 'stv-screen' }, statusHeader('Equip', u, true), h('div', { class: 'stv-a' }, mini, strip, slotList), h('div', { class: 'stv-b' }, items), h('div', { class: 'stv-c' }, cmp, acts));
+  }
+  // ----- learn: skills and passives of the primary class, in the Status style (replaces the old unit sheet's Skills and Passives tabs) -----
+  function learnView(u) {
+    const lt = SV.lt || 'skills', cls = D.classes[u.primary], pool = S.jpOf(u, u.primary), known = new Set(S.knownSkills(u, u.primary)), L = S.learnable(u), P = D.passives;
+    const dv = LO.derive(u.primary, u.gear, u.passives, u.race), cu = { wpn: dv.wpn, spellPow: dv.spellPow, healPow: dv.healPow, armor: dv.armor, mods: { power: dv.power }, lvPow: LO.levelMods(u.level).power };
+    const pick = SV.pick, sel = k => k === pick ? ' sel' : '';
+    const tap = k => () => { SV.pick = k === pick ? null : k; drawStatus(); };
+    const lrow = (k, icon, name, sub, right, lpFn) => { const r = h('div', { class: 'stv-row' + sel(k), role: 'button', onclick: tap(k) }, icon, h('span', { class: 't' }, h('b', { text: name }), sub ? h('i', { text: sub }) : null), right); return lpFn ? lp(r, lpFn) : r; };
+    const cost = (n, ok) => h('span', { class: 'stv-jp' + (ok ? '' : ' no'), text: n + ' JP' }), knownTag = h('span', { class: 'stv-known', text: 'Known' });
+    const strip = frame('stv-strip', [['skills', '✦', 'Skills'], ['passives', '◆', 'Passives']].map(([k, ic, l]) => h('button', { class: k === lt ? 'on' : '', onclick: () => { SV.lt = k; SV.pick = null; drawStatus(); } }, abIcon(ic, k === 'skills' ? 'k' : 'p'), h('small', { text: l }))));
+    let list, det = [], acts;
+    if (lt === 'skills') {
+      list = frame('stv-col stv-list', colHead(cname(u.primary).toUpperCase() + (S.isMastered(u, u.primary) ? ' · MASTERED' : ''), pool + ' JP'),
+        cls.ab.map(a => { const A = D.abilities[a] || {}, ok = known.has(a), c = S.skillCost(u.primary, a);
+          return lrow('a:' + a, abIcon(ok ? '✓' : '✦', ok ? 'k' : 's'), aname(a), (A.c !== undefined ? A.c + ' AP · ' : '') + (A.desc || ''), ok ? knownTag : cost(c, pool >= c), () => skillDetail(a, u)); }));
+      const a = pick && pick.startsWith('a:') ? pick.slice(2) : null, A = a ? D.abilities[a] || {} : null, c = a ? S.skillCost(u.primary, a) : 0, ok = a && known.has(a);
+      det = a ? [colHead(aname(a).toUpperCase(), A.c !== undefined ? A.c + ' AP' : ''), h('div', { class: 'stv-desc', text: A.desc || '' }), calcLines(cu, A, a), h('div', { class: 'dim stv-hint', text: ok ? 'Already learned.' : c + ' JP of ' + pool + ' in ' + cname(u.primary) + '.' })]
+        : [colHead('SKILL'), h('div', { class: 'dim', style: 'padding:4px 0', text: 'Tap a skill to read it. Skills are learned with JP earned in this class. Hold one for its full details.' })];
+      acts = h('div', { class: 'stv-acts' }, btn(a && !ok ? 'Learn · ' + c + ' JP' : 'Learn', () => { const r = S.learnSkill(ST, u.id, a); if (!r.ok) { toast(r.reason, true); return; } autosave(); render();
+        toast(r.unlocked.length ? 'Unlocked: ' + r.unlocked.map(cname).join(', ') : r.mastered ? cname(u.primary) + ' mastered!' : 'Learned ' + aname(a)); drawStatus(); }, 'pri', !a || ok || pool < c));
+    } else {
+      const setSlot = (i, id) => { const ids = [u.passives[0], u.passives[1]]; ids[i] = id; if (id && ids[1 - i] === id) ids[1 - i] = null; const r = S.setPassives(ST, u.id, ids); if (!r.ok) toast(r.reason, true); else { toast(r.returned && r.returned.length ? 'Gear the unit can no longer wear went to the stash' : id ? nm(P, id) + ' set' : 'Slot emptied'); autosave(); render(); } drawStatus(); };
+      list = frame('stv-col stv-list', colHead('EQUIPPED', '2 slots'),
+        [0, 1].map(i => { const p = u.passives[i]; return lrow('s:' + i, abIcon('◆', 'p'), p ? nm(P, p) : 'Empty slot', p ? P[p].desc : 'Choose a known passive below', null, p ? () => passiveDetail(p) : null); }),
+        u.passivesKnown.length ? [colHead('KNOWN'), u.passivesKnown.map(p => lrow('k:' + p, abIcon('✓', 'p'), nm(P, p), P[p].desc, u.passives.includes(p) ? h('span', { class: 'stv-e', text: 'E' }) : null, () => passiveDetail(p)))] : null,
+        [colHead('LEARN FROM ' + cname(u.primary).toUpperCase(), pool + ' JP'), L.passives.length ? L.passives.map(p => lrow('l:' + p.id, abIcon('◇', 'p'), nm(P, p.id), P[p.id].desc, cost(p.cost, pool >= p.cost), () => passiveDetail(p.id)))
+          : h('div', { class: 'dim', style: 'padding:4px', text: 'Nothing left to learn from ' + cname(u.primary) + '.' })]);
+      const k = pick ? pick.slice(0, 1) : null, id = pick ? pick.slice(2) : null, lp0 = k === 'l' ? L.passives.find(x => x.id === id) : null, pid = k === 's' ? u.passives[+id] : id;
+      det = pid ? [colHead(nm(P, pid).toUpperCase(), k === 's' ? 'Slot ' + (+id + 1) : k === 'l' ? lp0.cost + ' JP' : 'Known'), h('div', { class: 'stv-desc', text: P[pid].desc })]
+        : [colHead('PASSIVE'), h('div', { class: 'dim', style: 'padding:4px 0', text: k === 's' ? 'An empty slot. Tap a known passive, then put it here.' : 'Two passives can be worn at once, from any class. Tap one to learn it or put it in a slot.' })];
+      acts = k === 'l' ? h('div', { class: 'stv-acts' }, btn('Learn · ' + lp0.cost + ' JP', () => { const r = S.learnPassive(ST, u.id, id); if (!r.ok) toast(r.reason, true); else { toast('Learned ' + nm(P, id)); autosave(); render(); SV.pick = 'k:' + id; } drawStatus(); }, 'pri', pool < lp0.cost))
+        : k === 'k' ? h('div', { class: 'stv-acts' }, [0, 1].map(i => btn('Slot ' + (i + 1), () => setSlot(i, id), u.passives[i] === id ? '' : 'pri', u.passives[i] === id)))
+        : k === 's' ? h('div', { class: 'stv-acts' }, btn('Remove', () => setSlot(+id, null), '', !u.passives[+id]))
+        : h('div', { class: 'stv-acts' }, btn('Learn', null, 'pri', true));
+    }
+    const mini = frame('stv-mini', window.PORT && PORT.url ? h('img', { class: 'stv-port', alt: '', src: PORT.url({ name: u.name, race: u.race, primary: u.primary }, 'P') }) : null,
+      h('div', {}, h('div', { class: 'stv-nm' }, h('span', { text: u.name }), h('small', { text: 'Lv ' + u.level })), h('div', { class: 'stv-cl', text: cname(u.primary) + ' · ' + pool + ' JP to spend' })));
+    return h('div', { class: 'stv-screen' }, statusHeader('Learn', u, true), h('div', { class: 'stv-a' }, mini, strip), h('div', { class: 'stv-b' }, list), h('div', { class: 'stv-c' }, frame('stv-cmp stv-ldet', det), acts));
+  }
+  // Rename: a small sheet (the old unit sheet's name box)
+  function renameSheet(id) {
+    sheet('Rename', () => { const u = unit(id); const nameIn = h('input', { type: 'text', maxlength: 20, value: u.name, 'aria-label': 'Name', style: 'width:100%;padding:10px;border-radius:6px;border:1px solid var(--sl);background:#0b1118;color:var(--ink);font:16px system-ui' });
+      const go = () => { const v = nameIn.value.replace(/\s+/g, ' ').trim().slice(0, 20); if (!v) { toast('A name cannot be empty.', true); return; } u.name = v; if (ST.roster[0] === u) { if (ST.player) ST.player.name = v; if (ST.meta) ST.meta.name = v; } autosave(); closeSheet(); render(); drawStatus(); toast('Renamed ' + v); };
+      nameIn.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+      return [nameIn, h('div', { style: 'height:10px' }), btn('Rename', go, 'pri full')]; });
   }
   function canUse(u) { const e = D.classes[u.primary].equip || {}; return [].concat(e.weapons || [], e.offhand || [], (e.armor || []).map(a => a + ' armour')).join(', ') || 'little'; }
   function compare(u, sl, pick) {
