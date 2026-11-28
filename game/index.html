@@ -272,10 +272,15 @@ const rockKeys=rs=>(rs||[]).map(r=>Array.isArray(r)?r.join(','):r);
 const SQ3=Math.sqrt(3);
 let VOID=new Set(),ROCKS=rockKeys(CR.battlefield.rocks),HT=CR.battlefield.heights,POS=CR.battlefield.spawns,MAPKEY='default',THEME='steel',PROPS={},ZN={},PL=null;
 const HEIGHT_RULES=CR.height.rulesText;
-// Buildings (V2 mockup, ?bld=1): a map's `buildings: [{kind, tiles:[[x,y],...], h, door:[x,y,side]}]` raise their tiles to a solid block that blocks like a wall; drawBoard paints plaster and timber walls and one hipped thatch roof over the whole footprint.
+// Buildings (V2 mockup, ?bld=1), FFT style: a building is ordinary tiles raised to its height, so its roof is high ground units can stand,
+// climb and fight on. A map lists `buildings: [{kind, tiles:[[x,y,h],...], door:[x,y,side]}]`, h above the ground; the lowest h is the eaves,
+// anything higher is roof above them (a ridge). KIT says how a kind is painted: wall and roof textures, a timber frame, windows.
+const KIT={cottage:{name:'Cottage roof',wall:'plaster',roof:'thatch',frame:1,win:1},shed:{name:'Shed roof',wall:'planks',roof:'thatch',frame:1},crates:{name:'Stacked crates',wall:'planks',roof:'planks'}};
 let BLDG=new Map();
-function applyBuildings(bf){BLDG=new Map();const bs=bf.buildings||[];if(!bs.length)return;HT=HT.map(r=>r.slice());for(const b of bs){b._z=Math.min(...b.tiles.map(([x,y])=>HT[y][x]))+b.h;for(const [x,y] of b.tiles){HT[y][x]=b._z;const k=x+','+y;BLDG.set(k,b);if(!ROCKS.includes(k))ROCKS.push(k)}}}
-if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp)GD.maps.thornfield_camp.buildings=[{kind:'cottage',name:'Cottage',tiles:[[7,9],[8,9],[9,9],[8,10],[9,10]],h:3,door:[8,10,2]}];
+function applyBuildings(bf){BLDG=new Map();const bs=bf.buildings||[];if(!bs.length)return;HT=HT.map(r=>r.slice());for(const b of bs){const base=Math.min(...b.tiles.map(([x,y])=>HT[y][x]));b._wall=base+Math.min(...b.tiles.map(t=>t[2]));for(const [x,y,h] of b.tiles){HT[y][x]=base+h;BLDG.set(x+','+y,b)}}}
+if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp)GD.maps.thornfield_camp.buildings=[
+  {kind:'cottage',tiles:[[8,8,3],[9,8,3],[7,9,4],[8,9,4],[9,9,4],[8,10,3],[9,10,3]],door:[9,10,2]},
+  {kind:'shed',tiles:[[7,10,2]]},{kind:'crates',tiles:[[6,10,1]]}];
 function setMap(key){const m=key&&window.GAME_DATA.maps&&window.GAME_DATA.maps[key];const bf=m||CR.battlefield;HT=bf.heights;VOID=new Set((bf.voids||[]).map(([x,y])=>x+','+y));ROCKS=rockKeys(bf.rocks).concat([...VOID]);POS=bf.spawns;MAPKEY=m?key:'default';THEME=bf.theme||'steel';PROPS=bf.props||{};ZN=bf.zones||{};applyBuildings(bf);
   H=HT.length;W=HT[0].length;MAXH=Math.max(CR.height.maxLevel,...HT.map(r=>Math.max(...r)));CEN={x:(W-1+.5)/2*SQ3,y:(H-1)*.75};EXT=null;ZOOM=null;FOCUSED=null;const bwEl=document.getElementById('bw');if(bwEl){bwEl.scrollLeft=0;bwEl.scrollTop=0}}
 const PICK=Object.keys(JOBS).filter(id=>JOBS[id].selectable);
@@ -548,7 +553,7 @@ function placeTap(x,y){
   }
   if(here){FOCUS=here;inspect=`${here.n}: ${here.hp}/${here.max} HP · height ${ht(x,y)}. Foes start where you see them.`;PL.sel=null;render();return}
   if(PL.sel&&inPool&&!ROCKS.includes(k)){PL.sel.x=x;PL.sel.y=y;PL.sel=null;inspect='';render();return}
-  inspect=BLDG.has(k)?`${BLDG.get(k).name||'Building'}: blocks movement.`:PROPS[k]==='h'?`Stone wall: ${ht(x,y)} high. Only units that can climb 2 levels can get on top.`:ROCKS.includes(k)?`${PROPN[PROPS[k]]||'Obstacle'}: blocks movement.`:`Height ${ht(x,y)} tile.${inPool?'':' Not a deployment tile.'}`;render();
+  inspect=BLDG.has(k)?`${KIT[BLDG.get(k).kind].name}: height ${ht(x,y)}. Units can stand and fight up here.`:PROPS[k]==='h'?`Stone wall: ${ht(x,y)} high. Only units that can climb 2 levels can get on top.`:ROCKS.includes(k)?`${PROPN[PROPS[k]]||'Obstacle'}: blocks movement.`:`Height ${ht(x,y)} tile.${inPool?'':' Not a deployment tile.'}`;render();
 }
 function autoPlace(){mineU().forEach((u,i)=>{u.x=POS.P[i][0];u.y=POS.P[i][1]});PL.sel=null;inspect='';render()}
 function beginBattle(){
@@ -1446,58 +1451,36 @@ function drawBoard(mm,tg,stl,A){
   const tiles=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const [wx,wy]=wpos(x,y);tiles.push({x,y,wx,wy,depth:P2(wx,wy,0)[2]})}
   tiles.sort((a,b)=>a.depth-b.depth||a.x-b.x);
-  const roofAt=new Map();for(const t of tiles){const b=BLDG.get(t.x+','+t.y);if(b)roofAt.set(b,t)} // a roof is painted with its building's front-most tile
   const BEAM='#3a2716';
+  // a roof tile's top reads as a pitch: shade falls toward the eaves (edges onto lower ground), light toward higher roof, and a ridge runs through the top tiles
+  const roofTop=(C,x,y,h,NB,cx,cy)=>{
+    const bk=BLDG.get(x+','+y),top=Math.max(...bk.tiles.map(([a,b])=>ht(a,b))),M=[cx,cy];
+    NB.forEach(([a,b],i)=>{
+      const nb=inb(a,b)?BLDG.get(a+','+b):null,nh=inb(a,b)?ht(a,b):-9,p=C[i],q=C[(i+1)%6];
+      if(nb!==bk||nh<h){poly([p,q,lerp(q,M,.42),lerp(p,M,.42)],'rgba(30,18,6,.26)');g.strokeStyle='#4a3418';g.lineWidth=Math.max(1.5,R*.08);g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke()}
+      else if(nh>h)poly([p,q,lerp(q,M,.35),lerp(p,M,.35)],'rgba(255,238,190,.14)');
+      else if(h===top&&KIT[bk.kind].frame){const m=lerp(p,q,.5);g.strokeStyle='#6a4e24';g.lineWidth=Math.max(2,R*.12);g.lineCap='round';g.beginPath();g.moveTo(cx,cy);g.lineTo(m[0],m[1]);g.stroke()}
+    });
+  };
   const lerp=(p,q,f)=>[p[0]+(q[0]-p[0])*f,p[1]+(q[1]-p[1])*f];
   const quadAt=(a,b,d,u0,u1,v0,v1)=>{const A=lerp(a,b,u0),B=lerp(a,b,u1);return[[A[0],A[1]+d*v0],[B[0],B[1]+d*v0],[B[0],B[1]+d*v1],[A[0],A[1]+d*v1]]};
-  // one wall face of a building tile: stone footing, timber frame, and a window or the door on outside faces
+  // one side face of a building tile: roof above the eaves, then wall (timber frame, stone footing, a window or the door on outside faces)
   const bldFace=(W4,i,x,y,fdk)=>{
-    const a=W4[0],b=W4[1],d=W4[3][1]-a[1],bk=BLDG.get(x+','+y),N=(y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]])[i];
-    const out=BLDG.get(N[0]+','+N[1])!==bk;
-    const ft=quadAt(a,b,d,0,1,.8,1);texSide(ft,'wall',x*R,0,`rgba(0,0,0,${.2+.35*fdk})`);
+    const a=W4[0],b=W4[1],d=W4[3][1]-a[1],bk=BLDG.get(x+','+y),K=KIT[bk.kind],N=(y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]])[i];
+    const dark=`rgba(0,0,0,${.12+.4*fdk})`,out=BLDG.get(N[0]+','+N[1])!==bk,h=ht(x,y),rf=d>0?Math.min(1,(h-bk._wall)/h):0;
+    if(rf>0){texSide(quadAt(a,b,d,0,1,0,rf),K.roof,x*R,0,dark)}
+    if(rf>=1)return;
+    texSide(quadAt(a,b,d,0,1,rf,1),K.wall,x*R,0,dark);
+    if(!K.frame)return;
+    const wv=f=>rf+(1-rf)*f; // a point down the wall band
+    texSide(quadAt(a,b,d,0,1,wv(.82),1),'wall',x*R,0,`rgba(0,0,0,${.2+.35*fdk})`);
     g.strokeStyle=BEAM;g.lineWidth=Math.max(1.5,R*.09);g.lineCap='round';
-    const ln2=(p,q)=>{g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke()};
-    ln2(a,[a[0],a[1]+d*.8]);ln2(b,[b[0],b[1]+d*.8]);ln2([a[0],a[1]+d*.8],[b[0],b[1]+d*.8]);ln2([a[0],a[1]+d*.05],[b[0],b[1]+d*.05]);
-    if(!out)return;
+    const ln2=(p,q)=>{g.beginPath();g.moveTo(p[0],p[1]);g.lineTo(q[0],q[1]);g.stroke()},at=(f,v)=>{const p=lerp(a,b,f);return[p[0],p[1]+d*wv(v)]};
+    ln2(at(0,0),at(0,.82));ln2(at(1,0),at(1,.82));ln2(at(0,.82),at(1,.82));ln2(at(0,.02),at(1,.02));
+    if(!out||d*(1-rf)<R*.9)return;
     const door=bk.door&&bk.door[0]===x&&bk.door[1]===y&&bk.door[2]===i;
-    if(door){const D=quadAt(a,b,d,.28,.72,.34,.8);poly(D,'#4a2f18',BEAM,Math.max(1,R*.06));g.strokeStyle='rgba(20,12,6,.6)';g.lineWidth=1;for(const f of [.43,.57]){const p=lerp(a,b,f);ln2([p[0],p[1]+d*.36],[p[0],p[1]+d*.8])}const k2=lerp(a,b,.64);g.beginPath();g.arc(k2[0],k2[1]+d*.58,Math.max(1,R*.035),0,7);g.fillStyle='#c9a44a';g.fill()}
-    else{const Wn=quadAt(a,b,d,.3,.7,.25,.55);poly(Wn,'#1d1812',BEAM,Math.max(1,R*.06));poly(quadAt(a,b,d,.34,.66,.29,.51),`rgba(255,196,110,${.18-.1*fdk})`);const m=lerp(a,b,.5);g.strokeStyle=BEAM;g.lineWidth=Math.max(1,R*.04);ln2([m[0],m[1]+d*.25],[m[0],m[1]+d*.55]);const l=lerp(a,b,.3),r=lerp(a,b,.7);ln2([l[0],l[1]+d*.4],[r[0],r[1]+d*.4])}
-  };
-  // a hipped thatch roof over the convex hull of the footprint, with eaves that overhang the walls
-  const drawRoof=b=>{
-    const z=b._z*LV*R,pts=[],cs=b.tiles.map(([x,y])=>wpos(x,y));
-    for(const [wx,wy] of cs)for(let i=0;i<6;i++){const an=(-90+60*i)*Math.PI/180;pts.push([wx+Math.cos(an),wy+Math.sin(an)])}
-    pts.sort((p,q)=>p[0]-q[0]||p[1]-q[1]);const cr=(o,a,c)=>(a[0]-o[0])*(c[1]-o[1])-(a[1]-o[1])*(c[0]-o[0]),lo=[],hi=[];
-    for(const p of pts){while(lo.length>1&&cr(lo[lo.length-2],lo[lo.length-1],p)<=1e-9)lo.pop();lo.push(p)}
-    for(const p of pts.slice().reverse()){while(hi.length>1&&cr(hi[hi.length-2],hi[hi.length-1],p)<=1e-9)hi.pop();hi.push(p)}
-    let Hu=lo.slice(0,-1).concat(hi.slice(0,-1));
-    const c=[cs.reduce((s,p)=>s+p[0],0)/cs.length,cs.reduce((s,p)=>s+p[1],0)/cs.length];
-    let sxx=0,syy=0,sxy=0;for(const [px,py] of cs){sxx+=(px-c[0])**2;syy+=(py-c[1])**2;sxy+=(px-c[0])*(py-c[1])}
-    const ang=.5*Math.atan2(2*sxy,sxx-syy),ax=[Math.cos(ang),Math.sin(ang)],pe=[-ax[1],ax[0]];
-    Hu=Hu.map(p=>{const dx=p[0]-c[0],dy=p[1]-c[1],l=Math.hypot(dx,dy)||1;return[p[0]+dx/l*.28,p[1]+dy/l*.28]});
-    const pa=p=>(p[0]-c[0])*ax[0]+(p[1]-c[1])*ax[1],pp=p=>(p[0]-c[0])*pe[0]+(p[1]-c[1])*pe[1];
-    const mn=Math.min(...Hu.map(pa)),mx2=Math.max(...Hu.map(pa)),hw=Math.max(...Hu.map(p=>Math.abs(pp(p)))),half=Math.max(0,(mx2-mn)/2-hw*.85),mid=(mx2+mn)/2;
-    const rise=hw*.75*LV/.55*R,top=z+rise,ez=z-R*.12*LV/.55;
-    const rp=p=>{const t=Math.max(mid-half,Math.min(mid+half,pa(p)));return[c[0]+ax[0]*t,c[1]+ax[1]*t]};
-    const S=(p,zz)=>P2(p[0],p[1],zz);
-    const faces=Hu.map((p,i)=>{const q=Hu[(i+1)%Hu.length],a=S(p,ez),bq=S(q,ez),ra=S(rp(p),top),rb=S(rp(q),top);
-      let nx=q[1]-p[1],ny=-(q[0]-p[0]);const mx3=(p[0]+q[0])/2-c[0],my3=(p[1]+q[1])/2-c[1];if(nx*mx3+ny*my3<0){nx=-nx;ny=-ny}const nl=Math.hypot(nx,ny);const [vx,vy]=rot(nx/nl,ny/nl,th);
-      return{P:[a,bq,rb,ra],depth:(a[2]+bq[2])/2,vx,vy,el:Math.hypot(q[0]-p[0],q[1]-p[1])}}).sort((f1,f2)=>f1.depth-f2.depth);
-    const im=texImg('thatch'),pt=im&&g.createPattern(im,'repeat');
-    for(const f of faces){
-      const [a,bq,rb,ra]=f.P;
-      if(pt){const m=f.el/1.1,n=Math.hypot(hw,rise/R)/1.1;pt.setTransform(new DOMMatrix([(bq[0]-a[0])/(128*m),(bq[1]-a[1])/(128*m),(ra[0]-a[0])/(128*n),(ra[1]-a[1])/(128*n),a[0],a[1]]));poly(f.P.map(q=>[q[0],q[1]]),pt)}
-      else poly(f.P.map(q=>[q[0],q[1]]),'#b39a58');
-      const lit=-.62*f.vx+.45*f.vy,dk=Math.max(0,Math.min(.6,.3-.32*lit));poly(f.P.map(q=>[q[0],q[1]]),`rgba(30,20,8,${dk})`,'rgba(40,28,12,.7)',1);
-      g.strokeStyle='rgba(60,42,18,.85)';g.lineWidth=Math.max(1.5,R*.07);g.beginPath();g.moveTo(a[0],a[1]);g.lineTo(bq[0],bq[1]);g.stroke(); // eave
-    }
-    const r1=S([c[0]+ax[0]*(mid-half),c[1]+ax[1]*(mid-half)],top),r2=S([c[0]+ax[0]*(mid+half),c[1]+ax[1]*(mid+half)],top);
-    g.strokeStyle='#5a4220';g.lineWidth=Math.max(2,R*.13);g.lineCap='round';g.beginPath();g.moveTo(r1[0],r1[1]);g.lineTo(r2[0],r2[1]);g.stroke(); // ridge
-    // a stone chimney near one end of the ridge
-    const ch=[c[0]+ax[0]*(mid+half*.55)+pe[0]*.35,c[1]+ax[1]*(mid+half*.55)+pe[1]*.35],cb=S(ch,top-R*.15),cw=R*.16,chh=R*.55;
-    const cc=texImg('wall'),cp=cc&&g.createPattern(cc,'repeat');if(cp)cp.setTransform(new DOMMatrix().translateSelf(cb[0],cb[1]).scaleSelf(R*TS*1.4));
-    poly([[cb[0]-cw,cb[1]],[cb[0]-cw,cb[1]-chh],[cb[0]+cw,cb[1]-chh],[cb[0]+cw,cb[1]]],cp||'#7a746a','#2a2620',1);poly([[cb[0],cb[1]],[cb[0],cb[1]-chh],[cb[0]+cw,cb[1]-chh],[cb[0]+cw,cb[1]]],'rgba(0,0,0,.25)');
-    poly([[cb[0]-cw*1.2,cb[1]-chh],[cb[0]-cw*1.2,cb[1]-chh-R*.08],[cb[0]+cw*1.2,cb[1]-chh-R*.08],[cb[0]+cw*1.2,cb[1]-chh]],'#5e5850','#2a2620',1);
+    if(door){poly([at(.28,.3),at(.72,.3),at(.72,.82),at(.28,.82)],'#4a2f18',BEAM,Math.max(1,R*.06));g.strokeStyle='rgba(20,12,6,.6)';g.lineWidth=1;for(const f of [.43,.57])ln2(at(f,.32),at(f,.82));const k2=at(.64,.58);g.beginPath();g.arc(k2[0],k2[1],Math.max(1,R*.035),0,7);g.fillStyle='#c9a44a';g.fill()}
+    else if(K.win){poly([at(.3,.22),at(.7,.22),at(.7,.55),at(.3,.55)],'#1d1812',BEAM,Math.max(1,R*.06));poly([at(.34,.26),at(.66,.26),at(.66,.51),at(.34,.51)],`rgba(255,196,110,${.18-.1*fdk})`);g.strokeStyle=BEAM;g.lineWidth=Math.max(1,R*.04);ln2(at(.5,.22),at(.5,.55));ln2(at(.3,.38),at(.7,.38))}
   };
   const HZN=HZ?hzLit(ROUND()):null,HZX=HZ?hzLit(ROUND()+1):null,HZC={spikes:['rgba(150,160,170,.3)','#b4bec7'],quicksand:['rgba(200,160,80,.45)','#d2ad62'],fire:['rgba(255,100,30,.42)','#ff7a28'],jet:['rgba(255,120,40,.45)','#ff8a30'],vent:['rgba(205,228,242,.36)','#d4eaf6']};
   for(const t of tiles){
@@ -1509,15 +1492,17 @@ function drawBoard(mm,tg,stl,A){
       const al=-60+60*i+th,facing=Math.sin(al*Math.PI/180);
       if(facing<=.02)continue;
       const a=C[i],b=C[(i+1)%6],W4=[a,b,[b[0],b[1]+d],[a[0],a[1]+d]];
-      const fdk=(Math.cos((al-45)*Math.PI/180)+1)/2;if(TXF&&texSide(W4,BLDG.has(k)?'plaster':PROPS[k]==='h'?'wall':TXF[1],wx*R,0,`rgba(0,0,0,${.12+.4*fdk})`)){polys.push(W4);if(BLDG.has(k))bldFace(W4,i,x,y,fdk)}
+      const fdk=(Math.cos((al-45)*Math.PI/180)+1)/2;if(TXF&&BLDG.has(k)){bldFace(W4,i,x,y,fdk);polys.push(W4)}
+      else if(TXF&&texSide(W4,PROPS[k]==='h'?'wall':TXF[1],wx*R,0,`rgba(0,0,0,${.12+.4*fdk})`)){polys.push(W4)}
       else if(PROPS[k]==='h'){const sh=46-14*(Math.cos((al-45)*Math.PI/180)+1)/2;poly(W4,`hsl(38 8% ${sh}%)`,'#1c1a16');g.strokeStyle='rgba(20,18,14,.55)';g.lineWidth=1;const n=Math.max(2,Math.round(h*2));for(let m=1;m<n;m++){const f=m/n;g.beginPath();g.moveTo(a[0],a[1]+d*f);g.lineTo(b[0],b[1]+d*f);g.stroke();for(let jx=0;jx<2;jx++){const u=(jx+.5+(m%2?0:.35))/2.2,px=a[0]+(b[0]-a[0])*u,py=a[1]+(b[1]-a[1])*u;g.beginPath();g.moveTo(px,py+d*f);g.lineTo(px,py+d*(f-1/n));g.stroke()}}polys.push(W4)}
       else{poly(W4,`hsl(${TH.h} ${Math.max(5,TH.s-4)}% ${lt+TH.l-6-10*(Math.cos((al-45)*Math.PI/180)+1)/2}%)`,'#0c141b');polys.push(W4)}
     }
     const pk=PROPS[k];
     const NBR=y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]];
-    const tdone=TXF&&texTop(C,pk==='w'?'water':pk==='l'?'lava':pk==='h'?'wall':TXF[0],d,pk==='l'?null:pk==='w'?'rgba(14,44,78,.5)':`hsla(${TH.h} ${TH.s}% 45% / ${TXF[2]||.16})`);
+    const tdone=TXF&&texTop(C,pk==='w'?'water':pk==='l'?'lava':pk==='h'?'wall':BLDG.has(k)?KIT[BLDG.get(k).kind].roof:TXF[0],d,pk==='l'?null:pk==='w'?'rgba(14,44,78,.5)':`hsla(${TH.h} ${TH.s}% 45% / ${TXF[2]||.16})`);
     if(tdone&&pk!=='w'&&pk!=='l'){const lite=['snow','salt','quarry'].includes(THEME),sh=(h-2)*.06+((x+y)%2?.025:0)-(lite?.12:0);poly(C,sh<0?`rgba(0,0,0,${Math.min(.4,-sh)})`:`rgba(255,240,210,${Math.min(.18,sh)})`)} // height reads as light: low ground darker, high ground brighter
     if(tdone)poly(C,null,'rgba(8,12,16,.45)',.8);else poly(C,pk==='w'?`hsl(205 45% ${22+((x+y)%2?3:0)}%)`:pk==='y'?`hsl(${62+((x*5+y)%3)*5} 68% ${34+((x+y)%2?4:0)}%)`:pk==='l'?`hsl(${14+((x*3+y)%3)*4} 90% ${34+((x+y)%2?4:0)}%)`:pk==='h'?`hsl(40 10% ${(x+y)%2?60:57}%)`:`hsl(${TH.h} ${TH.s}% ${lt+TH.l}%)`,'#0c141b');
+    if(tdone&&BLDG.has(k)&&KIT[BLDG.get(k).kind].frame)roofTop(C,x,y,h,NBR,cx,cy);
     if(VMODE==='top')NBR.forEach(([a,b],i)=>{if(!inb(a,b))return;const dh=h-ht(a,b);if(dh>0){g.beginPath();g.moveTo(C[i][0],C[i][1]);g.lineTo(C[(i+1)%6][0],C[(i+1)%6][1]);g.strokeStyle=dh>1?'#04070a':'rgba(4,7,10,.75)';g.lineWidth=1.5+dh*1.4;g.stroke()}});
     if(pk==='w'){g.strokeStyle='rgba(160,210,240,.35)';g.lineWidth=1;for(let q=-1;q<=1;q+=2){g.beginPath();g.moveTo(cx-R*.4,cy+q*R*.12);g.quadraticCurveTo(cx,cy+q*R*.12-R*.1,cx+R*.4,cy+q*R*.12);g.stroke()}}
     else if(pk==='l'){g.strokeStyle='rgba(255,220,120,.5)';g.lineWidth=1.2;g.beginPath();g.moveTo(cx-R*.45,cy);g.lineTo(cx-R*.1,cy-R*.08);g.lineTo(cx+R*.1,cy+R*.08);g.lineTo(cx+R*.45,cy);g.stroke()}
@@ -1536,7 +1521,7 @@ function drawBoard(mm,tg,stl,A){
     if(castFp.has(k)&&!castAt.has(k))poly(C,'rgba(168,120,255,.16)','#a878ff',1.5);
     if(castAt.has(k))poly(C,'rgba(168,120,255,.32)','#a878ff',3);
     if(PREV&&PREV.tiles.has(k)){const hit=PREV.hit.has(k);poly(C,PREV.ally?(hit?'rgba(90,200,150,.5)':'rgba(90,200,150,.2)'):(hit?'rgba(255,110,60,.5)':'rgba(255,140,60,.2)'),PREV.ally?'#5ac896':'#ff8c3c',hit?3:2)} // targeting preview
-    if(h>0&&!here.length&&!SCENE&&!BLDG.has(k)){g.fillStyle='rgba(255,255,255,.35)';g.font=`${Math.round(R*.34)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(h,cx,cy)}
+    if(h>0&&!here.length&&!SCENE){g.fillStyle='rgba(255,255,255,.35)';g.font=`${Math.round(R*.34)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(h,cx,cy)}
     const trp=traps.find(q=>q.x===x&&q.y===y&&q.team===VIEWER);
     if(trp){g.fillStyle='rgba(226,178,76,.9)';g.font=`700 ${Math.round(R*.62)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(AB[trp.a].persist?'▲':'⚠',cx,cy+R*.05)} // only the owner's team can see a trap
     const hit={x,y,polys,cx,cy};HITS.push(hit);
@@ -1564,7 +1549,6 @@ function drawBoard(mm,tg,stl,A){
       g.globalAlpha=1;
       hit.polys.push([[cx-r,bY-2],[cx+r,bY-2],[cx+r,cy],[cx-r,cy]]);
     }
-    {const b=BLDG.get(k);if(b&&roofAt.get(b)===t)drawRoof(b)}
     if(castAt.has(k)){g.fillStyle='#d6c2ff';g.font=`${Math.round(R*.5)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText('✦',cx-R*.55,cy+R*.05)}
   }
 }
