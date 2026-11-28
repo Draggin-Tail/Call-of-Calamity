@@ -27,10 +27,18 @@ for(const [w,h,o] of [[390,664,'portrait'],[780,350,'landscape']]){
  await p.evaluate(()=>[...document.querySelectorAll('#stv .stv-ab .stv-row')][2].click());await p.waitForTimeout(150);s=await st();
  ok(/passive slot/i.test(s.help)&&!s.sheet,o+': one tap selects a row and explains it');
  await p.evaluate(()=>[...document.querySelectorAll('#stv .stv-ab .stv-row')][2].click());await p.waitForTimeout(200);s=await st();
- ok(s.sheet,o+': a second tap opens the editor (passives sheet)');
- const onTop=await p.evaluate(()=>{const q=document.querySelector('#sh-sheet .p');const b=q.getBoundingClientRect();const e=document.elementFromPoint(b.left+b.width/2,b.top+20);return !!(e&&e.closest('#sh-sheet'))});
- ok(onTop,o+': the editor sheet shows above the Status screen');
- await tabs(/^Close$/);await p.waitForTimeout(250);s=await st();ok(s&&!s.sheet&&s.mode==='stv-status',o+': closing the sheet returns to Status');
+ ok(s.mode==='stv-equip stv-learn'&&!s.sheet,o+': a second tap opens the Learn screen (no old sheet)');
+ ok(await p.evaluate(()=>/Passives/.test(document.querySelector('#stv .stv-strip .on').textContent)),o+': ... on the Passives page');
+ ok(s.frames.every(f=>f.v)&&!s.over,o+': the Learn screen fits ('+s.frames.filter(f=>!f.v).map(f=>f.c).join(',')+')');
+ // skills page: pick an unlearned skill and learn it with JP
+ await p.evaluate(()=>[...document.querySelectorAll('#stv .stv-strip button')][0].click());await p.waitForTimeout(150);
+ const lr=await p.evaluate(()=>{const u=GAME_SHELL.state().roster[0],before=u.skills?JSON.stringify(u.skills):'';const r=[...document.querySelectorAll('#stv .stv-list .stv-row')].find(x=>x.querySelector('.stv-jp:not(.no)'));if(!r)return null;r.click();return 1});
+ await p.waitForTimeout(150);
+ const jp0=await p.evaluate(()=>GAME_SAVE.jpOf?GAME_SAVE.jpOf(GAME_SHELL.state().roster[0],'squire'):null);
+ await p.evaluate(()=>[...document.querySelectorAll('#stv .stv-acts button')].find(x=>/^Learn/.test(x.textContent)).click());await p.waitForTimeout(200);
+ const jp1=await p.evaluate(()=>GAME_SAVE.jpOf?GAME_SAVE.jpOf(GAME_SHELL.state().roster[0],'squire'):null);
+ ok(lr&&jp0!==null&&jp1<jp0,o+': Learn spends JP on the picked skill ('+jp0+' to '+jp1+')');
+ await p.evaluate(()=>[...document.querySelectorAll('#stv .stv-hdr button')].find(x=>x.textContent==='Back').click());await p.waitForTimeout(200);s=await st();ok(s&&!s.sheet&&s.mode==='stv-status',o+': Back returns to Status');
  // long press an equipment row
  const hold=async sel=>{const el=await p.$(sel);const bb=await el.boundingBox();await p.mouse.move(bb.x+bb.width/2,bb.y+bb.height/2);await p.mouse.down();await p.waitForTimeout(650);await p.mouse.up();await p.waitForTimeout(150)};
  await hold('#stv .stv-eq .stv-row');s=await st();
