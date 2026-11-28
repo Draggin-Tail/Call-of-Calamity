@@ -35,9 +35,14 @@
   const MONSTER_ORDER = ['dire_wolf', 'cave_bear', 'giant_spider', 'ghoul', 'banshee', 'bone_archer', 'fire_elemental', 'stone_golem', 'storm_elemental',
     'drake_whelp', 'basilisk', 'maw_horror', 'elder_drake', 'barrow_king'];
   // returns { im, ox, oy }: the image and where this class's 128x640 sheet starts inside it
+  // Class art (design/visual_pass.md V4): Google-generated sheets (64px frames) for every class; ?gai=0 shows the old chibi sprites
+  const GAI = !/[?&]gai=0/.test(location.search), GAI_HAS = ['squire', 'scout', 'acolyte', 'apprentice', 'warrior', 'sentinel', 'bulwark', 'rogue', 'monk', 'berserker',
+    'archer', 'marksman', 'tracker', 'cleric', 'druid', 'shaman', 'wizard', 'necro', 'enchanter', 'bard', 'shadowknight', 'shadowmage', 'warlord', 'assassin',
+    'songweaver', 'spellbow', 'paladin', 'blood_knight', 'warden', 'siegebreaker', 'zen_archer', 'ranger', 'beastlord', 'ascetic', 'inquisitor', 'stormcaller'];
   function img(u) {
     if (!u || !u.job) return null;
     const team = u.team === 'P' ? 'ally' : 'enemy', race = (u.build && u.build.race) || u.race || 'human';
+    if (GAI && GAI_HAS.includes(u.job)) { const q = load('gai/' + team + '/' + u.job); if (q.ok) return { im: q, ox: 0, oy: 0, f: 64, k: 1.3 }; if (!q.bad) return null; }
     const mi = MONSTER_ORDER.indexOf(u.job);
     if (mi >= 0) {
       const m = load(team + '/monsters');
@@ -106,9 +111,10 @@
       if (s.deathAt && t >= s.deathAt) { A = ANIM.death; f = Math.min(A.n - 1, Math.floor((t - s.deathAt) / A.ms)); }
       else if (act) { A = ANIM[act.name]; f = Math.min(A.n - 1, Math.floor((t - act.t0) / A.ms)); }
       else if (s.walkUntil && t < s.walkUntil) { A = ANIM.walk; f = Math.floor((t - s.moveT0) / A.ms) % A.n; }
-      const size = R * (top ? 1.25 : 1.7), dx = Math.round(px - size / 2), dy = Math.round(top ? py - size * 0.55 : py - size * 0.94 + R * 0.12);
+      const size = R * (top ? 1.25 : 1.7) * (sh.k || 1), dx = Math.round(px - size / 2), dy = Math.round(top ? py - size * 0.55 : py - size * 0.94 + R * 0.12);
       const sm = g.imageSmoothingEnabled; g.imageSmoothingEnabled = false;
-      g.drawImage(im, sh.ox + f * F, sh.oy + (A.row + DIRS[face]) * F, F, F, dx, dy, Math.round(size), Math.round(size));
+      const FF = sh.f || F;
+      g.drawImage(im, sh.ox + f * FF, sh.oy + (A.row + DIRS[face]) * FF, FF, FF, dx, dy, Math.round(size), Math.round(size));
       g.imageSmoothingEnabled = sm;
       return dy + size * 0.12;
     },
