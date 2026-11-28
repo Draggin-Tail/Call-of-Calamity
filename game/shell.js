@@ -237,6 +237,7 @@ body.campaign #top .skirm{display:none}
 .stv-cc .ped{position:relative;display:grid;place-items:center;width:100%;flex:1;min-height:0}
 .stv-cc .ped::after{content:'';position:absolute;left:50%;bottom:1px;width:min(36px,80%);height:8px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(#3b4a5c,#1b2430 70%);box-shadow:0 0 0 1px #000a;z-index:-1}
 .stv-spr{display:block;width:var(--sz,32px);height:var(--sz,32px);background-size:400% 2000%;background-position:0 0;background-repeat:no-repeat;image-rendering:pixelated}
+.stv-spr.gai{transform:scale(1.4);transform-origin:50% 88%}
 .stv-cc .ped{container-type:size}.stv-cc .stv-spr{--sz:min(36px,100cqh,100cqw)}
 .stv-cc .n{font:600 9px system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.1}
 .stv-cc .p{width:70%;height:3px;border-radius:2px;background:#0008;overflow:hidden;flex:none}.stv-cc .p i{display:block;height:100%;background:linear-gradient(90deg,#b7e3ff,#4b9fd0)}
@@ -1435,7 +1436,9 @@ body.campaign #top .skirm{display:none}
     const C0 = D.classes[c], un = u.unlocked.includes(c), req = C0.requires || [];
     return { un, mastered: un && S.isMastered(u, c), known: un || req.every(r => u.unlocked.includes(r)), learned: S.knownSkills(u, c).length, size: C0.ab.length, req };
   }
-  const sprite = (c, cls) => h('i', { class: 'stv-spr ' + (cls || ''), style: "background-image:url('sprites/ally/" + c + ".png')" });
+  // the Google class art (sprites/gai, same 4x20 layout) unless ?gai=0 asks for the old chibi sprites
+  const SPR_DIR = /[?&]gai=0/.test(location.search) ? 'sprites/ally/' : 'sprites/gai/ally/';
+  const sprite = (c, cls) => h('i', { class: 'stv-spr ' + (SPR_DIR === 'sprites/ally/' ? '' : 'gai ') + (cls || ''), style: "background-image:url('" + SPR_DIR + c + ".png')" });
   function classesView(u) {
     const all = treeClasses(); if (!SV.cls || !D.classes[SV.cls]) SV.cls = u.primary;
     const sel = SV.cls, tiers = [...new Set(all.map(c => D.classes[c].tier))].sort();
