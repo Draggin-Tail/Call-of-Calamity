@@ -280,6 +280,20 @@ let BLDG=new Map(),SLOPE=new Map();
 // Slopes (mockup, ?bld=1): `slopes: [[x,y,h,deg]]` sets a tile's height (halves allowed) and tilts its top to rise toward deg (0 = east, -90 = north),
 // half a level up on the high side and half down on the low side, so a slope at 1/2 between ground at 0 and 1 is a ramp anyone can walk.
 const fmtH=h=>Number.isInteger(h)?String(h):(Math.floor(h)||'')+'½';
+// a slope corner is shared with the tiles that meet there: the average of the slopes, snapped to a flat neighbour within half a level, kept within half a level of the tile
+function slopeCorner(x,y,i,h){
+  const N=y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]];
+  const at=[[x,y],N[(i+5)%6],N[i]].filter(([a,b])=>inb(a,b)&&!VOID.has(a+','+b)&&!BLDG.has(a+','+b));
+  const sl=at.filter(([a,b])=>SLOPE.has(a+','+b)).map(([a,b])=>ht(a,b)),fl=at.filter(([a,b])=>!SLOPE.has(a+','+b)).map(([a,b])=>ht(a,b));
+  const avg=sl.reduce((t,v)=>t+v,0)/sl.length,f=fl.filter(v=>Math.abs(v-avg)<=.5).sort((p,q)=>Math.abs(p-avg)-Math.abs(q-avg))[0];
+  return Math.max(h-.5,Math.min(h+.5,f!=null?f:avg));
+}
+// The ground a step crosses (map pass 3, ?bld=1 mockup): each side's height at the edge the two tiles share (a slope's edge is the mean of its two corners).
+// Where they meet within half a level the step is free; otherwise it is a cliff, and its height must be within the unit's Jump, going up or down.
+const NB6=(x,y)=>y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]];
+function edgeH(x,y,i){const h=ht(x,y);if(!SLOPE.has(x+','+y))return h;return(slopeCorner(x,y,i,h)+slopeCorner(x,y,(i+1)%6,h))/2}
+function cliffAt(ax,ay,bx,by){const i=NB6(ax,ay).findIndex(([a,b])=>a===bx&&b===by);if(i<0)return ht(bx,by)-ht(ax,ay);const g=edgeH(bx,by,(i+3)%6)-edgeH(ax,ay,i);return Math.abs(g)<=.5?0:g} // + up, - down, 0 free
+const canStep=(ax,ay,bx,by,j)=>Math.abs(cliffAt(ax,ay,bx,by))<=j;
 function applySlopes(bf){SLOPE=new Map();const ss=bf.slopes||[];if(!ss.length)return;HT=HT.map(r=>r.slice());for(const [x,y,h,deg] of ss){HT[y][x]=h;SLOPE.set(x+','+y,deg)}}
 function applyBuildings(bf){BLDG=new Map();const bs=bf.buildings||[];if(!bs.length)return;HT=HT.map(r=>r.slice());for(const b of bs){const base=Math.min(...b.tiles.map(([x,y])=>HT[y][x]));b._wall=base+Math.min(...b.tiles.map(t=>t[2]));for(const [x,y,h] of b.tiles){HT[y][x]=base+h;BLDG.set(x+','+y,b)}}}
 if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp)GD.maps.thornfield_camp.buildings=[
@@ -663,7 +677,7 @@ function reach(u,mv=moveRange(u),jb=0,av=null){ // av: tiles to path around (the
     if(d>=mv)continue;
     for(const [nx,ny] of nbrs(x,y)){
       const k=nx+','+ny;
-      if(!inb(nx,ny)||dd.has(k)||ROCKS.includes(k)||(av&&av.has(k))||Math.abs(ht(nx,ny)-ht(x,y))>jumpOf(u,jb))continue;
+      if(!inb(nx,ny)||dd.has(k)||ROCKS.includes(k)||(av&&av.has(k))||!canStep(x,y,nx,ny,jumpOf(u,jb)))continue;
       const o=at(nx,ny);
       if(o&&o.team!==u.team)continue; // enemies block, allies can be passed through
       dd.set(k,d+1);prev.set(k,k0);q.push([nx,ny]);
@@ -691,7 +705,7 @@ function targets(u,a){
     return false;
   });
 }
-const summonTiles=u=>nbrs(u.x,u.y).filter(([x,y])=>inb(x,y)&&!ROCKS.includes(x+','+y)&&!at(x,y)&&Math.abs(ht(x,y)-ht(u.x,u.y))<=CR.summons.maxHeightStep).map(([x,y])=>x+','+y);
+const summonTiles=u=>nbrs(u.x,u.y).filter(([x,y])=>inb(x,y)&&!ROCKS.includes(x+','+y)&&!at(x,y)&&canStep(u.x,u.y,x,y,CR.summons.maxHeightStep)).map(([x,y])=>x+','+y);
 
 // ---- status rules read from combatRules.statuses (blocks, rangeDelta, skipsTurn, ignoresVanish, ...)
 const stActive=(u,pred)=>Object.keys(CR.statuses).find(k=>u.st[k]>0&&pred(CR.statuses[k]));
@@ -735,9 +749,9 @@ function pushPath(t,from,hexes,dir){ // plans the move without doing it: [[x,y,d
     if(!best)break;const[a,b]=best;
     if(!inb(a,b))break;
     if(dir==='pull'&&dist({x:a,y:b},from)<1)break;
-    if(ht(a,b)-ht(x,y)>jumpOf(t))break; // a wall higher than its climb stops it
+    if(cliffAt(x,y,a,b)>jumpOf(t))break; // a wall higher than its climb stops it
     if(ROCKS.includes(a+','+b)||at(a,b)){if(dir==='push')hit=true;break}
-    steps.push([a,b,Math.max(0,ht(x,y)-ht(a,b))]);x=a;y=b;
+    steps.push([a,b,Math.max(0,-cliffAt(x,y,a,b))]);x=a;y=b;
   }
   return{steps,hit,fall:steps.reduce((n,s)=>n+(s[2]>jumpOf(t)?fallDmg(Math.floor(s[2])):0),0)};
 }
@@ -1039,7 +1053,7 @@ function resolveAct(u,a,t,tile){
     if(h.hp>0)for(const k of hadVs)applyFx(h,A.fxVsStatus[k]); // Consecrate pins Judged foes
     if(A.selfHealIfNegative&&hadNeg&&u.hp>0){u.hp=Math.min(u.max,u.hp+A.selfHealIfNegative)}
     if(A.petStrike&&h.hp>0){const pt=petOf(u);if(pt){
-      if(A.petStrike.teleport&&dist(pt,h)>1){const spot=nbrs(h.x,h.y).filter(([x,y])=>inb(x,y)&&!ROCKS.includes(x+','+y)&&!at(x,y)&&Math.abs(ht(x,y)-ht(h.x,h.y))<=jumpOf(pt)).sort((a,b)=>dist({x:a[0],y:a[1]},pt)-dist({x:b[0],y:b[1]},pt))[0];if(spot){pt.x=spot[0];pt.y=spot[1]}}
+      if(A.petStrike.teleport&&dist(pt,h)>1){const spot=nbrs(h.x,h.y).filter(([x,y])=>inb(x,y)&&!ROCKS.includes(x+','+y)&&!at(x,y)&&canStep(h.x,h.y,x,y,jumpOf(pt))).sort((a,b)=>dist({x:a[0],y:a[1]},pt)-dist({x:b[0],y:b[1]},pt))[0];if(spot){pt.x=spot[0];pt.y=spot[1]}}
       if(dist(pt,h)===1){say(`${pt.n} strikes ${h.n}`);tot+=hurt(pt,h,A.petStrike.p,{},'spirit_bite')}}}
     if(A.swapMeter){TA.gainMeter(u,Math.max(0,h.meter));h.meter=-spent*CR.turn.meterPenaltyPerPointSpent;say(`${u.n} takes ${h.n}'s turn meter`)}
     if(A.markQuarry&&h.hp>0){if(u.quarry&&u.quarry!==h)u.quarry.st.quarry=0;u.quarry=h;h.st.quarry=A.markQuarry} // Tracker: one Quarry at a time
@@ -1467,14 +1481,6 @@ function drawBoard(mm,tg,stl,A){
   const tiles=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const [wx,wy]=wpos(x,y);tiles.push({x,y,wx,wy,depth:P2(wx,wy,0)[2]})}
   tiles.sort((a,b)=>a.depth-b.depth||a.x-b.x);
-  // a slope corner is shared with the tiles that meet there: the average of the slopes, snapped to a flat neighbour within half a level, kept within half a level of the tile
-  const slopeCorner=(x,y,i,h)=>{
-    const N=y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]];
-    const at=[[x,y],N[(i+5)%6],N[i]].filter(([a,b])=>inb(a,b)&&!VOID.has(a+','+b)&&!BLDG.has(a+','+b));
-    const sl=at.filter(([a,b])=>SLOPE.has(a+','+b)).map(([a,b])=>ht(a,b)),fl=at.filter(([a,b])=>!SLOPE.has(a+','+b)).map(([a,b])=>ht(a,b));
-    const avg=sl.reduce((t,v)=>t+v,0)/sl.length,f=fl.filter(v=>Math.abs(v-avg)<=.5).sort((p,q)=>Math.abs(p-avg)-Math.abs(q-avg))[0];
-    return Math.max(h-.5,Math.min(h+.5,f!=null?f:avg));
-  };
   const BEAM='#3a2716';
   // a roof tile's top reads as a pitch: shade falls toward the eaves (edges onto lower ground), light toward higher roof, and a ridge runs through the top tiles
   const roofTop=(C,x,y,h,NB,cx,cy)=>{
@@ -1663,7 +1669,7 @@ async function aiStep(u){
   // walking distance to the nearest foe for this unit's climb (map pass 2): bridges, cliffs, chasms and walls send it the long way round instead of
   // pressing against the straight line; tiles it cannot walk to from here fall back to the straight distance plus a large penalty
   const pdJ=jumpOf(u),pd=new Map(),pq=[];for(const f of foes){const k=f.x+','+f.y;if(!pd.has(k)){pd.set(k,0);pq.push([f.x,f.y])}}
-  for(let i=0;i<pq.length;i++){const [x,y]=pq[i],d=pd.get(x+','+y);for(const [nx,ny] of nbrs(x,y)){const k=nx+','+ny;if(!inb(nx,ny)||pd.has(k)||ROCKS.includes(k)||Math.abs(ht(nx,ny)-ht(x,y))>pdJ)continue;pd.set(k,d+1);pq.push([nx,ny])}}
+  for(let i=0;i<pq.length;i++){const [x,y]=pq[i],d=pd.get(x+','+y);for(const [nx,ny] of nbrs(x,y)){const k=nx+','+ny;if(!inb(nx,ny)||pd.has(k)||ROCKS.includes(k)||!canStep(x,y,nx,ny,pdJ))continue;pd.set(k,d+1);pq.push([nx,ny])}}
   const usePd=pd.has(u.x+','+u.y),nd=(x,y)=>{if(!usePd)return ndHex(x,y);const v=pd.get(x+','+y);return v===undefined?ndHex(x,y)+40:v};
   const lvl=u.lvPow&&u.lvPow>1?u.lvPow:1,amb=hidden(u),spellUser=t=>t.ab.some(a=>AB[a]&&AB[a].tags&&AB[a].tags.includes('spell')&&AB[a].k==='dmg');
   const est=(a,t)=>{const A=AB[a];let p=(effP(u,A,a)+abBonus(u,A,t,amb,u.charge||0))*abMult(A,t);
