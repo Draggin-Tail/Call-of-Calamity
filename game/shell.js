@@ -222,6 +222,53 @@ body.campaign #top .skirm{display:none}
 .stv-dh{display:flex;gap:10px;align-items:center}
 .stv-kit{display:flex;flex-direction:column;gap:5px}.stv-kit .no{opacity:.55}
 .stv-close{display:flex;justify-content:flex-end}
+/* ---- Class tree (UI pass phase 3) ---- */
+.stv-classes .stv-a{flex:1}.stv-classes .stv-c{flex:none}
+.stv-treef{flex:1;display:flex;flex-direction:column;padding:4px 6px 3px;min-height:0}
+.stv-tree{position:relative;flex:1;display:flex;flex-direction:column;gap:2px;min-height:0}
+.stv-tier{display:flex;flex-direction:column;min-height:0;flex:1 1 13px}.stv-tier.t2,.stv-tier.t3{flex-grow:3}
+.stv-tier .tl{height:13px;font:700 9px/11px system-ui;letter-spacing:.16em;color:var(--sg);padding:1px 2px;border-bottom:1px solid rgba(217,178,90,.2);flex:none}
+.stv-tier .g{flex:1;display:grid;grid-template-columns:repeat(6,1fr);grid-auto-rows:1fr;min-height:0}
+.stv-tier.t1 .g{grid-template-columns:repeat(4,1fr);padding:0 16.6%}
+.stv-cc{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:1px;padding:0 1px 1px;border:0;border-radius:5px;background:none;color:inherit;cursor:pointer;min-width:0;min-height:0;z-index:1}
+.stv-cc .ped{position:relative;display:grid;place-items:center;width:100%;flex:1;min-height:0}
+.stv-cc .ped::after{content:'';position:absolute;left:50%;bottom:1px;width:min(36px,80%);height:8px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(#3b4a5c,#1b2430 70%);box-shadow:0 0 0 1px #000a;z-index:-1}
+.stv-spr{display:block;width:var(--sz,32px);height:var(--sz,32px);background-size:400% 2000%;background-position:0 0;background-repeat:no-repeat;image-rendering:pixelated}
+.stv-cc .ped{container-type:size}.stv-cc .stv-spr{--sz:min(36px,100cqh,100cqw)}
+.stv-cc .n{font:600 9px system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.1}
+.stv-cc .p{width:70%;height:3px;border-radius:2px;background:#0008;overflow:hidden;flex:none}.stv-cc .p i{display:block;height:100%;background:linear-gradient(90deg,#b7e3ff,#4b9fd0)}
+.stv-cc .p:empty{background:none}
+.stv-cc.lock .stv-spr,.stv-cdh .big.lock .stv-spr{filter:brightness(.12) saturate(0) drop-shadow(0 0 1px #7a8796)}
+.stv-cc.lock .n{color:#8b96a1}.stv-cc.unk .n{color:#5d6873;letter-spacing:.1em}
+.stv-cc.pri .ped::after{background:radial-gradient(#ffe39a,#b88424 70%);box-shadow:0 0 8px #e2b24c}
+.stv-cc.sec .ped::after{background:radial-gradient(#cdeeff,#3d82b8 70%);box-shadow:0 0 8px #4b9fd0}
+.stv-cc.sel{background:rgba(217,178,90,.14);box-shadow:inset 0 0 0 1px var(--sg)}
+.stv-cc .tag{position:absolute;left:2px;top:1px;font:800 8px system-ui;background:var(--sg);color:#10161d;border-radius:2px;padding:0 3px}.stv-cc .tag.s{background:#8fd0ff}
+.stv-cc .star{position:absolute;right:2px;top:0;font-size:10px;color:#ffd77a;text-shadow:0 0 3px #000}
+.stv-lines{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;overflow:visible}
+.stv-lines polyline{fill:none;stroke:#e2b24c;stroke-width:2;stroke-linejoin:round;filter:drop-shadow(0 0 2px rgba(226,178,76,.6))}
+.stv-lines polyline.todo{stroke-dasharray:4 3;opacity:.8}
+.stv-legend{display:flex;flex-wrap:wrap;gap:3px 10px;justify-content:center;font:500 9.5px system-ui;color:#9aa3ad;padding-top:3px;flex:none}
+.stv-legend span{display:flex;align-items:center;gap:3px}.stv-legend b{width:10px;height:5px;border-radius:50%;background:#e2b24c}.stv-legend b.sec{background:#4b9fd0}.stv-legend .unk{letter-spacing:.06em}
+.stv-cdet{padding:7px 9px;display:flex;flex-direction:column;gap:5px;font-size:11.5px;line-height:1.35}
+.stv-cdh{display:flex;gap:9px;align-items:center}.stv-cdh b.stv-serif{font-size:17px;color:var(--sg)}
+.stv-cdh .big{width:52px;height:52px;flex:none;display:grid;place-items:center;border-radius:5px;background:radial-gradient(circle at 50% 70%,#2a3a4e,#0b1118 75%);border:1px solid var(--sl)}.stv-cdh .big .stv-spr{--sz:48px}
+.stv-req{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;font:600 11px system-ui}
+.stv-pips{display:flex;gap:2px;flex-wrap:wrap}.stv-pips i{width:7px;height:7px;border-radius:2px;background:#0b1118;border:1px solid #3a4756}.stv-pips i.on{background:#8fd0ff;border-color:#4b9fd0}
+.stv-blurb{color:#c9d1d8}
+.stv-cdet .stv-acts{margin-top:2px}.stv-cdet .stv-acts .sb{white-space:normal!important;line-height:1.1;padding-left:4px!important;padding-right:4px!important;min-width:0}
+.stv-pen{font-style:normal;font-size:12px;color:#9aa3ad;margin-left:auto}
+.stv-nm[role=button]{cursor:pointer}
+@media (orientation:portrait){.stv-cdet{max-height:44vh;overflow:hidden}}
+@media (orientation:landscape){
+  .stv-classes .stv-screen{display:grid;grid-template-columns:1fr 240px;grid-template-rows:auto 1fr}
+  .stv-classes .stv-c{min-height:0}.stv-classes .stv-cdet{flex:1;overflow:hidden}
+  .stv-tree{flex-direction:row;gap:6px}
+  .stv-tier{flex:none!important}.stv-tier.t1{width:11%}.stv-tier.t2,.stv-tier.t3{flex:1!important}
+  .stv-tier .g{grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(4,1fr)}
+  .stv-tier.t1 .g{grid-template-columns:1fr;padding:0}
+  .stv-legend{gap:2px 8px;font-size:9px}
+}
 /* equip, portrait: the slot list is replaced by the strip */
 .stv-equip .stv-eq{display:none}
 .stv-equip .stv-a{flex:none}.stv-equip .stv-b{flex:1}
@@ -1160,20 +1207,21 @@ body.campaign #top .skirm{display:none}
   }
 
   function openStatus(id, mode, slot) { SV = { id, mode: mode || 'status', sel: SV && SV.id === id ? SV.sel : 'primary', slot: slot || 'MainHand', pick: null }; drawStatus(); }
+  addEventListener('resize', () => { if (SV && SV.mode === 'classes') drawStatus(); });
   function closeStatus() { SV = null; drawStatus(); render(); }
   function drawStatus() {
     let root = document.getElementById('stv');
     if (!SV || !ST || !unit(SV.id)) { if (root) root.remove(); SV = null; return; }
     if (!root) { root = h('div', { id: 'stv' }); lpBind(root); document.getElementById('shell').appendChild(root); }
     root.innerHTML = ''; root.className = 'stv-' + SV.mode;
-    root.appendChild(SV.mode === 'equip' ? equipView(unit(SV.id)) : statusView(unit(SV.id)));
+    root.appendChild(SV.mode === 'equip' ? equipView(unit(SV.id)) : SV.mode === 'classes' ? classesView(unit(SV.id)) : statusView(unit(SV.id)));
   }
   const frame = (cls, ...kids) => h('div', { class: 'stv-frame ' + (cls || '') }, ...kids);
   const colHead = (t, r) => h('h3', {}, h('span', { text: t }), r ? h('span', { class: 'dim', text: r }) : null);
   function statusHeader(title, u, nav) {
-    const i = ST.roster.indexOf(u), n = ST.roster.length, go = d => { const v = ST.roster[(i + d + n) % n]; SV.id = v.id; SV.pick = null; drawStatus(); };
+    const i = ST.roster.indexOf(u), n = ST.roster.length, go = d => { const v = ST.roster[(i + d + n) % n]; SV.id = v.id; SV.pick = null; SV.cls = null; drawStatus(); };
     return frame('stv-hdr', h('h1', { text: title }), nav && n > 1 ? h('div', { class: 'stv-nav' }, h('button', { class: 'stv-arr', 'aria-label': 'Previous unit', onclick: () => go(-1), text: '◂' }), h('span', { text: (i + 1) + ' / ' + n }), h('button', { class: 'stv-arr', 'aria-label': 'Next unit', onclick: () => go(1), text: '▸' })) : null,
-      btn('Back', () => { if (SV.mode === 'equip') { SV.mode = 'status'; SV.pick = null; drawStatus(); } else closeStatus(); }, 'sm'));
+      btn('Back', () => { if (SV.mode !== 'status') { SV.mode = 'status'; SV.pick = null; drawStatus(); } else closeStatus(); }, 'sm'));
   }
   function bar(k, l, pct, txt) { return h('div', { class: 'stv-bar' }, h('b', { text: l }), h('div', { class: 'stv-bt ' + k }, h('i', { style: 'width:' + Math.max(0, Math.min(100, pct)) + '%' })), h('span', { text: txt })); }
   function idCard(u, s) {
@@ -1181,7 +1229,7 @@ body.campaign #top .skirm{display:none}
     const L = S.learnable(u), jp = S.jpOf(u, u.primary), next = L.skills.concat(L.passives).reduce((m, x) => Math.min(m, x.cost), Infinity);
     const port = window.PORT && PORT.url ? PORT.url({ name: u.name, race: u.race, primary: u.primary }, 'P') : '';
     return frame('stv-id', port ? h('img', { class: 'stv-port', alt: '', src: port }) : h('div', { class: 'stv-port' }),
-      h('div', { class: 'stv-bars' }, h('div', { class: 'stv-nm' }, h('span', { text: u.name }), h('small', { text: 'Lv ' + u.level })),
+      h('div', { class: 'stv-bars' }, h('div', { class: 'stv-nm', role: 'button', title: 'Rename', onclick: () => unitSheet(u.id, 'class') }, h('span', { text: u.name }), h('small', { text: 'Lv ' + u.level }), h('em', { class: 'stv-pen', text: '✎' })),
         h('div', { class: 'stv-cl' }, (D.races[u.race] ? D.races[u.race].name + ' · ' : '') + cname(u.primary), u.secondary ? h('span', { class: 'sec', text: ' · ' + (D.classes[u.secondary].command || cname(u.secondary)) }) : null),
         bar('hp', 'HP', 100, s.hp + '/' + s.hp), bar('mp', 'MP', 100, s.mp + '/' + s.mp), bar('xp', 'EXP', xp, capped ? 'max' : xp + '%'), bar('jp', 'JP', next === Infinity ? 100 : 100 * jp / next, String(jp))));
   }
@@ -1201,12 +1249,12 @@ body.campaign #top .skirm{display:none}
     const eq = frame('stv-col stv-eq', colHead('EQUIPMENT'), SLOTS.map(sl => { const g = u.gear[sl];
       return row(slotIcon(g), SLOT_NAME[sl], g ? iname(g) : '—', g ? itemLine(g) : 'Empty', 'eq:' + sl, () => openStatus(u.id, 'equip', sl), g ? () => itemDetail(g, u) : null); }));
     const ab = frame('stv-col stv-ab', colHead('ABILITIES'),
-      row(abIcon('✦', 'k'), 'Primary', pc.command || cname(u.primary), cname(u.primary) + ' · ' + S.knownSkills(u, u.primary).length + ' of ' + pc.ab.length, 'primary', () => unitSheet(u.id, 'class'), () => kitDetail(u, u.primary, 'Primary')),
-      row(abIcon('✧', 's'), 'Secondary', sc ? sc.command || cname(u.secondary) : 'None', sc ? cname(u.secondary) + (S.isMastered(u, u.secondary) ? ' · mastered' : ' · ' + S.knownSkills(u, u.secondary).length + ' learned') : 'Pick one in Classes', 'secondary', () => unitSheet(u.id, 'class'), sc ? () => kitDetail(u, u.secondary, 'Secondary') : null),
+      row(abIcon('✦', 'k'), 'Primary', pc.command || cname(u.primary), cname(u.primary) + ' · ' + S.knownSkills(u, u.primary).length + ' of ' + pc.ab.length, 'primary', () => openStatus(u.id, 'classes'), () => kitDetail(u, u.primary, 'Primary')),
+      row(abIcon('✧', 's'), 'Secondary', sc ? sc.command || cname(u.secondary) : 'None', sc ? cname(u.secondary) + (S.isMastered(u, u.secondary) ? ' · mastered' : ' · ' + S.knownSkills(u, u.secondary).length + ' learned') : 'Pick one in Classes', 'secondary', () => openStatus(u.id, 'classes'), sc ? () => kitDetail(u, u.secondary, 'Secondary') : null),
       [0, 1].map(i => { const p = u.passives[i]; return row(abIcon('◆', 'p'), 'Passive', p ? nm(D.passives, p) : 'Empty', null, 'pas' + i, () => unitSheet(u.id, 'passives'), p ? () => passiveDetail(p) : null); }),
       row(abIcon('+', 'k'), null, 'Learn skills', S.jpOf(u, u.primary) + ' JP', 'learn', () => unitSheet(u.id, 'skills')));
     const help = frame('stv-help', helpFor(u));
-    const acts = h('div', { class: 'stv-acts' }, btn('Classes', () => unitSheet(u.id, 'class')), btn('Equip', () => openStatus(u.id, 'equip', 'MainHand'), 'pri'), btn('Learn', () => unitSheet(u.id, 'skills')));
+    const acts = h('div', { class: 'stv-acts' }, btn('Classes', () => openStatus(u.id, 'classes')), btn('Equip', () => openStatus(u.id, 'equip', 'MainHand'), 'pri'), btn('Learn', () => unitSheet(u.id, 'skills')));
     return h('div', { class: 'stv-screen' }, statusHeader('Status', u, true),
       h('div', { class: 'stv-a' }, idCard(u, s), statGrid(s), acts), h('div', { class: 'stv-b' }, eq), h('div', { class: 'stv-c' }, ab, help));
   }
@@ -1253,6 +1301,67 @@ body.campaign #top .skirm{display:none}
       rows.map(([l, k, suf]) => { const x = a[k], y = b[k], cls = y > x ? 'up' : y < x ? 'dn' : ''; return h('div', {}, h('span', { text: l }), h('b', { class: cls, text: x === y ? x + (suf || '') : x + ' → ' + y + (suf || '') })); }),
       a.guard !== b.guard ? h('div', {}, h('span', { text: 'Guard' }), h('b', { class: b.guard ? 'up' : 'dn', text: (a.guard ? 'Yes' : 'No') + ' → ' + (b.guard ? 'Yes' : 'No') })) : null),
       lost.length ? h('div', { class: 'stv-warn', text: (D.gear[pick].weapon && D.gear[pick].weapon.hands === 2 ? 'Two-handed: ' : '') + lost.map(x => 'the ' + iname(u.gear[x])).join(' and ') + ' goes back to the stash.' }) : null];
+  }
+  // ----- class tree (UI pass phase 3) -----
+  // Tiers of classes as sprites on pedestals. Unlocked classes show their sprite; locked ones are silhouettes, and a class whose requirements
+  // are not all unlocked hides its name as ? ? ?. Tap a class to see what unlocks it (gold lines from its requirements) and to set it.
+  const ROLE_NAME = { entry: 'Starting class', tank: 'Tank', melee: 'Melee', ranged: 'Ranged', healer: 'Healer', caster: 'Caster', support: 'Support' };
+  const TIER_ROMAN = ['', 'I', 'II', 'III', 'IV'];
+  function treeClasses() { return Object.keys(D.classes).filter(c => D.classes[c].selectable !== false); }
+  function classState(u, c) {
+    const C0 = D.classes[c], un = u.unlocked.includes(c), req = C0.requires || [];
+    return { un, mastered: un && S.isMastered(u, c), known: un || req.every(r => u.unlocked.includes(r)), learned: S.knownSkills(u, c).length, size: C0.ab.length, req };
+  }
+  const sprite = (c, cls) => h('i', { class: 'stv-spr ' + (cls || ''), style: "background-image:url('sprites/ally/" + c + ".png')" });
+  function classesView(u) {
+    const all = treeClasses(); if (!SV.cls || !D.classes[SV.cls]) SV.cls = u.primary;
+    const sel = SV.cls, tiers = [...new Set(all.map(c => D.classes[c].tier))].sort();
+    const cell = c => { const s = classState(u, c), C0 = D.classes[c];
+      const el = h('button', { class: 'stv-cc' + (s.un ? '' : ' lock') + (s.known ? '' : ' unk') + (c === u.primary ? ' pri' : '') + (c === u.secondary ? ' sec' : '') + (c === sel ? ' sel' : ''), 'data-c': c, 'aria-label': s.known ? C0.name : 'Unknown class',
+        onclick: () => { SV.cls = c; drawStatus(); } },
+        c === u.primary ? h('span', { class: 'tag', text: 'P' }) : c === u.secondary ? h('span', { class: 'tag s', text: 'S' }) : null, s.mastered ? h('span', { class: 'star', text: '★' }) : null,
+        h('span', { class: 'ped' }, sprite(c)), h('span', { class: 'n', text: s.known ? C0.name : '? ? ?' }),
+        h('span', { class: 'p' }, s.un && !s.mastered ? h('i', { style: 'width:' + Math.round(100 * s.learned / s.size) + '%' }) : null));
+      return s.known ? lp(el, () => kitDetail(u, c, 'Tier ' + TIER_ROMAN[C0.tier])) : el; };
+    const body = h('div', { class: 'stv-tree' }, tiers.map(t => h('div', { class: 'stv-tier t' + t }, h('div', { class: 'tl', text: 'TIER ' + TIER_ROMAN[t] }), h('div', { class: 'g' }, all.filter(c => D.classes[c].tier === t).map(cell)))));
+    const legend = h('div', { class: 'stv-legend' }, h('span', {}, h('b', { class: 'pri' }), 'Primary'), h('span', {}, h('b', { class: 'sec' }), 'Secondary'), h('span', { text: '★ Mastered' }), h('span', { class: 'unk', text: '? ? ? Not yet in reach' }));
+    const tree = frame('stv-treef', body, legend);
+    const wrap = h('div', { class: 'stv-screen' }, statusHeader('Classes', u, true), h('div', { class: 'stv-a' }, tree), h('div', { class: 'stv-c' }, frame('stv-cdet', classDetail(u, sel))));
+    requestAnimationFrame(() => treeLines(body, u, sel));
+    return wrap;
+  }
+  function treeLines(body, u, sel) {
+    const old = body.querySelector('svg'); if (old) old.remove();
+    const to = body.querySelector('[data-c="' + sel + '"]'), req = D.classes[sel].requires || []; if (!to || !req.length) return;
+    const B = body.getBoundingClientRect(), c = el => { const r = el.getBoundingClientRect(); return { x: r.left - B.left + r.width / 2, y: r.top - B.top + r.height * .45, t: r.top - B.top, b: r.bottom - B.top, l: r.left - B.left, r: r.right - B.left }; };
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg'); svg.setAttribute('class', 'stv-lines');
+    const land = innerWidth > innerHeight, T = c(to);
+    req.forEach(r => { const el = body.querySelector('[data-c="' + r + '"]'); if (!el) return; const F = c(el), done = S.isMastered(u, r);
+      // an elbow line: out of the requirement, across, into the class
+      const pts = land ? [[F.r, F.y], [(F.r + T.l) / 2, F.y], [(F.r + T.l) / 2, T.y], [T.l, T.y]] : [[F.x, F.b], [F.x, (F.b + T.t) / 2], [T.x, (F.b + T.t) / 2], [T.x, T.t]];
+      const pl = document.createElementNS('http://www.w3.org/2000/svg', 'polyline'); pl.setAttribute('points', pts.map(p => p.join(',')).join(' '));
+      pl.setAttribute('class', done ? 'done' : 'todo'); svg.appendChild(pl); });
+    body.appendChild(svg);
+  }
+  function classDetail(u, c) {
+    const C0 = D.classes[c], s = classState(u, c), pips = (n, k) => h('span', { class: 'stv-pips' }, Array.from({ length: n }, (_, i) => h('i', { class: i < k ? 'on' : '' })));
+    const status = s.mastered ? 'Mastered' : s.un ? 'Unlocked' : 'Locked';
+    const reqRows = s.req.map(r => { const rs = classState(u, r); return [h('span', { text: rs.known ? cname(r) : '? ? ?' }), pips(rs.size, rs.learned), h('span', { class: 'dim', text: rs.learned + '/' + rs.size })]; });
+    const sec = u.secondary === c;
+    const acts = s.un ? h('div', { class: 'stv-acts' },
+      btn(c === u.primary ? 'Primary' : 'Set primary', () => setClassFromTree(u, c, u.secondary === c ? null : u.secondary), 'pri', c === u.primary),
+      btn(sec ? 'Remove secondary' : 'Set secondary', () => setClassFromTree(u, u.primary, sec ? null : c), '', c === u.primary)) : null;
+    return [h('div', { class: 'stv-cdh' }, h('span', { class: 'big' + (s.un ? '' : ' lock') }, sprite(c)), h('div', {}, h('b', { class: 'stv-serif', text: s.known ? C0.name : '? ? ?' }),
+        h('div', { class: 'dim', text: 'Tier ' + TIER_ROMAN[C0.tier] + (s.known ? ' · ' + (ROLE_NAME[C0.role] || C0.role) : '') + ' · ' + status }))),
+      s.un ? h('div', { class: 'stv-req' }, h('span', { text: C0.command || 'Skills' }), pips(s.size, s.learned), h('span', { class: 'dim', text: s.learned + '/' + s.size })) : null,
+      reqRows.length && !s.un ? h('div', { class: 'stv-req' }, reqRows) : null,
+      h('div', { class: 'stv-blurb', text: s.known ? (C0.signature || '') + (s.un ? '' : ' Master ' + (s.req.length > 1 ? 'both classes' : cname(s.req[0])) + ' to unlock.') : 'Unlock ' + (s.req.length > 1 ? 'both of the classes it needs' : 'the class it needs') + ' to learn more.' }),
+      s.known ? h('div', { class: 'dim stv-hint', text: 'Hold a class to see all of its skills.' }) : null, acts];
+  }
+  function setClassFromTree(u, p, s) {
+    const r = S.setClass(ST, u.id, p, s || null); if (!r.ok) { toast(r.reason, true); return; }
+    toast(r.needsWeapon ? 'No weapon this class can wield: buy or equip one' : r.returned.length ? 'Gear the class cannot use went to the stash' : p !== u.primary ? cname(p) + ' is now the primary' : s ? cname(s) + ' is now the secondary' : 'Secondary removed');
+    autosave(); drawStatus();
   }
   // Best gear: every slot keeps its kind of item (a sword stays a sword, medium armour stays medium) and takes the strongest one in the stash. An empty slot takes the strongest anything.
   function gearScore(g) { const it = D.gear[g]; if (!it) return -1; const sm = it.statMods || {}, w = it.weapon; return (w ? LO.strike(Object.assign({}, w)) * 3 : 0) + (it.armor || 0) + (it.res || 0) * 0.8 + (sm.hp || 0) * 0.5 + (it.spellPow || 0) * 0.6 + (it.healPow || 0) * 0.5 + (sm.mana || 0) * 0.4 + (it.crit || 0) * 0.6 + (sm.spd || 0) * 6 + (sm.mv || 0) * 6 + (II() ? II().tier(g) * 0.01 : 0); }
