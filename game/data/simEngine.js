@@ -150,7 +150,7 @@ window.GAME_DATA = window.GAME_DATA || {};
   function inRange(from, A, x, y) {
     const d = dist(from, { x, y }); if (d === 0) return true;
     const dh = ht(from.x, from.y) - ht(x, y);
-    if (A.r <= CR.targeting.meleeRange) return d === 1 && Math.abs(dh) <= CR.targeting.meleeMaxHeightGap;
+    if (A.r <= CR.targeting.meleeRange) return d === 1 && Math.trunc(Math.abs(dh)) <= CR.targeting.meleeMaxHeightGap;
     return d <= Math.max(CR.height.minRange, A.r + Math.trunc(dh / CR.height.rangedReach.levelsPerRange) + rangeMod(from));
   }
   function targets(u, a) {
@@ -218,7 +218,7 @@ window.GAME_DATA = window.GAME_DATA || {};
       if (rockAt(a, b) || at(a, b)) { if (dir === 'push') hit = true; break; }
       steps.push([a, b, Math.max(0, ht(x, y) - ht(a, b))]); x = a; y = b;
     }
-    return { steps, hit, fall: steps.reduce((n, s) => n + (s[2] > jumpOf(t) ? fallDmg(s[2]) : 0), 0) };
+    return { steps, hit, fall: steps.reduce((n, s) => n + (s[2] > jumpOf(t) ? fallDmg(Math.floor(s[2])) : 0), 0) };
   }
   function forcedMove(t, from, hexes, dir, opts) {
     if (!from || isBlocked(t, 'forcedMove')) return;
@@ -430,7 +430,7 @@ window.GAME_DATA = window.GAME_DATA || {};
     if (A.exorcism) b += A.exorcism.perStatus * EXO;
     const dh = ht(u.x, u.y) - ht(h.x, h.y);
     if (A.highGroundBonus && dh > 0) b += A.highGroundBonus;
-    if (A.heightBonus && dh > 0) b += A.heightBonus * dh;
+    if (A.heightBonus && dh > 0) b += A.heightBonus * Math.floor(dh);
     return b;
   }
   let SCALE = 1;   // Twin's second cast deals a fraction of the damage

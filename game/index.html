@@ -276,12 +276,27 @@ const HEIGHT_RULES=CR.height.rulesText;
 // climb and fight on. A map lists `buildings: [{kind, tiles:[[x,y,h],...], door:[x,y,side]}]`, h above the ground; the lowest h is the eaves,
 // anything higher is roof above them (a ridge). KIT says how a kind is painted: wall and roof textures, a timber frame, windows.
 const KIT={cottage:{name:'Cottage roof',wall:'plaster',roof:'thatch',frame:1,win:1},shed:{name:'Shed roof',wall:'planks',roof:'thatch',frame:1},crates:{name:'Stacked crates',wall:'planks',roof:'planks'}};
-let BLDG=new Map();
+let BLDG=new Map(),SLOPE=new Map();
+// Slopes (mockup, ?bld=1): `slopes: [[x,y,h,deg]]` sets a tile's height (halves allowed) and tilts its top to rise toward deg (0 = east, -90 = north),
+// half a level up on the high side and half down on the low side, so a slope at 1/2 between ground at 0 and 1 is a ramp anyone can walk.
+const fmtH=h=>Number.isInteger(h)?String(h):(Math.floor(h)||'')+'½';
+function applySlopes(bf){SLOPE=new Map();const ss=bf.slopes||[];if(!ss.length)return;HT=HT.map(r=>r.slice());for(const [x,y,h,deg] of ss){HT[y][x]=h;SLOPE.set(x+','+y,deg)}}
 function applyBuildings(bf){BLDG=new Map();const bs=bf.buildings||[];if(!bs.length)return;HT=HT.map(r=>r.slice());for(const b of bs){const base=Math.min(...b.tiles.map(([x,y])=>HT[y][x]));b._wall=base+Math.min(...b.tiles.map(t=>t[2]));for(const [x,y,h] of b.tiles){HT[y][x]=base+h;BLDG.set(x+','+y,b)}}}
 if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp)GD.maps.thornfield_camp.buildings=[
   {kind:'cottage',tiles:[[8,8,3],[9,8,3],[7,9,4],[8,9,4],[9,9,4],[8,10,3],[9,10,3]],door:[9,10,2]},
   {kind:'shed',tiles:[[7,10,2]]},{kind:'crates',tiles:[[6,10,1]]}];
-function setMap(key){const m=key&&window.GAME_DATA.maps&&window.GAME_DATA.maps[key];const bf=m||CR.battlefield;HT=bf.heights;VOID=new Set((bf.voids||[]).map(([x,y])=>x+','+y));ROCKS=rockKeys(bf.rocks).concat([...VOID]);POS=bf.spawns;MAPKEY=m?key:'default';THEME=bf.theme||'steel';PROPS=bf.props||{};ZN=bf.zones||{};applyBuildings(bf);
+if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp){const m=GD.maps.thornfield_camp,S=[];
+  for(const x of [1,2,3,4])S.push([x,7,.5,-90]); // a ramp up the terrace
+  const wp=(x,y)=>[(x+.5*(y&1))*Math.sqrt(3),y*1.5],nb=(x,y)=>(y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]]).filter(([a,b])=>a>=0&&b>=0&&a<12&&b<12);
+  // a hill: top at 2, a ring of slopes at 1 1/2, then a ring at 1/2 down to the field
+  const C=[5,10],[hx,hy]=wp(...C),key=([x,y])=>x+','+y,busy=new Set(['6,10','7,10','8,10','9,10','7,9','8,9','9,9','8,8','9,8']);
+  m.rocks=m.rocks.filter(r=>key(r)!=='5,9');delete m.props['5,9'];
+  const R1=nb(...C).filter(t=>!busy.has(key(t))),seen=new Set([key(C),...R1.map(key)]),R2=[];
+  for(const t of R1)for(const n of nb(...t))if(!seen.has(key(n))&&!busy.has(key(n))&&!m.rocks.some(r=>key(r)===key(n))){seen.add(key(n));R2.push(n)}
+  const toC=([x,y])=>{const [px,py]=wp(x,y);return Math.atan2(hy-py,hx-px)*180/Math.PI};
+  for(const t of R1)S.push([t[0],t[1],1.5,toC(t)]);for(const t of R2)S.push([t[0],t[1],.5,toC(t)]);
+  m.slopes=S;m.heights=m.heights.map(r=>r.slice());m.heights[C[1]][C[0]]=2}
+function setMap(key){const m=key&&window.GAME_DATA.maps&&window.GAME_DATA.maps[key];const bf=m||CR.battlefield;HT=bf.heights;VOID=new Set((bf.voids||[]).map(([x,y])=>x+','+y));ROCKS=rockKeys(bf.rocks).concat([...VOID]);POS=bf.spawns;MAPKEY=m?key:'default';THEME=bf.theme||'steel';PROPS=bf.props||{};ZN=bf.zones||{};applyBuildings(bf);applySlopes(bf);
   H=HT.length;W=HT[0].length;MAXH=Math.max(CR.height.maxLevel,...HT.map(r=>Math.max(...r)));CEN={x:(W-1+.5)/2*SQ3,y:(H-1)*.75};EXT=null;ZOOM=null;FOCUSED=null;const bwEl=document.getElementById('bw');if(bwEl){bwEl.scrollLeft=0;bwEl.scrollTop=0}}
 const PICK=Object.keys(JOBS).filter(id=>JOBS[id].selectable);
 const SD=k=>CR.statuses[k].desc;
@@ -662,7 +677,7 @@ const mvMap=()=>mode==='move'?reach(active):(isMove(mode)?slipMap(active,mode):n
 function inRange(from,A,x,y){
   const d=dist(from,{x,y});if(d===0)return true;
   const dh=ht(from.x,from.y)-ht(x,y);
-  if(A.r<=CR.targeting.meleeRange)return d===1&&Math.abs(dh)<=CR.targeting.meleeMaxHeightGap; // melee cannot cross a cliff
+  if(A.r<=CR.targeting.meleeRange)return d===1&&Math.trunc(Math.abs(dh))<=CR.targeting.meleeMaxHeightGap; // melee cannot cross a cliff
   return d<=Math.max(CR.height.minRange,A.r+Math.trunc(dh/CR.height.rangedReach.levelsPerRange)+rangeMod(from)); // ranged reach: trunc(height difference / 2), Blind lowers it
 }
 function targets(u,a){
@@ -724,7 +739,7 @@ function pushPath(t,from,hexes,dir){ // plans the move without doing it: [[x,y,d
     if(ROCKS.includes(a+','+b)||at(a,b)){if(dir==='push')hit=true;break}
     steps.push([a,b,Math.max(0,ht(x,y)-ht(a,b))]);x=a;y=b;
   }
-  return{steps,hit,fall:steps.reduce((n,s)=>n+(s[2]>jumpOf(t)?fallDmg(s[2]):0),0)};
+  return{steps,hit,fall:steps.reduce((n,s)=>n+(s[2]>jumpOf(t)?fallDmg(Math.floor(s[2])):0),0)};
 }
 function forcedMove(t,from,hexes,dir,opts){ // push / pull effects; Rooted units cannot be moved
   if(!from||isBlocked(t,'forcedMove'))return;
@@ -960,7 +975,7 @@ function abBonus(u,A,h,amb,chg){ // ability-level power bonuses: echo, spendChar
   if(A.exorcism)b+=A.exorcism.perStatus*EXO;
   const dh=ht(u.x,u.y)-ht(h.x,h.y);
   if(A.highGroundBonus&&dh>0)b+=A.highGroundBonus;
-  if(A.heightBonus&&dh>0)b+=A.heightBonus*dh;
+  if(A.heightBonus&&dh>0)b+=A.heightBonus*Math.floor(dh);
   return b;
 }
 function abMult(A,h){let m=1;for(const k in A.multVsStatus||{})if(h&&h.st[k])m*=A.multVsStatus[k];return m} // Breaching Shot: double damage to a shielded target
@@ -1451,6 +1466,14 @@ function drawBoard(mm,tg,stl,A){
   const tiles=[];
   for(let y=0;y<H;y++)for(let x=0;x<W;x++){const [wx,wy]=wpos(x,y);tiles.push({x,y,wx,wy,depth:P2(wx,wy,0)[2]})}
   tiles.sort((a,b)=>a.depth-b.depth||a.x-b.x);
+  // a slope corner is shared with the tiles that meet there: the average of the slopes, snapped to a flat neighbour within half a level, kept within half a level of the tile
+  const slopeCorner=(x,y,i,h)=>{
+    const N=y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y-1],[x+1,y],[x,y+1],[x-1,y+1],[x-1,y],[x-1,y-1]];
+    const at=[[x,y],N[(i+5)%6],N[i]].filter(([a,b])=>inb(a,b)&&!VOID.has(a+','+b)&&!BLDG.has(a+','+b));
+    const sl=at.filter(([a,b])=>SLOPE.has(a+','+b)).map(([a,b])=>ht(a,b)),fl=at.filter(([a,b])=>!SLOPE.has(a+','+b)).map(([a,b])=>ht(a,b));
+    const avg=sl.reduce((t,v)=>t+v,0)/sl.length,f=fl.filter(v=>Math.abs(v-avg)<=.5).sort((p,q)=>Math.abs(p-avg)-Math.abs(q-avg))[0];
+    return Math.max(h-.5,Math.min(h+.5,f!=null?f:avg));
+  };
   const BEAM='#3a2716';
   // a roof tile's top reads as a pitch: shade falls toward the eaves (edges onto lower ground), light toward higher roof, and a ridge runs through the top tiles
   const roofTop=(C,x,y,h,NB,cx,cy)=>{
@@ -1486,12 +1509,14 @@ function drawBoard(mm,tg,stl,A){
   for(const t of tiles){
     if(VOID.has(t.x+','+t.y))continue; // a hole in the footprint: nothing drawn, nothing standable
     const {x,y,wx,wy}=t,h=ht(x,y),d=h*LV*R,k=x+','+y,[cx,cy]=P2(wx,wy,d);
-    const C=[0,1,2,3,4,5].map(i=>{const an=(-90+60*i)*Math.PI/180;return P2(wx+Math.cos(an),wy+Math.sin(an),d).slice(0,2)});
+    const SL=SLOPE.get(k),su=SL==null?null:[Math.cos(SL*Math.PI/180),Math.sin(SL*Math.PI/180)];
+    const CZ=[0,1,2,3,4,5].map(i=>su?slopeCorner(x,y,i,h)*LV*R:d);
+    const C=[0,1,2,3,4,5].map(i=>{const an=(-90+60*i)*Math.PI/180;return P2(wx+Math.cos(an),wy+Math.sin(an),CZ[i]).slice(0,2)});
     const lt=24+h*8+((x+y)%2?2:0),polys=[C];
-    if(d>0)for(let i=0;i<6;i++){
+    if(Math.max(...CZ)>0)for(let i=0;i<6;i++){
       const al=-60+60*i+th,facing=Math.sin(al*Math.PI/180);
       if(facing<=.02)continue;
-      const a=C[i],b=C[(i+1)%6],W4=[a,b,[b[0],b[1]+d],[a[0],a[1]+d]];
+      const a=C[i],b=C[(i+1)%6],W4=[a,b,[b[0],b[1]+CZ[(i+1)%6]],[a[0],a[1]+CZ[i]]];if(CZ[i]<=0&&CZ[(i+1)%6]<=0)continue;
       const fdk=(Math.cos((al-45)*Math.PI/180)+1)/2;if(TXF&&BLDG.has(k)){bldFace(W4,i,x,y,fdk);polys.push(W4)}
       else if(TXF&&texSide(W4,PROPS[k]==='h'?'wall':TXF[1],wx*R,0,`rgba(0,0,0,${.12+.4*fdk})`)){polys.push(W4)}
       else if(PROPS[k]==='h'){const sh=46-14*(Math.cos((al-45)*Math.PI/180)+1)/2;poly(W4,`hsl(38 8% ${sh}%)`,'#1c1a16');g.strokeStyle='rgba(20,18,14,.55)';g.lineWidth=1;const n=Math.max(2,Math.round(h*2));for(let m=1;m<n;m++){const f=m/n;g.beginPath();g.moveTo(a[0],a[1]+d*f);g.lineTo(b[0],b[1]+d*f);g.stroke();for(let jx=0;jx<2;jx++){const u=(jx+.5+(m%2?0:.35))/2.2,px=a[0]+(b[0]-a[0])*u,py=a[1]+(b[1]-a[1])*u;g.beginPath();g.moveTo(px,py+d*f);g.lineTo(px,py+d*(f-1/n));g.stroke()}}polys.push(W4)}
@@ -1502,6 +1527,7 @@ function drawBoard(mm,tg,stl,A){
     const tdone=TXF&&texTop(C,pk==='w'?'water':pk==='l'?'lava':pk==='h'?'wall':BLDG.has(k)?KIT[BLDG.get(k).kind].roof:TXF[0],d,pk==='l'?null:pk==='w'?'rgba(14,44,78,.5)':`hsla(${TH.h} ${TH.s}% 45% / ${TXF[2]||.16})`);
     if(tdone&&pk!=='w'&&pk!=='l'){const lite=['snow','salt','quarry'].includes(THEME),sh=(h-2)*.06+((x+y)%2?.025:0)-(lite?.12:0);poly(C,sh<0?`rgba(0,0,0,${Math.min(.4,-sh)})`:`rgba(255,240,210,${Math.min(.18,sh)})`)} // height reads as light: low ground darker, high ground brighter
     if(tdone)poly(C,null,'rgba(8,12,16,.45)',.8);else poly(C,pk==='w'?`hsl(205 45% ${22+((x+y)%2?3:0)}%)`:pk==='y'?`hsl(${62+((x*5+y)%3)*5} 68% ${34+((x+y)%2?4:0)}%)`:pk==='l'?`hsl(${14+((x*3+y)%3)*4} 90% ${34+((x+y)%2?4:0)}%)`:pk==='h'?`hsl(40 10% ${(x+y)%2?60:57}%)`:`hsl(${TH.h} ${TH.s}% ${lt+TH.l}%)`,'#0c141b');
+    if(su){const [vx,vy]=rot(-su[0],-su[1],th),b2=(-.6*vx+.8*vy);poly(C,b2>0?`rgba(255,240,210,${.22*b2})`:`rgba(0,0,0,${.4*-b2})`)} // a slope is lit by the way it faces
     if(tdone&&BLDG.has(k)&&KIT[BLDG.get(k).kind].frame)roofTop(C,x,y,h,NBR,cx,cy);
     if(VMODE==='top')NBR.forEach(([a,b],i)=>{if(!inb(a,b))return;const dh=h-ht(a,b);if(dh>0){g.beginPath();g.moveTo(C[i][0],C[i][1]);g.lineTo(C[(i+1)%6][0],C[(i+1)%6][1]);g.strokeStyle=dh>1?'#04070a':'rgba(4,7,10,.75)';g.lineWidth=1.5+dh*1.4;g.stroke()}});
     if(pk==='w'){g.strokeStyle='rgba(160,210,240,.35)';g.lineWidth=1;for(let q=-1;q<=1;q+=2){g.beginPath();g.moveTo(cx-R*.4,cy+q*R*.12);g.quadraticCurveTo(cx,cy+q*R*.12-R*.1,cx+R*.4,cy+q*R*.12);g.stroke()}}
@@ -1521,7 +1547,7 @@ function drawBoard(mm,tg,stl,A){
     if(castFp.has(k)&&!castAt.has(k))poly(C,'rgba(168,120,255,.16)','#a878ff',1.5);
     if(castAt.has(k))poly(C,'rgba(168,120,255,.32)','#a878ff',3);
     if(PREV&&PREV.tiles.has(k)){const hit=PREV.hit.has(k);poly(C,PREV.ally?(hit?'rgba(90,200,150,.5)':'rgba(90,200,150,.2)'):(hit?'rgba(255,110,60,.5)':'rgba(255,140,60,.2)'),PREV.ally?'#5ac896':'#ff8c3c',hit?3:2)} // targeting preview
-    if(h>0&&!here.length&&!SCENE){g.fillStyle='rgba(255,255,255,.35)';g.font=`${Math.round(R*.34)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(h,cx,cy)}
+    if(h>0&&!here.length&&!SCENE){g.fillStyle='rgba(255,255,255,.35)';g.font=`${Math.round(R*.34)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(fmtH(h),cx,cy)}
     const trp=traps.find(q=>q.x===x&&q.y===y&&q.team===VIEWER);
     if(trp){g.fillStyle='rgba(226,178,76,.9)';g.font=`700 ${Math.round(R*.62)}px system-ui`;g.textAlign='center';g.textBaseline='middle';g.fillText(AB[trp.a].persist?'▲':'⚠',cx,cy+R*.05)} // only the owner's team can see a trap
     const hit={x,y,polys,cx,cy};HITS.push(hit);
