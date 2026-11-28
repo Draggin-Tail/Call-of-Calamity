@@ -1,4 +1,4 @@
-# Post-process the cut GAI sheets: tint ally grey-blue cloth to a clearer blue, then quantize every sheet to 128 colours (with alpha) for phones.
+# Post-process the cut GAI sheets: quantize every sheet to 128 colours (with alpha) for phones. (Ally blue is now done in cut.py; --tint redoes it here for old cuts.)
 import sys, glob
 import numpy as np
 from PIL import Image
@@ -11,5 +11,5 @@ def blue(im):
     return Image.fromarray(np.dstack([nr, ng, nb, al]).clip(0, 255).astype(np.uint8))
 for f in sorted(glob.glob(D + '/*/*.png')):
     im = Image.open(f).convert('RGBA')
-    if '/ally/' in f and '--no-tint' not in sys.argv: im = blue(im)
+    if '/ally/' in f and '--tint' in sys.argv: im = blue(im)
     im.quantize(128, method=Image.Quantize.FASTOCTREE, dither=Image.Dither.NONE).save(f, optimize=True)
