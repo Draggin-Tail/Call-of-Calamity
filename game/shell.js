@@ -119,7 +119,7 @@
 .sh-sub button{flex:1;min-height:40px;white-space:nowrap}
 .sh-sub button.on{background:var(--gold);color:#241a05}
 #shell select,#shell input[type=text]{width:100%;min-height:44px;background:var(--rock);color:var(--ink);border:1px solid var(--line);border-radius:10px;padding:6px 10px;font-size:15px}
-#sh-toast{position:absolute;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));background:#0b1218;border:1px solid var(--gold);border-radius:10px;padding:10px 12px;font-size:14px;display:none;z-index:9;text-align:center}
+#sh-toast{position:absolute;left:12px;right:12px;bottom:calc(70px + env(safe-area-inset-bottom));background:#0b1218;border:1px solid var(--gold);border-radius:10px;padding:10px 12px;font-size:14px;display:none;z-index:30;text-align:center}
 body.campaign #top .skirm{display:none}
 .sh-map .qm{position:absolute;transform:translate(calc(-50% - var(--ns,1) * 22px),calc(-100% - var(--ns,1) * 18px)) scale(max(var(--ns,1),.8));min-width:22px;height:22px;border-radius:11px;padding:0 5px;font:800 13px/22px system-ui;text-align:center;pointer-events:none;z-index:5;box-shadow:0 0 0 2px #0e1620,0 2px 6px rgba(0,0,0,.6)}
 .sh-map .qm.q-offer{background:#f2c14e;color:#241a05}.sh-map .qm.q-goal{background:#59c2ff;color:#04121c;animation:qbob 1.2s ease-in-out infinite}.sh-map .qm.q-report{background:#6fd36f;color:#08200a;animation:qbob 1.2s ease-in-out infinite}.sh-map .qm.q-lead{background:#c79cff;color:#1a0a2a}
@@ -153,6 +153,98 @@ body.campaign #top .skirm{display:none}
 .etab{position:absolute;z-index:3;background:rgba(14,22,32,.78);color:var(--gold);border:1px solid rgba(226,178,76,.7);border-radius:99px;font:600 11px system-ui;padding:6px 9px;min-height:30px;max-width:36%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .etab.e-l{left:6px;transform:translateY(-50%)}.etab.e-r{right:6px;transform:translateY(-50%)}.etab.e-t{top:8px;transform:translateX(-50%)}.etab.e-b{bottom:8px;transform:translateX(-50%)}
 .qleg{top:auto!important;bottom:8px}
+/* ---- Status and Equip (UI pass phase 2): dark gold-framed panels, full screen, no scrolling ---- */
+#stv{position:absolute;inset:0;z-index:15;background:radial-gradient(ellipse at 50% 20%,#1c2530,#0a0f15 75%);color:var(--ink);font:13px/1.3 system-ui,sans-serif;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;--sg:#e2b24c;--sl:rgba(217,178,90,.55);--serif:'Cardo','Palatino Linotype',Palatino,Georgia,serif}
+#stv *{box-sizing:border-box}
+#stv .dim{color:#9aa3ad}#stv .gold{color:var(--sg)}#stv .bad{color:#e2665a}
+.stv-serif{font-family:var(--serif)}
+.stv-screen{position:absolute;inset:0;display:flex;flex-direction:column;gap:6px;padding:calc(env(safe-area-inset-top) + 6px) calc(env(safe-area-inset-right) + 6px) calc(env(safe-area-inset-bottom) + 6px) calc(env(safe-area-inset-left) + 6px);max-width:560px;margin:0 auto}
+.stv-a,.stv-b,.stv-c{display:flex;flex-direction:column;gap:6px;min-height:0;min-width:0}
+.stv-frame{background:rgba(16,24,34,.92);border:1px solid var(--sl);border-radius:6px;box-shadow:inset 0 0 0 3px rgba(12,19,27,.9),inset 0 0 0 4px rgba(217,178,90,.22),0 6px 18px rgba(0,0,0,.45);min-width:0}
+.stv-hdr{display:flex;align-items:center;gap:8px;padding:4px 6px 4px 10px;flex:none}
+.stv-hdr h1{margin:0;font:700 18px var(--serif);flex:1}
+.stv-nav{display:flex;align-items:center;gap:2px;font:600 12px system-ui;color:#9aa3ad}
+.stv-arr{background:none;border:0;color:var(--sg);font-size:16px;min-width:34px;min-height:34px;cursor:pointer}
+.stv-id{display:flex;gap:9px;padding:8px;flex:none}
+.stv-port{width:72px;height:72px;flex:none;image-rendering:pixelated;border:1px solid #000;border-radius:3px;background:#0b1118}
+.stv-bars{flex:1;display:flex;flex-direction:column;gap:3px;min-width:0}
+.stv-nm{display:flex;align-items:baseline;gap:8px;font:700 20px var(--serif);line-height:1;min-width:0}
+.stv-nm span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stv-nm small{font:700 13px var(--serif);color:var(--sg);flex:none}
+.stv-cl{font-size:11px;color:#9aa3ad;margin:2px 0 3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.stv-cl .sec{color:#8fd0ff}
+.stv-bar{display:grid;grid-template-columns:28px 1fr auto;gap:5px;align-items:center;font:700 10px system-ui}
+.stv-bar span{font:600 11px system-ui;font-variant-numeric:tabular-nums;min-width:34px;text-align:right}
+.stv-bt{position:relative;height:8px;border-radius:2px;background:#0007;overflow:hidden;border:1px solid #0009}
+.stv-bt i{position:absolute;inset:0 auto 0 0}
+.stv-bt.hp i{background:linear-gradient(#9be08f,#4f9e4a)}.stv-bt.mp i{background:linear-gradient(#8fb6f0,#3d6fb8)}.stv-bt.xp i{background:linear-gradient(#f3d27e,#b88424)}.stv-bt.jp i{background:linear-gradient(#b7e3ff,#4b9fd0)}
+.stv-stats{display:grid;grid-template-columns:repeat(3,1fr);padding:3px 0;flex:none}
+.stv-stats div{display:flex;justify-content:space-between;gap:4px;padding:3px 9px;font:600 12px system-ui;border-right:1px solid rgba(217,178,90,.15)}
+.stv-stats div:nth-child(3n){border-right:0}.stv-stats span{color:#9aa3ad;font-weight:500}.stv-stats b{font-variant-numeric:tabular-nums}
+.stv-col{padding:5px 5px 3px;min-height:0;overflow:hidden}
+.stv-col h3,.stv-cmp h3{margin:0 0 2px;padding:0 4px 4px;font:700 10px system-ui;letter-spacing:.14em;color:var(--sg);border-bottom:1px solid rgba(217,178,90,.25);display:flex;justify-content:space-between;gap:6px}
+.stv-col h3 .dim,.stv-cmp h3 .dim{letter-spacing:0;font-weight:600}
+.stv-row{display:flex;align-items:center;gap:7px;padding:3px;border-radius:4px;min-width:0;cursor:pointer}
+.stv-row .t{min-width:0;flex:1}
+.stv-row .t small{display:block;font:500 9px system-ui;color:#9aa3ad;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stv-row .t b{display:block;font:600 12px system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stv-row .t i{display:block;font:500 10px system-ui;font-style:normal;color:#b9c3cc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stv-row.sel{background:rgba(217,178,90,.14);box-shadow:inset 0 0 0 1px var(--sg)}
+.stv-slot{position:relative;width:38px;height:38px;flex:none;border-radius:5px;background:radial-gradient(circle at 50% 40%,#22344a,#0b1118 75%);border:1px solid var(--tc,#6d6d72);box-shadow:inset 0 0 0 1px #000a;display:grid;place-items:center}
+.stv-slot img{width:32px;height:32px;image-rendering:pixelated}
+.stv-slot>b{font:700 15px var(--serif);color:var(--tc)}
+.stv-slot em{position:absolute;right:-1px;bottom:-1px;font:700 8px system-ui;font-style:normal;background:var(--tc);color:#10161d;padding:0 3px;border-radius:3px 0 4px 0}
+.stv-slot.empty{border:1px dashed #4a5662;opacity:.7}
+.stv-slot.big{width:52px;height:52px}.stv-slot.big img{width:48px;height:48px}
+.stv-ic{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:5px;background:#0b1118;border:1px solid rgba(217,178,90,.35);font-size:14px}
+.stv-ic.k{color:#ffd77a}.stv-ic.s{color:#8fd0ff;border-color:#4b9fd0}.stv-ic.p{color:#c7a6ff;border-color:#8b6fc4}
+.stv-help{padding:7px 10px;font-size:11.5px;line-height:1.35;min-height:0;overflow:hidden;flex:1}
+.stv-help b.stv-serif{font-size:13px;color:var(--sg)}.stv-desc{margin-top:2px}.stv-hint{margin-top:5px;font-size:10.5px}
+.stv-chips{display:flex;flex-wrap:wrap;gap:4px;margin-top:5px}
+.stv-chips .more{color:var(--sg);cursor:pointer}
+.stv-chips span{font:600 10px system-ui;padding:3px 6px;border-radius:3px;background:#0b1118;border:1px solid #3a4756}
+.stv-acts{display:flex;gap:6px;flex:none;margin-top:auto}.stv-acts .sb{flex:1;min-height:40px}
+.stv-mini{display:flex;align-items:center;gap:8px;padding:5px 8px;flex:none}.stv-mini .stv-port{width:44px;height:44px}.stv-mini .stv-nm{font-size:17px}.stv-mini .stv-cl{white-space:normal;margin:2px 0 0}
+.stv-strip{display:flex;justify-content:space-around;padding:5px 3px;flex:none}
+.stv-strip button{display:flex;flex-direction:column;align-items:center;gap:3px;padding:3px 4px;border-radius:5px;background:none;border:0;color:inherit;cursor:pointer;min-width:0}
+.stv-strip small{font:600 9px system-ui;color:#9aa3ad;text-transform:uppercase;white-space:nowrap}
+.stv-strip .on{background:rgba(217,178,90,.14);box-shadow:inset 0 0 0 1px var(--sg)}.stv-strip .on small{color:var(--sg)}
+.stv-e{font:700 9px system-ui;color:#10161d;background:var(--sg);border-radius:3px;padding:1px 4px}
+.stv-list{flex:1}
+.stv-cmp{padding:5px 8px;flex:none}
+.stv-cg{display:grid;grid-template-columns:1fr 1fr;gap:0 14px}
+.stv-cg div{display:flex;justify-content:space-between;gap:4px;font:600 11.5px system-ui;padding:2px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.stv-cg span{color:#9aa3ad;font-weight:500}.stv-cg .up{color:#7fd07a}.stv-cg .dn{color:#e2665a}
+.stv-cg .up::after{content:' ▲';font-size:8px}.stv-cg .dn::after{content:' ▼';font-size:8px}
+.stv-warn{margin-top:4px;font:500 10.5px system-ui;color:#f0c46a}
+.stv-det{position:absolute;inset:0;z-index:5;background:rgba(0,0,0,.55);display:flex;align-items:center;justify-content:center;padding:16px}
+.stv-detb{width:100%;max-width:420px;max-height:100%;overflow:auto;padding:12px 14px;display:flex;flex-direction:column;gap:6px;font-size:13px;line-height:1.4;-webkit-user-select:text;user-select:text}
+.stv-detb b.stv-serif{font-size:17px;color:var(--sg)}
+.stv-dh{display:flex;gap:10px;align-items:center}
+.stv-kit{display:flex;flex-direction:column;gap:5px}.stv-kit .no{opacity:.55}
+.stv-close{display:flex;justify-content:flex-end}
+/* equip, portrait: the slot list is replaced by the strip */
+.stv-equip .stv-eq{display:none}
+.stv-equip .stv-a{flex:none}.stv-equip .stv-b{flex:1}
+.stv-status .stv-screen{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto auto auto minmax(60px,1fr) auto;grid-template-areas:"h h" "id id" "st st" "eq ab" "help help" "acts acts"}
+.stv-status .stv-a,.stv-status .stv-b,.stv-status .stv-c{display:contents}
+.stv-status .stv-hdr{grid-area:h}.stv-status .stv-id{grid-area:id}.stv-status .stv-stats{grid-area:st}.stv-status .stv-eq{grid-area:eq}.stv-status .stv-ab{grid-area:ab}.stv-status .stv-help{grid-area:help}.stv-status .stv-acts{grid-area:acts}
+@media (orientation:landscape){
+  .stv-screen{max-width:none;gap:5px;padding-top:calc(env(safe-area-inset-top) + 4px);padding-bottom:calc(env(safe-area-inset-bottom) + 4px)}
+  .stv-status .stv-screen,.stv-equip .stv-screen{display:grid;grid-template-columns:minmax(230px,.9fr) 1fr 1fr;grid-template-rows:auto 1fr;grid-template-areas:none}
+  .stv-status .stv-a,.stv-status .stv-b,.stv-status .stv-c{display:flex}
+  .stv-hdr{grid-column:1/-1;padding:2px 6px 2px 10px}
+  .stv-status .stv-hdr,.stv-status .stv-id,.stv-status .stv-stats,.stv-status .stv-eq,.stv-status .stv-ab,.stv-status .stv-help{grid-area:auto}
+  .stv-status .stv-hdr{grid-column:1/-1}
+  .stv-acts .sb{white-space:nowrap;padding-left:6px;padding-right:6px}
+  .stv-id{padding:6px}.stv-port{width:58px;height:58px}
+  .stv-stats div{padding:2px 7px;font-size:11px}
+  .stv-row{padding:2px 3px}.stv-slot{width:34px;height:34px}
+  .stv-ab .stv-row .t i{display:none}.stv-ab .stv-ic{width:24px;height:24px;font-size:12px}
+  .stv-acts .sb{min-height:34px}
+  .stv-equip .stv-eq{display:block}.stv-equip .stv-strip,.stv-equip .stv-mini{display:none}
+  .stv-equip .stv-screen{grid-template-columns:minmax(220px,.9fr) 1.1fr minmax(220px,.9fr)}
+  .stv-cg{grid-template-columns:1fr}
+}
 `;
 
   // ---------- state helpers ----------
@@ -179,6 +271,7 @@ body.campaign #top .skirm{display:none}
   function showShell(on) { document.getElementById('shell').classList.toggle('on', on); document.body.classList.toggle('campaign', on || !!window.__campaignBattle); }
 
   function render() {
+    if (SV) setTimeout(drawStatus, 0);
     const c = col(); c.innerHTML = '';
     if (view === 'game') { const ln = C.takeLoreNews(ST); if (ln.length) setTimeout(() => toast(ln.slice(0, 2).map(x => x.text).join(' \u00b7 ')), 80); }
     if (view === 'title') return titleScreen(c);
@@ -905,7 +998,7 @@ body.campaign #top .skirm{display:none}
       h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: 'Roster' }), h('div', { class: 'dim', text: 'Roster ' + ST.roster.length + '/' + S.RULES.rosterCap + ' · away ' + away.length + '/' + S.RULES.dispatch.maxOut + ' · stash ' + stashN + ' item' + (stashN === 1 ? '' : 's') })), btn('Stash', stashSheet, 'sm')),
       h('div', { style: 'height:8px' }),
       ST.roster.map((u, i) => { const aw = awayOf(u.id), cu = S.catchUp(ST, u);
-        return h('div', { class: 'card', onclick: () => unitSheet(u.id, 'class') },
+        return h('div', { class: 'card', onclick: () => openStatus(u.id) },
         h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: u.name }), ' ', h('span', { class: 'dim', text: (D.races[u.race] ? D.races[u.race].name + ' · ' : '') + 'Lv ' + u.level + ' · ' + cname(u.primary) + (u.secondary ? ' / ' + cname(u.secondary) : '') })),
           aw ? h('span', { class: 'dim', text: 'Away' }) : [
             i > 0 ? btn('Send out', e => { e.stopPropagation(); dispatchSheet(u.id); }, 'sm') : null]),
@@ -993,6 +1086,188 @@ body.campaign #top .skirm{display:none}
       return h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('div', { class: 'dim', text: SLOT_NAME[sl] }), h('b', { text: cur ? iname(cur) : '—' }), cur ? h('div', { class: 'dim', text: D.gear[cur].desc }) : null), cur ? btn('Remove', () => { S.unequip(ST, u.id, sl); autosave(); render(); refreshSheet(); }, 'sm') : null),
         options.length ? h('select', { onchange: e => { if (!e.target.value) return; const r = S.equip(ST, u.id, e.target.value); if (!r.ok) toast(r.reason, true); else { toast('Equipped'); autosave(); render(); } refreshSheet(); } }, h('option', { value: '', text: 'Change… (' + options.length + ' in stash)' }), options.map(g => h('option', { value: g, text: iname(g) }))) : h('div', { class: 'dim', text: 'Nothing wearable in the stash.' }));
     });
+  }
+
+  // ---------- status and equip screens (UI pass phase 2, FFT style) ----------
+  // Full-screen views over the shell: Status (stats, equipment with item icons, abilities, a help box) and Equip (slots, the items this unit can wear, what changes).
+  // Tap a row to read about it in the help box; tap it again to change it. Hold any item, skill or passive for its full details.
+  // Editing classes, learning and passives still happens in the unit sheet (Classes and Learn open it on top).
+  let SV = null;   // { id, mode: 'status' | 'equip', sel, slot, pick }
+  const II = () => window.ITEM_ICON;
+  const TIER_NAME = t => t ? 'Tier ' + t : 'Unique';
+  function statsOf(u, gear) {
+    const d = LO.derive(u.primary, gear, u.passives, u.race), cls = D.classes[u.primary], lm = LO.levelMods(u.level), w = d.wpn || {};
+    return { hp: Math.round((cls.hp + d.stat.hp) * lm.hp), mp: d.manaMax, mv: cls.mv + d.stat.mv, jump: (cls.jump || D.combatRules.height.defaultClimb) + d.stat.jump, spd: cls.spd + d.stat.spd,
+      armor: Math.round(d.armor), res: Math.round(d.res), crit: Math.round(d.crit + (w.crit || 0)), wpn: w.p ? Math.round(LO.strike(w)) : 0, range: w.r || 1, guard: !!(d.guard || cls.guard), power: lm.power, d };
+  }
+  function itemLine(id) {   // one short line: what the item mostly does
+    const it = D.gear[id]; if (!it) return '';
+    if (it.weapon) { const w = it.weapon; return Math.round(LO.strike(Object.assign({}, w))) + ' dmg · ' + (w.hands === 2 ? 'two-handed' : w.r > 1 ? 'range ' + w.r : 'melee'); }
+    const p = [];
+    if (it.guard) p.push('Guard');
+    if (it.armor) p.push('+' + it.armor + '% armor'); if (it.res) p.push('+' + it.res + '% resist');
+    if (it.spellPow) p.push('+' + it.spellPow + '% spell'); if (it.healPow) p.push('+' + it.healPow + '% heal'); if (it.crit) p.push('+' + it.crit + '% crit');
+    const sm = it.statMods || {}; if (sm.hp) p.push('+' + sm.hp + ' HP'); if (sm.spd) p.push((sm.spd > 0 ? '+' : '') + sm.spd + ' Speed'); if (sm.mv) p.push('+' + sm.mv + ' Move'); if (sm.mana) p.push('+' + sm.mana + ' mana');
+    if (!p.length && it.elemRes) Object.keys(it.elemRes).forEach(k => p.push('+' + it.elemRes[k] + '% vs ' + k));
+    return p.slice(0, 2).join(' · ') || (it.effect ? 'Special effect' : '');
+  }
+  function slotIcon(id, big) {
+    if (!id) return h('span', { class: 'stv-slot empty' });
+    const t = II() ? II().tier(id) : 1, url = II() ? II().url(id, 2) : '', s = h('span', { class: 'stv-slot' + (big ? ' big' : ''), style: '--tc:' + (II() ? II().color(t) : '#8a8f96') });
+    if (url) s.appendChild(h('img', { alt: '', src: url })); else s.appendChild(h('b', { text: (D.gear[id].name || '?')[0] }));
+    s.appendChild(h('em', { text: t ? String(t) : 'U' })); return s;
+  }
+  // Long press: hold an element with ._lp (a function returning the detail content) to open the detail panel.
+  let lpT = null, lpFired = false;
+  function lpBind(root) {
+    root.addEventListener('pointerdown', e => { const el = e.target.closest('[data-lp]'); if (!el || !el._lp) return; lpFired = false; const x = e.clientX, y = e.clientY; clearTimeout(lpT);
+      lpT = setTimeout(() => { lpFired = true; detail(el._lp()); }, 450);
+      const cancel = ev => { if (ev.type === 'pointermove' && Math.hypot(ev.clientX - x, ev.clientY - y) < 10) return; clearTimeout(lpT); root.removeEventListener('pointermove', cancel); };
+      root.addEventListener('pointermove', cancel); root.addEventListener('pointerup', cancel, { once: true }); root.addEventListener('pointercancel', cancel, { once: true }); });
+    root.addEventListener('click', e => { if (lpFired) { e.stopPropagation(); e.preventDefault(); lpFired = false; } }, true);
+    root.addEventListener('contextmenu', e => { if (e.target.closest('[data-lp]')) e.preventDefault(); });
+  }
+  const lp = (el, fn) => { el.setAttribute('data-lp', ''); el._lp = fn; return el; };
+  function detail(content) {
+    const root = document.getElementById('stv'); if (!root) return;
+    const old = root.querySelector('.stv-det'); if (old) old.remove();
+    const box = h('div', { class: 'stv-det', onclick: () => box.remove() }, h('div', { class: 'stv-frame stv-detb', onclick: e => e.stopPropagation() }, content, h('div', { class: 'stv-close' }, btn('Close', () => box.remove(), 'sm'))));
+    root.appendChild(box);
+  }
+  function itemDetail(id, u) {
+    const it = D.gear[id], t = II() ? II().tier(id) : 1, w = it.weapon, who = Object.keys(D.classes).filter(c => D.classes[c].selectable !== false && LO.canEquip(c, id, [])).map(cname);
+    return [h('div', { class: 'stv-dh' }, slotIcon(id, true), h('div', {}, h('b', { class: 'stv-serif', text: it.name }), h('div', { class: 'dim', text: SLOT_NAME[it.slot] + ' · ' + TIER_NAME(t) + (w ? ' · ' + w.family + (w.hands === 2 ? ', two-handed' : '') : it.weight ? ' · ' + it.weight : it.offType ? ' · ' + it.offType : '') }))),
+      w ? h('div', { class: 'gold', text: 'Attack: ' + Math.round(LO.strike(Object.assign({}, w))) + ' damage, ' + (w.r > 1 ? 'range ' + w.r : 'melee') + (w.c ? ' · ' + w.c + ' AP' : '') + (w.crit ? ' · ' + w.crit + '% crit' : '') }) : null,
+      h('div', { text: it.desc || '' }), it.effect ? h('div', { class: 'gold', text: it.effect }) : null, it.lore ? h('div', { class: 'dim', style: 'font-style:italic', text: it.lore }) : null,
+      h('div', { class: 'dim', text: who.length ? 'Worn by: ' + who.join(', ') : 'Only some passives let a unit use this.' }),
+      u && !LO.canEquip(u.primary, id, u.passives) ? h('div', { class: 'bad', text: cname(u.primary) + ' cannot use this.' }) : null,
+      it.price ? h('div', { class: 'dim', text: 'Shop price about ' + it.price + ' g' }) : null];
+  }
+  function skillDetail(a, u) {
+    const A = D.abilities[a] || {}, dv = LO.derive(u.primary, u.gear, u.passives, u.race), cu = { wpn: dv.wpn, spellPow: dv.spellPow, healPow: dv.healPow, armor: dv.armor, mods: { power: dv.power }, lvPow: LO.levelMods(u.level).power };
+    return [h('b', { class: 'stv-serif', text: aname(a) }), h('div', { class: 'dim', text: [A.c !== undefined ? A.c + ' AP' : null, A.r !== undefined ? (A.r > 1 ? 'range ' + A.r : A.r === 0 ? 'self' : 'melee') : null, A.mana ? A.mana + ' mana' : null, A.cd ? 'cooldown ' + A.cd : null, A.tags && A.tags.includes('spell') ? 'spell' : null].filter(Boolean).join(' · ') }),
+      h('div', { text: A.desc || '' }), calcLines(cu, A, a)];
+  }
+  function kitDetail(u, c, role) {
+    const C0 = D.classes[c], known = new Set(S.knownSkills(u, c));
+    return [h('b', { class: 'stv-serif', text: C0.command || cname(c) }), h('div', { class: 'dim', text: role + ' · ' + cname(c) + ' · ' + known.size + ' of ' + C0.ab.length + ' skills learned' + (S.isMastered(u, c) ? ' (mastered)' : '') }),
+      C0.signature ? h('div', { text: C0.signature }) : null,
+      h('div', { class: 'stv-kit' }, C0.ab.map(a => { const A = D.abilities[a] || {}; return h('div', { class: known.has(a) ? '' : 'no' }, h('b', { text: aname(a) + (A.c !== undefined ? '  ' + A.c + ' AP' : '') + (known.has(a) ? '' : ' · not learned') }), h('div', { class: 'dim', text: A.desc || '' })); }))];
+  }
+  function passiveDetail(p) {
+    const P = D.passives[p] || {};
+    return [h('b', { class: 'stv-serif', text: nm(D.passives, p) }), h('div', { class: 'dim', text: 'Passive' + (P.teacher ? ' · taught by ' + cname(P.teacher) : '') + (P.jp ? ' · ' + P.jp + ' JP' : '') }), h('div', { text: P.desc || '' })];
+  }
+
+  function openStatus(id, mode, slot) { SV = { id, mode: mode || 'status', sel: SV && SV.id === id ? SV.sel : 'primary', slot: slot || 'MainHand', pick: null }; drawStatus(); }
+  function closeStatus() { SV = null; drawStatus(); render(); }
+  function drawStatus() {
+    let root = document.getElementById('stv');
+    if (!SV || !ST || !unit(SV.id)) { if (root) root.remove(); SV = null; return; }
+    if (!root) { root = h('div', { id: 'stv' }); lpBind(root); document.getElementById('shell').appendChild(root); }
+    root.innerHTML = ''; root.className = 'stv-' + SV.mode;
+    root.appendChild(SV.mode === 'equip' ? equipView(unit(SV.id)) : statusView(unit(SV.id)));
+  }
+  const frame = (cls, ...kids) => h('div', { class: 'stv-frame ' + (cls || '') }, ...kids);
+  const colHead = (t, r) => h('h3', {}, h('span', { text: t }), r ? h('span', { class: 'dim', text: r }) : null);
+  function statusHeader(title, u, nav) {
+    const i = ST.roster.indexOf(u), n = ST.roster.length, go = d => { const v = ST.roster[(i + d + n) % n]; SV.id = v.id; SV.pick = null; drawStatus(); };
+    return frame('stv-hdr', h('h1', { text: title }), nav && n > 1 ? h('div', { class: 'stv-nav' }, h('button', { class: 'stv-arr', 'aria-label': 'Previous unit', onclick: () => go(-1), text: '◂' }), h('span', { text: (i + 1) + ' / ' + n }), h('button', { class: 'stv-arr', 'aria-label': 'Next unit', onclick: () => go(1), text: '▸' })) : null,
+      btn('Back', () => { if (SV.mode === 'equip') { SV.mode = 'status'; SV.pick = null; drawStatus(); } else closeStatus(); }, 'sm'));
+  }
+  function bar(k, l, pct, txt) { return h('div', { class: 'stv-bar' }, h('b', { text: l }), h('div', { class: 'stv-bt ' + k }, h('i', { style: 'width:' + Math.max(0, Math.min(100, pct)) + '%' })), h('span', { text: txt })); }
+  function idCard(u, s) {
+    const a = LO.xpForLevel(u.level), b = LO.xpForLevel(u.level + 1), capped = u.level >= LO.levelMods(999).level, xp = capped ? 100 : Math.round(100 * (u.xp - a) / Math.max(1, b - a));
+    const L = S.learnable(u), jp = S.jpOf(u, u.primary), next = L.skills.concat(L.passives).reduce((m, x) => Math.min(m, x.cost), Infinity);
+    const port = window.PORT && PORT.url ? PORT.url({ name: u.name, race: u.race, primary: u.primary }, 'P') : '';
+    return frame('stv-id', port ? h('img', { class: 'stv-port', alt: '', src: port }) : h('div', { class: 'stv-port' }),
+      h('div', { class: 'stv-bars' }, h('div', { class: 'stv-nm' }, h('span', { text: u.name }), h('small', { text: 'Lv ' + u.level })),
+        h('div', { class: 'stv-cl' }, (D.races[u.race] ? D.races[u.race].name + ' · ' : '') + cname(u.primary), u.secondary ? h('span', { class: 'sec', text: ' · ' + (D.classes[u.secondary].command || cname(u.secondary)) }) : null),
+        bar('hp', 'HP', 100, s.hp + '/' + s.hp), bar('mp', 'MP', 100, s.mp + '/' + s.mp), bar('xp', 'EXP', xp, capped ? 'max' : xp + '%'), bar('jp', 'JP', next === Infinity ? 100 : 100 * jp / next, String(jp))));
+  }
+  function statGrid(s) {
+    const c = (l, v) => h('div', {}, h('span', { text: l }), h('b', { text: v }));
+    return frame('stv-stats', c('Move', s.mv), c('Jump', s.jump), c('Speed', s.spd), c('Armor', s.armor + '%'), c('Resist', s.res + '%'), c('Crit', s.crit + '%'), c('Weapon', s.wpn || '—'), c('Guard', s.guard ? 'Yes' : 'No'), c('Power', '×' + s.power.toFixed(2)));
+  }
+  function row(icon, small, name, sub, key, onTap, lpFn) {
+    const sel = SV.sel === key;
+    const r = h('div', { class: 'stv-row' + (sel ? ' sel' : ''), role: 'button', tabindex: '0', onclick: () => { if (SV.sel === key && onTap) onTap(); else { SV.sel = key; drawStatus(); } } },
+      icon, h('span', { class: 't' }, small ? h('small', { text: small }) : null, h('b', { text: name }), sub ? h('i', { text: sub }) : null));
+    return lpFn ? lp(r, lpFn) : r;
+  }
+  const abIcon = (ch, k) => h('span', { class: 'stv-ic ' + k, text: ch });
+  function statusView(u) {
+    const s = statsOf(u, u.gear), pc = D.classes[u.primary], sc = u.secondary && D.classes[u.secondary];
+    const eq = frame('stv-col stv-eq', colHead('EQUIPMENT'), SLOTS.map(sl => { const g = u.gear[sl];
+      return row(slotIcon(g), SLOT_NAME[sl], g ? iname(g) : '—', g ? itemLine(g) : 'Empty', 'eq:' + sl, () => openStatus(u.id, 'equip', sl), g ? () => itemDetail(g, u) : null); }));
+    const ab = frame('stv-col stv-ab', colHead('ABILITIES'),
+      row(abIcon('✦', 'k'), 'Primary', pc.command || cname(u.primary), cname(u.primary) + ' · ' + S.knownSkills(u, u.primary).length + ' of ' + pc.ab.length, 'primary', () => unitSheet(u.id, 'class'), () => kitDetail(u, u.primary, 'Primary')),
+      row(abIcon('✧', 's'), 'Secondary', sc ? sc.command || cname(u.secondary) : 'None', sc ? cname(u.secondary) + (S.isMastered(u, u.secondary) ? ' · mastered' : ' · ' + S.knownSkills(u, u.secondary).length + ' learned') : 'Pick one in Classes', 'secondary', () => unitSheet(u.id, 'class'), sc ? () => kitDetail(u, u.secondary, 'Secondary') : null),
+      [0, 1].map(i => { const p = u.passives[i]; return row(abIcon('◆', 'p'), 'Passive', p ? nm(D.passives, p) : 'Empty', null, 'pas' + i, () => unitSheet(u.id, 'passives'), p ? () => passiveDetail(p) : null); }),
+      row(abIcon('+', 'k'), null, 'Learn skills', S.jpOf(u, u.primary) + ' JP', 'learn', () => unitSheet(u.id, 'skills')));
+    const help = frame('stv-help', helpFor(u));
+    const acts = h('div', { class: 'stv-acts' }, btn('Classes', () => unitSheet(u.id, 'class')), btn('Equip', () => openStatus(u.id, 'equip', 'MainHand'), 'pri'), btn('Learn', () => unitSheet(u.id, 'skills')));
+    return h('div', { class: 'stv-screen' }, statusHeader('Status', u, true),
+      h('div', { class: 'stv-a' }, idCard(u, s), statGrid(s), acts), h('div', { class: 'stv-b' }, eq), h('div', { class: 'stv-c' }, ab, help));
+  }
+  function helpFor(u) {
+    const k = SV.sel || 'primary', hint = h('div', { class: 'dim stv-hint', text: 'Tap again to change it. Hold anything for details.' });
+    const chips = (c) => { const k = S.knownSkills(u, c), n = 5; return h('div', { class: 'stv-chips' }, k.slice(0, k.length > n + 1 ? n : n + 1).map(a => lp(h('span', { text: aname(a) }), () => skillDetail(a, u))), k.length > n + 1 ? h('span', { class: 'more', text: '+' + (k.length - n) + ' more', onclick: e => { e.stopPropagation(); detail(kitDetail(u, c, c === u.primary ? 'Primary' : 'Secondary')); } }) : null); };
+    if (k === 'primary' || k === 'secondary') { const c = k === 'primary' ? u.primary : u.secondary; if (!c) return [h('b', { class: 'stv-serif', text: 'No secondary' }), h('div', { text: 'A secondary brings the skills you learned in another class into battle. Choose one in Classes.' })];
+      const C0 = D.classes[c]; return [h('div', {}, h('b', { class: 'stv-serif', text: C0.command || cname(c) }), h('span', { class: 'dim', text: ' · ' + (k === 'primary' ? 'Primary' : 'Secondary') + ', ' + cname(c) + (S.isMastered(u, c) ? ' (mastered)' : '') })),
+        h('div', { class: 'stv-desc', text: C0.signature || '' }), chips(c)]; }
+    if (k.startsWith('pas')) { const p = u.passives[+k.slice(3)]; return p ? [h('div', {}, h('b', { class: 'stv-serif', text: nm(D.passives, p) }), h('span', { class: 'dim', text: ' · Passive' })), h('div', { class: 'stv-desc', text: D.passives[p].desc }), hint] : [h('b', { class: 'stv-serif', text: 'Empty passive slot' }), h('div', { text: 'Tap again to choose a passive.' })]; }
+    if (k === 'learn') return [h('b', { class: 'stv-serif', text: 'Learn skills' }), h('div', { class: 'stv-desc', text: S.jpOf(u, u.primary) + ' JP to spend in ' + cname(u.primary) + '. Tap again to learn skills and passives.' })];
+    if (k.startsWith('eq:')) { const sl = k.slice(3), g = u.gear[sl]; return g ? [h('div', {}, h('b', { class: 'stv-serif', text: iname(g) }), h('span', { class: 'dim', text: ' · ' + SLOT_NAME[sl] })), h('div', { class: 'stv-desc', text: D.gear[g].desc || '' }), D.gear[g].effect ? h('div', { class: 'gold stv-desc', text: D.gear[g].effect }) : null, h('div', { class: 'dim stv-hint', text: 'Tap again to change it. Hold for details.' })] : [h('b', { class: 'stv-serif', text: SLOT_NAME[sl] + ': empty' }), h('div', { text: 'Tap again to pick something from the stash.' })]; }
+    return null;
+  }
+  // ----- equip -----
+  function wearable(u, sl) { return Object.keys(ST.inventory.items).filter(g => D.gear[g] && D.gear[g].slot === sl && LO.canEquip(u.primary, g, u.passives)); }
+  function equipView(u) {
+    const sl = SV.slot, cur = u.gear[sl], opts = wearable(u, sl), pick = SV.pick && (SV.pick === cur || opts.includes(SV.pick)) ? SV.pick : null;
+    const sort = (a, b) => (II() ? II().tier(b) - II().tier(a) : 0) || iname(a).localeCompare(iname(b));
+    const list = [].concat(cur ? [cur] : [], opts.filter(g => g !== cur).sort(sort));
+    const strip = frame('stv-strip', SLOTS.map(x => h('button', { class: x === sl ? 'on' : '', onclick: () => { SV.slot = x; SV.pick = null; drawStatus(); } }, slotIcon(u.gear[x]), h('small', { text: SLOT_NAME[x] }))));
+    const slotList = frame('stv-col stv-eq', colHead('EQUIPMENT'), SLOTS.map(x => { const g = u.gear[x]; const r = h('div', { class: 'stv-row' + (x === sl ? ' sel' : ''), role: 'button', onclick: () => { SV.slot = x; SV.pick = null; drawStatus(); } }, slotIcon(g), h('span', { class: 't' }, h('small', { text: SLOT_NAME[x] }), h('b', { text: g ? iname(g) : '—' }), h('i', { text: g ? itemLine(g) : 'Empty' }))); return g ? lp(r, () => itemDetail(g, u)) : r; }));
+    const items = frame('stv-col stv-list', colHead(SLOT_NAME[sl].toUpperCase(), opts.length + ' in the stash'),
+      list.length ? list.map(g => lp(h('div', { class: 'stv-row' + (g === pick ? ' sel' : ''), role: 'button', onclick: () => { SV.pick = g === pick ? null : g; drawStatus(); } }, slotIcon(g), h('span', { class: 't' }, h('b', { text: iname(g) }), h('i', { text: itemLine(g) })),
+        g === cur ? h('span', { class: 'stv-e', text: 'E' }) : ST.inventory.items[g] > 1 ? h('span', { class: 'dim', text: '×' + ST.inventory.items[g] }) : null), () => itemDetail(g, u)))
+        : h('div', { class: 'dim', style: 'padding:8px', text: 'Nothing in the stash that ' + cname(u.primary) + ' can use here. Shops and fights bring more.' }));
+    const cmp = frame('stv-cmp', compare(u, sl, pick));
+    const acts = h('div', { class: 'stv-acts' },
+      btn('Remove', () => { const r = S.unequip(ST, u.id, sl); if (!r.ok) toast(r.reason, true); else { toast(iname(r.item) + ' went to the stash'); autosave(); } SV.pick = null; drawStatus(); }, '', !cur),
+      btn('Best gear', () => bestGear(u)),
+      btn('Equip', () => { const r = S.equip(ST, u.id, pick); if (!r.ok) toast(r.reason, true); else { toast('Equipped ' + iname(pick) + (r.returned && r.returned.length ? '; ' + r.returned.map(iname).join(', ') + ' went to the stash' : '')); autosave(); } SV.pick = null; drawStatus(); }, 'pri', !pick || pick === cur));
+    const mini = frame('stv-mini', window.PORT && PORT.url ? h('img', { class: 'stv-port', alt: '', src: PORT.url({ name: u.name, race: u.race, primary: u.primary }, 'P') }) : null,
+      h('div', {}, h('div', { class: 'stv-nm' }, h('span', { text: u.name }), h('small', { text: 'Lv ' + u.level })), h('div', { class: 'stv-cl', text: cname(u.primary) + ' · can use ' + canUse(u) })));
+    return h('div', { class: 'stv-screen' }, statusHeader('Equip', u, true), h('div', { class: 'stv-a' }, mini, strip, slotList), h('div', { class: 'stv-b' }, items), h('div', { class: 'stv-c' }, cmp, acts));
+  }
+  function canUse(u) { const e = D.classes[u.primary].equip || {}; return [].concat(e.weapons || [], e.offhand || [], (e.armor || []).map(a => a + ' armour')).join(', ') || 'little'; }
+  function compare(u, sl, pick) {
+    const cur = u.gear[sl];
+    if (!pick || pick === cur) return [colHead('IF EQUIPPED'), h('div', { class: 'dim', style: 'padding:4px 0', text: 'Tap an item to see what it would change. Hold it for its details.' })];
+    const next = LO.cleanGear(u.primary, Object.assign({}, u.gear, { [sl]: pick }), u.passives), a = statsOf(u, u.gear), b = statsOf(u, next);
+    const rows = [['Weapon', 'wpn'], ['Armor', 'armor', '%'], ['Resist', 'res', '%'], ['HP', 'hp'], ['MP', 'mp'], ['Speed', 'spd'], ['Move', 'mv'], ['Crit', 'crit', '%']];
+    const lost = SLOTS.filter(x => x !== sl && u.gear[x] && next[x] !== u.gear[x]);
+    return [colHead('IF EQUIPPED: ' + iname(pick).toUpperCase()), h('div', { class: 'stv-cg' },
+      rows.map(([l, k, suf]) => { const x = a[k], y = b[k], cls = y > x ? 'up' : y < x ? 'dn' : ''; return h('div', {}, h('span', { text: l }), h('b', { class: cls, text: x === y ? x + (suf || '') : x + ' → ' + y + (suf || '') })); }),
+      a.guard !== b.guard ? h('div', {}, h('span', { text: 'Guard' }), h('b', { class: b.guard ? 'up' : 'dn', text: (a.guard ? 'Yes' : 'No') + ' → ' + (b.guard ? 'Yes' : 'No') })) : null),
+      lost.length ? h('div', { class: 'stv-warn', text: (D.gear[pick].weapon && D.gear[pick].weapon.hands === 2 ? 'Two-handed: ' : '') + lost.map(x => 'the ' + iname(u.gear[x])).join(' and ') + ' goes back to the stash.' }) : null];
+  }
+  // Best gear: every slot keeps its kind of item (a sword stays a sword, medium armour stays medium) and takes the strongest one in the stash. An empty slot takes the strongest anything.
+  function gearScore(g) { const it = D.gear[g]; if (!it) return -1; const sm = it.statMods || {}, w = it.weapon; return (w ? LO.strike(Object.assign({}, w)) * 3 : 0) + (it.armor || 0) + (it.res || 0) * 0.8 + (sm.hp || 0) * 0.5 + (it.spellPow || 0) * 0.6 + (it.healPow || 0) * 0.5 + (sm.mana || 0) * 0.4 + (it.crit || 0) * 0.6 + (sm.spd || 0) * 6 + (sm.mv || 0) * 6 + (II() ? II().tier(g) * 0.01 : 0); }
+  function kindOf(g) { const it = D.gear[g]; return it.weapon ? 'w:' + it.weapon.family + ':' + it.weapon.hands : it.offType ? 'o:' + it.offType : it.weight ? 'a:' + it.weight : 'x:' + g; }
+  function bestGear(u) {
+    const changed = [];
+    for (const sl of SLOTS) {
+      if (sl === 'Accessory' && u.gear[sl]) continue;   // accessories are a build choice: only an empty slot is filled
+      if (sl === 'OffHand') { const m = u.gear.MainHand && D.gear[u.gear.MainHand].weapon; if (m && m.hands === 2) continue; }
+      const cur = u.gear[sl], pool = wearable(u, sl).filter(g => !cur || kindOf(g) === kindOf(cur));
+      const best = pool.sort((a, b) => gearScore(b) - gearScore(a))[0];
+      if (best && (!cur || gearScore(best) > gearScore(cur))) { const r = S.equip(ST, u.id, best); if (r.ok) changed.push(iname(best)); }
+    }
+    if (changed.length) { toast('Best gear: ' + changed.join(', ')); autosave(); } else toast('Already wearing the best of each kind you have');
+    SV.pick = null; drawStatus();
   }
 
   // ---------- factions ----------
