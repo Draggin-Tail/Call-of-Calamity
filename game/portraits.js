@@ -325,6 +325,14 @@
 
   const CROP = 44, CROP_X = 10, CROP_Y = 7;
   const cache = {};
+  // MOCKUP (gai-art-mockup branch): ?gai=1 uses the Google-generated busts in portraits_gai/<class>.png (one per class, every race for now)
+  const GAI = /[?&]gai=1/.test(location.search), GIMG = {};
+  function gai(job, team) {
+    const i = GIMG[job]; if (!i || !i.ok) return null;
+    const o = document.createElement('canvas'); o.width = o.height = CROP * 3; const c = o.getContext('2d');
+    const gr = c.createRadialGradient(66, 50, 10, 66, 66, 100); gr.addColorStop(0, team === 'E' ? '#5a2a26' : '#2a3c5e'); gr.addColorStop(1, '#141820');
+    c.fillStyle = gr; c.fillRect(0, 0, 132, 132); c.drawImage(i, 0, 0, 132, 132); return o;
+  }
   const PORT = {
     ready: true, onready: null, size: 132,
     canvas(u, team) {
@@ -332,6 +340,7 @@
       team = team || (u && (u.baseTeam || u.team)) || 'P'; if (team !== 'P' && team !== 'E') team = 'P';
       const ck = [team, b.race || u.race || 'human', job, b.name || u.n || u.name].join('|');
       if (cache[ck]) return cache[ck];
+      if (GAI && GIMG[job]) { const gv = gai(job, team); if (gv) { cache[ck] = gv; return gv; } }
       let cv = MON.includes(job) ? monster(job, team) : make(u, team);
       if (!cv) return null;
       // tighter crop: keep the middle 48x48 of the 64 grid (head, neck and the top of the shoulders), then scale 3x with hard edges so the card can show it at 72px
@@ -344,4 +353,7 @@
     classes: () => Object.keys(CLS), races: () => Object.keys(RACE)
   };
   window.PORT = PORT;
+  if (GAI) ['squire','scout','acolyte','apprentice','warrior','sentinel','bulwark','rogue','monk','berserker','archer','marksman','tracker','cleric','druid','shaman','wizard','necro','enchanter','bard',
+    'shadowknight','shadowmage','warlord','assassin','songweaver','spellbow','paladin','blood_knight','warden','siegebreaker','zen_archer','ranger','beastlord','ascetic','inquisitor','stormcaller']
+    .forEach(j => { const i = GIMG[j] = new Image(); i.onload = () => { i.ok = true; for (const k in cache) if (k.split('|')[2] === j) delete cache[k]; }; i.src = 'portraits_gai/' + j + '.png'; });
 })();
