@@ -15,7 +15,7 @@ for(const [w,h,o] of [[390,664,'portrait'],[780,350,'landscape']]){
  await p.evaluate(()=>[...document.querySelectorAll('#sh-col .card')][0].click());await p.waitForTimeout(300);
  const st=()=>p.evaluate(()=>{const r=document.getElementById('stv');if(!r)return null;const sc=r.querySelector('.stv-screen');const vis=e=>{const b=e.getBoundingClientRect();return b.width>0&&b.top>=-1&&b.bottom<=innerHeight+1&&b.left>=-1&&b.right<=innerWidth+1};
    return {mode:r.className,over:sc.scrollHeight>sc.clientHeight+1||document.documentElement.scrollHeight>innerHeight+1,frames:[...r.querySelectorAll('.stv-frame')].filter(f=>getComputedStyle(f).display!=='none'&&!f.closest('.stv-det')).map(f=>({c:f.className,v:vis(f)})),
-   icons:r.querySelectorAll('.stv-eq .stv-slot img').length,acts:[...r.querySelectorAll('.stv-acts button')].map(x=>x.textContent+(x.disabled?'(off)':'')),help:(r.querySelector('.stv-help')||{}).textContent||'',det:(r.querySelector('.stv-det')||{}).textContent||'',sheet:!!document.querySelector('#sh-sheet.on')}});
+   icons:r.querySelectorAll('.stv-eq .stv-slot img,.stv-eq .stv-slot .ii').length,acts:[...r.querySelectorAll('.stv-acts button')].map(x=>x.textContent+(x.disabled?'(off)':'')),help:(r.querySelector('.stv-help')||{}).textContent||'',det:(r.querySelector('.stv-det')||{}).textContent||'',sheet:!!document.querySelector('#sh-sheet.on')}});
  let s=await st();
  ok(s&&s.mode==='stv-status',o+': a roster card opens the Status screen');
  ok(!s.over,o+': no scrolling');

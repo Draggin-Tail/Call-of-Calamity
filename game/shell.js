@@ -192,6 +192,8 @@ body.campaign #top .skirm{display:none}
 .stv-row.sel{background:rgba(217,178,90,.14);box-shadow:inset 0 0 0 1px var(--sg)}
 .stv-slot{position:relative;width:38px;height:38px;flex:none;border-radius:5px;background:radial-gradient(circle at 50% 40%,#22344a,#0b1118 75%);border:1px solid var(--tc,#6d6d72);box-shadow:inset 0 0 0 1px #000a;display:grid;place-items:center}
 .stv-slot img{width:32px;height:32px;image-rendering:pixelated}
+.stv-slot .ii{--s:2;display:block;width:calc(16px*var(--s));height:calc(16px*var(--s));background:url(icons.png) no-repeat;background-size:calc(112px*var(--s)) auto;background-position:calc(var(--c)*-16px*var(--s)) calc(var(--r)*-16px*var(--s));image-rendering:-webkit-optimize-contrast;image-rendering:pixelated}
+.stv-slot.big .ii{--s:3}.vic-li .stv-slot .ii{--s:1.5}
 .stv-slot>b{font:700 15px var(--serif);color:var(--tc)}
 .stv-slot em{position:absolute;right:-1px;bottom:-1px;font:700 8px system-ui;font-style:normal;background:var(--tc);color:#10161d;padding:0 3px;border-radius:3px 0 4px 0}
 .stv-slot.empty{border:1px dashed #4a5662;opacity:.7}
@@ -235,6 +237,7 @@ body.campaign #top .skirm{display:none}
 .stv-cc .ped{position:relative;display:grid;place-items:center;width:100%;flex:1;min-height:0}
 .stv-cc .ped::after{content:'';position:absolute;left:50%;bottom:1px;width:min(36px,80%);height:8px;transform:translateX(-50%);border-radius:50%;background:radial-gradient(#3b4a5c,#1b2430 70%);box-shadow:0 0 0 1px #000a;z-index:-1}
 .stv-spr{display:block;width:var(--sz,32px);height:var(--sz,32px);background-size:400% 2000%;background-position:0 0;background-repeat:no-repeat;image-rendering:pixelated}
+.stv-spr.gai{transform:scale(1.4);transform-origin:50% 88%}
 .stv-cc .ped{container-type:size}.stv-cc .stv-spr{--sz:min(36px,100cqh,100cqw)}
 .stv-cc .n{font:600 9px system-ui;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;line-height:1.1}
 .stv-cc .p{width:70%;height:3px;border-radius:2px;background:#0008;overflow:hidden;flex:none}.stv-cc .p i{display:block;height:100%;background:linear-gradient(90deg,#b7e3ff,#4b9fd0)}
@@ -1013,7 +1016,7 @@ body.campaign #top .skirm{display:none}
       return out;
     });
   }
-  function itemRow(g, action, count) { const it = D.gear[g]; return h('div', { class: 'card' }, h('div', { class: 'row' }, h('div', { class: 'grow' }, h('b', { text: it.name + (count > 1 ? ' ×' + count : '') }), h('div', { class: 'dim', text: SLOT_NAME[it.slot] + (it.weapon ? ' · ' + it.weapon.family + (it.weapon.hands === 2 ? ' (2h)' : '') : it.weight ? ' · ' + it.weight : '') }), h('div', { class: 'dim', text: it.desc })), action)); }
+  function itemRow(g, action, count) { const it = D.gear[g]; return h('div', { class: 'card' }, h('div', { class: 'row' }, slotIcon(g), h('div', { class: 'grow' }, h('b', { text: it.name + (count > 1 ? ' ×' + count : '') }), h('div', { class: 'dim', text: SLOT_NAME[it.slot] + (it.weapon ? ' · ' + it.weapon.family + (it.weapon.hands === 2 ? ' (2h)' : '') : it.weight ? ' · ' + it.weight : '') }), h('div', { class: 'dim', text: it.desc })), action)); }
   function recruitSheet(id) {
     sheet('Recruit', () => {
       const sv = C.nodeServices(ST, id), cost = S.recruitCost(ST), price = cl => Math.round(cost * (C.recruitMult ? C.recruitMult(ST, id, cl) : 1)); if (!sv.recruit) return [h('div', { class: 'dim', text: 'No one is taking on recruits here right now.' })];
@@ -1281,8 +1284,8 @@ body.campaign #top .skirm{display:none}
   }
   function slotIcon(id, big) {
     if (!id) return h('span', { class: 'stv-slot empty' });
-    const t = II() ? II().tier(id) : 1, url = II() ? II().url(id, 2) : '', s = h('span', { class: 'stv-slot' + (big ? ' big' : ''), style: '--tc:' + (II() ? II().color(t) : '#8a8f96') });
-    if (url) s.appendChild(h('img', { alt: '', src: url })); else s.appendChild(h('b', { text: (D.gear[id].name || '?')[0] }));
+    const t = II() ? II().tier(id) : 1, cell = II() && II().cell ? II().cell(id) : null, url = !cell && II() ? II().url(id, 2) : '', s = h('span', { class: 'stv-slot' + (big ? ' big' : ''), style: '--tc:' + (II() ? II().color(t) : '#8a8f96') });
+    if (cell) s.appendChild(h('i', { class: 'ii', style: '--c:' + cell[0] + ';--r:' + cell[1] })); else if (url) s.appendChild(h('img', { alt: '', src: url })); else s.appendChild(h('b', { text: (D.gear[id].name || '?')[0] }));
     s.appendChild(h('em', { text: t ? String(t) : 'U' })); return s;
   }
   // Long press: hold an element with ._lp (a function returning the detail content) to open the detail panel.
@@ -1433,7 +1436,9 @@ body.campaign #top .skirm{display:none}
     const C0 = D.classes[c], un = u.unlocked.includes(c), req = C0.requires || [];
     return { un, mastered: un && S.isMastered(u, c), known: un || req.every(r => u.unlocked.includes(r)), learned: S.knownSkills(u, c).length, size: C0.ab.length, req };
   }
-  const sprite = (c, cls) => h('i', { class: 'stv-spr ' + (cls || ''), style: "background-image:url('sprites/ally/" + c + ".png')" });
+  // the Google class art (sprites/gai, same 4x20 layout) unless ?gai=0 asks for the old chibi sprites
+  const SPR_DIR = /[?&]gai=0/.test(location.search) ? 'sprites/ally/' : 'sprites/gai/ally/';
+  const sprite = (c, cls) => h('i', { class: 'stv-spr ' + (SPR_DIR === 'sprites/ally/' ? '' : 'gai ') + (cls || ''), style: "background-image:url('" + SPR_DIR + c + ".png')" });
   function classesView(u) {
     const all = treeClasses(); if (!SV.cls || !D.classes[SV.cls]) SV.cls = u.primary;
     const sel = SV.cls, tiers = [...new Set(all.map(c => D.classes[c].tier))].sort();

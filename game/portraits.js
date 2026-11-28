@@ -330,7 +330,7 @@
   const NPC = { voss: /\bVoss\b/, harrow: /\bHarrow\b(?! Farms)/, osric: /\bOsric\b/, corisande: /\bCorisande\b/, ilvane: /\bIlvane\b/, thorne: /\bThorne\b/, crane: /\bCrane\b/,
     agathe: /\bAgathe\b/, old_standard: /\bOld Standard\b/, hask: /\bHask\b/, wil: /\bWil( Fenn)?\b|\bKing Wil\b/, brielle: /\bBrielle\b/, harte: /\bHarte\b/, teodor: /\bTeodor\b/,
     marsh: /\bHester Marsh\b|\bAgent Marsh\b/, vell: /\bCassia Vell\b|\bWarden Vell\b/, rook: /\bMags Rook\b|\bSergeant Rook\b/, kit: /\bKit Ashby\b/, nell: /^Nell\b/, tobin: /\bTobin Reed\b|^Tobin\b/,
-    aldo: /\bBrother Aldo\b/, aldric: /\bAldric\b/, corley: /\bCorley\b/, maren: /\bMaren\b/, tobb: /\bTobb\b/, wen: /\bOld Wen\b/, dov: /\bDov Quill\b/, ysolde: /\bYsolde\b/ };
+    aldo: /\bBrother Aldo\b/, aldric: /\bNovice Aldric\b/, corley: /\bCorley\b/, maren: /\bMaren\b/, tobb: /\bTobb\b/, wen: /\bOld Wen\b/, dov: /\bDov Quill\b/, ysolde: /\bYsolde\b/ };
   const NIMG = {};
   const npcOf = name => { if (!name) return null; for (const k in NPC) if (NPC[k].test(name)) return k; return null; };
   function npcImg(k) {
@@ -369,7 +369,13 @@
       cache[ck] = o; return o;
     },
     // Safari refuses toDataURL on a canvas it counts as cross-origin (seen on raw.githack previews); show the unit's letters instead of stopping the battle.
-    url(u, team) { const c = PORT.canvas(u, team); if (!c) return ''; if (c.url === undefined) { try { c.url = c.toDataURL(); } catch (e) { c.url = ''; } } return c.url; },
+    // Image-based art (NPC busts, the Google class portraits) is returned as the file path, not a canvas export: Safari on the raw.githack
+    // preview counts those images as cross-origin and refuses toDataURL, which used to drop it back to the drawn face.
+    url(u, team) {
+      { const b = (u && u.build) || u || {}, job = b.primary || (u && u.job), nk = npcOf(b.name || (u && (u.n || u.name)));
+        if (nk) return 'portraits/npc/' + nk + '.png';
+        if (GAI && job && GIMG[job] && !GIMG[job].bad) return 'portraits_gai/' + job + '.png'; }
+      const c = PORT.canvas(u, team); if (!c) return ''; if (c.url === undefined) { try { c.url = c.toDataURL(); } catch (e) { c.url = ''; } } return c.url; },
     // the file of a named NPC's bust, or '' (for <img> on story sheets)
     npcSrc(name) { const k = npcOf(name); return k ? 'portraits/npc/' + k + '.png' : ''; },
     classes: () => Object.keys(CLS), races: () => Object.keys(RACE)
@@ -378,5 +384,5 @@
   Object.keys(NPC).forEach(npcImg);   // load the NPC busts up front so the first scene or battle already has them
   if (GAI) ['squire','scout','acolyte','apprentice','warrior','sentinel','bulwark','rogue','monk','berserker','archer','marksman','tracker','cleric','druid','shaman','wizard','necro','enchanter','bard',
     'shadowknight','shadowmage','warlord','assassin','songweaver','spellbow','paladin','blood_knight','warden','siegebreaker','zen_archer','ranger','beastlord','ascetic','inquisitor','stormcaller']
-    .forEach(j => { const i = GIMG[j] = new Image(); i.onload = () => { i.ok = true; for (const k in cache) if (k.split('|')[2] === j) delete cache[k]; PORT.onready && PORT.onready(); }; i.src = 'portraits_gai/' + j + '.png'; });
+    .forEach(j => { const i = GIMG[j] = new Image(); i.onload = () => { i.ok = true; for (const k in cache) if (k.split('|')[2] === j) delete cache[k]; PORT.onready && PORT.onready(); }; i.onerror = () => { i.bad = true; }; i.src = 'portraits_gai/' + j + '.png'; });
 })();
