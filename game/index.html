@@ -294,6 +294,7 @@ const NB6=(x,y)=>y&1?[[x+1,y-1],[x+1,y],[x+1,y+1],[x,y+1],[x-1,y],[x,y-1]]:[[x,y
 function edgeH(x,y,i){const h=ht(x,y);if(!SLOPE.has(x+','+y))return h;return(slopeCorner(x,y,i,h)+slopeCorner(x,y,(i+1)%6,h))/2}
 function cliffAt(ax,ay,bx,by){const i=NB6(ax,ay).findIndex(([a,b])=>a===bx&&b===by);if(i<0)return ht(bx,by)-ht(ax,ay);const g=edgeH(bx,by,(i+3)%6)-edgeH(ax,ay,i);return Math.abs(g)<=.5?0:g} // + up, - down, 0 free
 const canStep=(ax,ay,bx,by,j)=>Math.abs(cliffAt(ax,ay,bx,by))<=j;
+const gapAt=k=>VOID.has(k)||PROPS[k]==='w'||PROPS[k]==='l'; // what a leap can cross
 function applySlopes(bf){SLOPE=new Map();const ss=bf.slopes||[];if(!ss.length)return;HT=HT.map(r=>r.slice());for(const [x,y,h,deg] of ss){HT[y][x]=h;SLOPE.set(x+','+y,deg)}}
 function applyBuildings(bf){BLDG=new Map();const bs=bf.buildings||[];if(!bs.length)return;HT=HT.map(r=>r.slice());for(const b of bs){const base=Math.min(...b.tiles.map(([x,y])=>HT[y][x]));b._wall=base+Math.min(...b.tiles.map(t=>t[2]));for(const [x,y,h] of b.tiles){HT[y][x]=base+h;BLDG.set(x+','+y,b)}}}
 if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp)GD.maps.thornfield_camp.buildings=[
@@ -309,6 +310,7 @@ if(/[?&]bld=1/.test(location.search)&&GD.maps&&GD.maps.thornfield_camp){const m=
   for(const t of R1)for(const n of nb(...t))if(!seen.has(key(n))&&!busy.has(key(n))&&!m.rocks.some(r=>key(r)===key(n))){seen.add(key(n));R2.push(n)}
   const toC=([x,y])=>{const [px,py]=wp(x,y);return Math.atan2(hy-py,hx-px)*180/Math.PI};
   for(const t of R1)S.push([t[0],t[1],1.5,toC(t)]);for(const t of R2)S.push([t[0],t[1],.5,toC(t)]);
+  for(const k of ['4,5','4,6']){m.rocks.push(k.split(',').map(Number));m.props[k]='w'} // a pond to leap
   m.slopes=S;m.heights=m.heights.map(r=>r.slice());m.heights[C[1]][C[0]]=2}
 function setMap(key){const m=key&&window.GAME_DATA.maps&&window.GAME_DATA.maps[key];const bf=m||CR.battlefield;HT=bf.heights;VOID=new Set((bf.voids||[]).map(([x,y])=>x+','+y));ROCKS=rockKeys(bf.rocks).concat([...VOID]);POS=bf.spawns;MAPKEY=m?key:'default';THEME=bf.theme||'steel';PROPS=bf.props||{};ZN=bf.zones||{};applyBuildings(bf);applySlopes(bf);
   H=HT.length;W=HT[0].length;MAXH=Math.max(CR.height.maxLevel,...HT.map(r=>Math.max(...r)));CEN={x:(W-1+.5)/2*SQ3,y:(H-1)*.75};EXT=null;ZOOM=null;FOCUSED=null;const bwEl=document.getElementById('bw');if(bwEl){bwEl.scrollLeft=0;bwEl.scrollTop=0}}
@@ -683,6 +685,17 @@ function reach(u,mv=moveRange(u),jb=0,av=null){ // av: tiles to path around (the
       dd.set(k,d+1);prev.set(k,k0);q.push([nx,ny]);
       if(!o){const path=[];for(let c=k;c!==null;c=prev.get(c))path.unshift(c.split(',').map(Number));out.set(k,path.slice(1))}
     }
+    // leaping a gap (user, 2026-11-28): straight over holes, deep water or lava, 1 hex per 2 Jump, onto ground within Jump of the take-off; every hex crossed counts
+    const J=jumpOf(u,jb),L=Math.floor(J/2);
+    if(L>0)NB6(x,y).forEach((n1,i)=>{
+      let [cx,cy]=n1,s=0;while(s<L&&inb(cx,cy)&&gapAt(cx+','+cy)){s++;[cx,cy]=NB6(cx,cy)[i]}
+      if(!s||!inb(cx,cy))return;const k=cx+','+cy;
+      if(gapAt(k)||ROCKS.includes(k)||dd.has(k)||(av&&av.has(k))||d+s+1>mv)return;
+      const g=Math.abs(ht(cx,cy)-ht(x,y));if(g>.5&&g>J)return;
+      const o=at(cx,cy);if(o&&o.team!==u.team)return;
+      dd.set(k,d+s+1);prev.set(k,k0);q.push([cx,cy]);
+      if(!o){const path=[];for(let c=k;c!==null;c=prev.get(c))path.unshift(c.split(',').map(Number));out.set(k,path.slice(1))}
+    });
   }
   return out;
 }
