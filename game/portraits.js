@@ -4,6 +4,7 @@
    marks), beard, front hair, headgear by class, then a coloured outline pass.
    Same input = same face: skin tone, sex, hair style and colour, eye colour, brow, marks and age are picked from a hash of race + name, so two units of one race and class differ.
    Visual only. Monsters use a crop of their board sprite (sprites/<team>/monsters.png).
+   Named NPCs (Voss, Agathe, Tobb...) use their own busts from portraits/npc/ instead (NPC, matched on the name).
    Add a class: put it in CLS. Add a race: put it in RACE. */
 (function () {
   const N = 64, CX = 32;
@@ -325,6 +326,24 @@
 
   const CROP = 44, CROP_X = 10, CROP_Y = 7;
   const cache = {};
+  // Named NPCs (design/visual_pass.md): hand-made busts in portraits/npc/<id>.png, matched on the unit's or speaker's name.
+  const NPC = { voss: /\bVoss\b/, harrow: /\bHarrow\b(?! Farms)/, osric: /\bOsric\b/, corisande: /\bCorisande\b/, ilvane: /\bIlvane\b/, thorne: /\bThorne\b/, crane: /\bCrane\b/,
+    agathe: /\bAgathe\b/, old_standard: /\bOld Standard\b/, hask: /\bHask\b/, wil: /\bWil( Fenn)?\b|\bKing Wil\b/, brielle: /\bBrielle\b/, harte: /\bHarte\b/, teodor: /\bTeodor\b/,
+    marsh: /\bHester Marsh\b|\bAgent Marsh\b/, vell: /\bCassia Vell\b|\bWarden Vell\b/, rook: /\bMags Rook\b|\bSergeant Rook\b/, kit: /\bKit Ashby\b/, nell: /^Nell\b/, tobin: /\bTobin Reed\b|^Tobin\b/,
+    aldo: /\bBrother Aldo\b/, aldric: /\bAldric\b/, corley: /\bCorley\b/, maren: /\bMaren\b/, tobb: /\bTobb\b/, wen: /\bOld Wen\b/, dov: /\bDov Quill\b/, ysolde: /\bYsolde\b/ };
+  const NIMG = {};
+  const npcOf = name => { if (!name) return null; for (const k in NPC) if (NPC[k].test(name)) return k; return null; };
+  function npcImg(k) {
+    let i = NIMG[k];
+    if (!i) { i = NIMG[k] = new Image(); i.onload = () => { i.ok = true; for (const c in cache) if (npcOf(c.split('|')[3]) === k) delete cache[c]; PORT.onready && PORT.onready(); }; i.src = 'portraits/npc/' + k + '.png'; }
+    return i.ok ? i : null;
+  }
+  function npcCanvas(k, team) {
+    const i = npcImg(k); if (!i) return null;
+    const o = document.createElement('canvas'); o.width = o.height = 132; const c = o.getContext('2d');
+    const gr = c.createRadialGradient(66, 50, 10, 66, 66, 100); gr.addColorStop(0, team === 'E' ? '#5a2a26' : '#3a3424'); gr.addColorStop(1, '#141820');
+    c.fillStyle = gr; c.fillRect(0, 0, 132, 132); c.drawImage(i, 0, 0, 132, 132); return o;
+  }
   const PORT = {
     ready: true, onready: null, size: 132,
     canvas(u, team) {
@@ -332,6 +351,7 @@
       team = team || (u && (u.baseTeam || u.team)) || 'P'; if (team !== 'P' && team !== 'E') team = 'P';
       const ck = [team, b.race || u.race || 'human', job, b.name || u.n || u.name].join('|');
       if (cache[ck]) return cache[ck];
+      { const nk = npcOf(b.name || u.n || u.name); if (nk) { const nv = npcCanvas(nk, team); if (nv) { cache[ck] = nv; return nv; } npcImg(nk); } }
       let cv = MON.includes(job) ? monster(job, team) : make(u, team);
       if (!cv) return null;
       // tighter crop: keep the middle 48x48 of the 64 grid (head, neck and the top of the shoulders), then scale 3x with hard edges so the card can show it at 72px
@@ -341,7 +361,10 @@
     },
     // Safari refuses toDataURL on a canvas it counts as cross-origin (seen on raw.githack previews); show the unit's letters instead of stopping the battle.
     url(u, team) { const c = PORT.canvas(u, team); if (!c) return ''; if (c.url === undefined) { try { c.url = c.toDataURL(); } catch (e) { c.url = ''; } } return c.url; },
+    // the file of a named NPC's bust, or '' (for <img> on story sheets)
+    npcSrc(name) { const k = npcOf(name); return k ? 'portraits/npc/' + k + '.png' : ''; },
     classes: () => Object.keys(CLS), races: () => Object.keys(RACE)
   };
   window.PORT = PORT;
+  Object.keys(NPC).forEach(npcImg);   // load the NPC busts up front so the first scene or battle already has them
 })();

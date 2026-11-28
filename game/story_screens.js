@@ -42,6 +42,8 @@
     const cname = id => (D.classes && D.classes[id] ? D.classes[id].name : id);
     const WHO = { voss: 'Lord Marshal Voss', crane: 'Factor Crane', ilvane: 'Archon Ilvane', agathe: 'Mother Agathe', old_standard: 'Captain Old Standard', osric: 'Lord Osric', corisande: 'Lady Corisande', thorne: 'Inquisitor-Captain Thorne', harrow: 'Steward Harrow', wil: 'Wil Fenn', brielle: 'Brielle Hale', hask: 'Hask', council: 'The council' };
     const who = id => WHO[id] || (id ? String(id).replace(/_/g, ' ').replace(/(^| )./g, c => c.toUpperCase()) : '');
+    // the speaker's name, with their portrait when they are a named NPC
+    const whoEl = t => { const src = window.PORT && PORT.npcSrc ? PORT.npcSrc(t) : ''; return h('div', { class: 'who' + (src ? ' wp' : '') }, src ? h('img', { src, alt: '' }) : null, h('span', { text: t })); };
     const claimName = c => (c === 'broken' ? 'No one (a broken Moot)' : C.MOOT.claimants[c] ? C.MOOT.claimants[c].name : c);
     const save = () => { try { S.saveSlot('auto', ST()); } catch (e) { /* storage may be blocked */ } };
     const changes = r => { const ch = (r && r.changes) || []; const vis = S.visibleChanges ? S.visibleChanges(ST(), ch) : ch; return vis.map(c => fname(c.faction) + ' ' + (c.delta > 0 ? '+' : '') + c.delta + (S.tierOf && c.to !== undefined && S.tierOf(c.to).name ? ' (now ' + S.tierOf(c.to).name + ')' : '')); };
@@ -79,6 +81,7 @@
 #ss-sheet .pb{overflow-y:auto;padding:12px;padding-bottom:calc(16px + env(safe-area-inset-bottom));-webkit-overflow-scrolling:touch}
 #ss-sheet .q,#shell .q{margin:6px 0;padding-left:10px;border-left:3px solid var(--line);font-style:italic}
 #ss-sheet .who,#shell .who{font-size:12px;color:var(--gold);letter-spacing:.06em;text-transform:uppercase}
+#ss-sheet .who.wp,#shell .who.wp{display:flex;align-items:center;gap:10px;margin-bottom:4px}#ss-sheet .who.wp img,#shell .who.wp img{width:52px;height:52px;border:1px solid var(--gold);border-radius:4px;background:#1a1f2a}
 #ss-sheet .card.urg,#shell .card.urg{border-color:var(--gold)}#ss-sheet .card.foe,#shell .card.foe{border-color:var(--foe)}
 #ss-sheet .seat,#shell .seat{display:flex;gap:8px;align-items:center;padding:6px 0;border-bottom:1px solid var(--line)}#ss-sheet .seat:last-child,#shell .seat:last-child{border:0}
 #ss-sheet .meter,#shell .meter{height:6px;background:var(--rock);border-radius:3px;overflow:hidden;margin:4px 0}#ss-sheet .meter>i,#shell .meter>i{display:block;height:100%}
@@ -114,7 +117,7 @@
     function mootPrimerCard(st) {
       if (fl().moot_places !== primerKey(st)) { fl().moot_places = primerKey(st); if (C.mootRevealPlaces) C.mootRevealPlaces(st); }   // saves that already had a called Moot get the seats put on the map too
       const m = C.mootState(st), w = MOOT_VOICE[m.by] || 'voss', done = () => { fl().moot_primer = primerKey(st); save(); };
-      return h('div', { class: 'card urg' }, h('div', { class: 'who', text: who(w) }),
+      return h('div', { class: 'card urg' }, whoEl(who(w)),
         h('div', { text: C.MOOT.calls[m.by] || 'The bell has rung at Crown Keep.' }), gap(8),
         h('div', { text: 'The realm has had no king for years. Now five seats will meet at Crown Keep to choose who rules: the Lords, the Syndicate, the Synod, the Hearthwatch and, if someone can bring them through the gates, the Broken Banner. Each votes for its own interest.' }), gap(6),
         h('div', { text: 'The day is yours to choose. Nothing forces it. But if no one moves the seats, the Steward keeps the seal and the Interval goes on for good.' }), gap(8),
@@ -189,30 +192,30 @@
       const cs = C.contractScene(st); if (cs) out.push(contractSceneCard(cs));
       if (primerDue(st) && !f && !mv && !cs) out.push(mootPrimerCard(st));
       const m = C.mootState(st); if (m.hall && m.hall.pending && !f) out.push(hallCard(m));
-      if (hd && hd.reclaim) out.push(h('div', { class: 'card foe' }, h('div', { class: 'who', text: 'A herald at your gate' }), h('div', { text: fname(hd.backer) + ' want ' + node(hd.node) + ' back. You turned on them, they say, and a gift can be taken back.' }), gap(8),
+      if (hd && hd.reclaim) out.push(h('div', { class: 'card foe' }, whoEl('A herald at your gate'), h('div', { text: fname(hd.backer) + ' want ' + node(hd.node) + ' back. You turned on them, they say, and a gift can be taken back.' }), gap(8),
         btn('Hand it over quietly', () => did(C.holdReclaim(st, 'quiet'), 'You give up the hold', ['Your stash is kept safe at any Hearthwatch house.']), 'full'), gap(),
         btn('Refuse (they will lay siege)', () => did(C.holdReclaim(st, 'refuse'), 'You refuse', ['They will come for it. Be at the hold to defend it.']), 'full bad'), gap(),
         btn('Appeal to the crown you made', () => did(C.holdReclaim(st, 'appeal'), 'The ruler remembers', ['Your standing with them is mended to Neutral.']), 'full pri', hd.appealed || C.moot(st).declared !== (st.world.realm || {}).outcome),
         why(hd.appealed ? 'You have appealed once already.' : C.moot(st).declared !== (st.world.realm || {}).outcome ? 'Only if you declared for the ruler.' : '')));
-      if (hd && hd.siege && !hd.lost && !f) out.push(h('div', { class: 'card foe' }, h('div', { class: 'who', text: 'Your hold is under siege' }), h('div', { text: fname(hd.siege.by) + ' are at the walls of ' + node(hd.node) + '. Hold out five rounds, or lose it.' }), gap(8),
+      if (hd && hd.siege && !hd.lost && !f) out.push(h('div', { class: 'card foe' }, whoEl('Your hold is under siege'), h('div', { text: fname(hd.siege.by) + ' are at the walls of ' + node(hd.node) + '. Hold out five rounds, or lose it.' }), gap(8),
         at === hd.node ? btn('Defend the walls', () => { const r = C.holdSiegeFight(st); if (!r.ok) return toast(r.reason, true); save(); draw(); }, 'pri full') : h('div', { class: 'dim', text: 'Travel to ' + node(hd.node) + ' to defend it.' })));
       if (hd && hd.lost && at === hd.node && !f) {
         const party = (st.party || []).map(id => ((st.roster || []).find(u => u.id === id) || {}).primary), sneak = party.some(p => ['rogue', 'scout', 'assassin'].includes(p)) || (S.goodwillTier && S.goodwillTier(st).id === 'trusted');
-        out.push(h('div', { class: 'card foe' }, h('div', { class: 'who', text: 'Your old gate' }), h('div', { text: fname(hd.takenBy) + ' hold ' + node(hd.node) + ' now. You could take it back.' }), gap(8),
+        out.push(h('div', { class: 'card foe' }, whoEl('Your old gate'), h('div', { text: fname(hd.takenBy) + ' hold ' + node(hd.node) + ' now. You could take it back.' }), gap(8),
           btn('Storm the gate (hard)', () => { const r = C.retakeHoldFight(st, 'gate'); if (!r.ok) return toast(r.reason, true); save(); draw(); }, 'full'), gap(),
           btn('The side door', () => { const r = C.retakeHoldFight(st, 'door'); if (!r.ok) return toast(r.reason, true); save(); draw(); }, 'full pri', !sneak), why(sneak ? '' : 'Needs a rogue or scout in the party, or the Hearthwatch\'s trust.')));
       }
-      const offers = C.holdOffers(st); if (offers.length) out.push(h('div', { class: 'card urg' }, h('div', { class: 'who', text: 'The Kingmaker\'s reward' }), h('div', { text: 'The new ruler offers you a hold of your own. Pick one.' }), gap(8),
+      const offers = C.holdOffers(st); if (offers.length) out.push(h('div', { class: 'card urg' }, whoEl('The Kingmaker\'s reward'), h('div', { text: 'The new ruler offers you a hold of your own. Pick one.' }), gap(8),
         offers.map(o => [btn(o.name, () => did(C.grantHold(st, o.id), 'A hold of your own', ['It sells at a discount and keeps a stash.']), 'full'), gap()])));
-      if (news.length) out.push(h('div', { class: 'card' }, h('div', { class: 'who', text: 'Word reaches you' }), news.map(n => h('div', { style: 'margin:6px 0' }, n.title ? h('b', { text: n.title }) : null, h('div', { text: n.text }))), gap(), btn('Got it', () => { news.length = 0; draw(); }, 'sm')));
+      if (news.length) out.push(h('div', { class: 'card' }, whoEl('Word reaches you'), news.map(n => h('div', { style: 'margin:6px 0' }, n.title ? h('b', { text: n.title }) : null, h('div', { text: n.text }))), gap(), btn('Got it', () => { news.length = 0; draw(); }, 'sm')));
       return out;
     }
     // things you can do where you stand (shown in the place's own sheet on the map)
     function peopleCards(st) {
       const out = [], at = here();
       // people waiting for you here: a scene you closed, put off, or that came due while you stood here
-      const f0 = sceneFight(st); if (f0) out.push(h('div', { class: 'card foe' }, h('div', { class: 'who', text: f0.enc.name }), h('div', { class: 'dim', text: 'The fight is still waiting for you here.' }), gap(), btn('Face it', () => openSheet('now'), 'pri full')));
-      if (C.movesHere && !f0) C.movesHere(st, at).forEach(m => out.push(h('div', { class: 'card urg' }, h('div', { class: 'who', text: who(m.who) || 'Someone' }), h('div', { class: 'dim', text: m.pending ? 'Is waiting for your answer.' : 'Wants a word with you.' }), gap(),
+      const f0 = sceneFight(st); if (f0) out.push(h('div', { class: 'card foe' }, whoEl(f0.enc.name), h('div', { class: 'dim', text: 'The fight is still waiting for you here.' }), gap(), btn('Face it', () => openSheet('now'), 'pri full')));
+      if (C.movesHere && !f0) C.movesHere(st, at).forEach(m => out.push(h('div', { class: 'card urg' }, whoEl(who(m.who) || 'Someone'), h('div', { class: 'dim', text: m.pending ? 'Is waiting for your answer.' : 'Wants a word with you.' }), gap(),
         btn(m.pending ? 'Answer' : 'Talk', () => { if (!m.pending && !C.startMove(st, m.id)) return toast('Not now', true); save(); openSheet('now'); }, 'pri full'))));
       return out;
     }
@@ -224,11 +227,11 @@
       return out;
     }
     function moveCard(mv) {
-      return h('div', { class: 'card urg' }, mv.who ? h('div', { class: 'who', text: who(mv.who) }) : null, h('div', { style: 'margin:4px 0;white-space:pre-line', text: mv.setup }), (mv.lines || []).filter(Boolean).map(quote), gap(8),
+      return h('div', { class: 'card urg' }, mv.who ? whoEl(who(mv.who)) : null, h('div', { style: 'margin:4px 0;white-space:pre-line', text: mv.setup }), (mv.lines || []).filter(Boolean).map(quote), gap(8),
         mv.options.map(o => [btn(o.label, () => did(C.chooseMove(ST(), o.id), mv.who ? who(mv.who) : 'It is done'), 'full'), o.hint ? h('div', { class: 'dim', style: 'font-size:12px;margin:3px 4px 8px;font-style:italic', text: o.hint }) : gap()]));
     }
     function contractSceneCard(cs) {
-      return h('div', { class: 'card urg' }, h('div', { class: 'who', text: 'Contract: ' + cs.name }), h('div', { style: 'margin:4px 0;white-space:pre-line', text: cs.setup }), gap(8),
+      return h('div', { class: 'card urg' }, whoEl('Contract: ' + cs.name), h('div', { style: 'margin:4px 0;white-space:pre-line', text: cs.setup }), gap(8),
         cs.options.map(o => [btn(o.label, () => did(C.contractChoose(ST(), o.id), cs.name), 'full', !o.ok), !o.ok ? why('Not enough gold.') : o.hint ? h('div', { class: 'dim', style: 'font-size:12px;margin:3px 4px 8px;font-style:italic', text: o.hint }) : gap()]));
     }
     function holdCard(st, hs) {
@@ -244,7 +247,7 @@
     function fightCard(st, w) {
       C.activeWander(st); const info = C.encounterBuilds('wander', null), party = (st.party || []).map(id => st.roster.find(u => u.id === id)).filter(Boolean);
       const leave = Object.keys(LEAVE).find(k => w.enc[k]);
-      return h('div', { class: 'card foe' }, h('div', { class: 'who', text: w.enc.name }), w.text ? h('div', { style: 'margin:4px 0', text: w.text }) : null,
+      return h('div', { class: 'card foe' }, whoEl(w.enc.name), w.text ? h('div', { style: 'margin:4px 0', text: w.text }) : null,
         h('div', { class: 'dim', text: 'Enemies: ' + info.builds.map(b => (b.name ? b.name + ' (' + cname(b.primary) + ')' : cname(b.primary)) + ' Lv ' + b.level).join(', ') }),
         h('div', { class: 'dim', text: 'Your party: ' + party.map(u => u.name + ' Lv ' + u.level).join(', ') }),
         info.objective && C.objectiveText ? h('div', { class: 'gold', text: 'Objective: ' + C.objectiveText(info.objective, info.builds) }) : null,
@@ -277,7 +280,7 @@
     }
     function hallCard(m) {
       const decl = m.declared;
-      return h('div', { class: 'card foe' }, h('div', { class: 'who', text: 'The Hall of Oaths' }), h('div', { text: 'The count says ' + claimName(m.hall.winner) + '. Steel at the back of the hall: Osric\'s men have barred the doors.' }), gap(8),
+      return h('div', { class: 'card foe' }, whoEl('The Hall of Oaths'), h('div', { text: 'The count says ' + claimName(m.hall.winner) + '. Steel at the back of the hall: Osric\'s men have barred the doors.' }), gap(8),
         btn('Defend the result', () => { const r = C.mootHallFight(ST(), 'defend'); if (!r.ok) return toast(r.reason, true); save(); tab = 'now'; draw(); }, 'pri full'), gap(),
         btn('Join Osric\'s men', () => { const r = C.mootHallFight(ST(), 'coup'); if (!r.ok) return toast(r.reason, true); save(); tab = 'now'; draw(); }, 'bad full', decl !== 'osric'), why(decl !== 'osric' ? 'Only those who declared for Osric can join him.' : 'If you lose, the Crown outlaws you.'));
     }
@@ -417,12 +420,12 @@
       out.push(h('div', { class: 'sh-h', text: 'Leads' }));
       const live = leads.filter(l => !l.done), done = leads.filter(l => l.done);
       if (!live.length) out.push(h('div', { class: 'dim', text: done.length ? 'Every lead you have has been followed.' : 'No leads yet. People will tell you things worth following, if you stay to listen.' }));
-      live.forEach(l => out.push(h('div', { class: 'card' }, h('div', { class: 'who', text: who(l.who) || l.who }), h('b', { text: l.name }), h('div', { class: 'dim', text: l.text }))));
+      live.forEach(l => out.push(h('div', { class: 'card' }, whoEl(who(l.who) || l.who), h('b', { text: l.name }), h('div', { class: 'dim', text: l.text }))));
       if (done.length) out.push(h('details', {}, h('summary', { class: 'dim', text: 'Followed up (' + done.length + ')' }), done.map(l => h('div', { class: 'dim', text: '✓ ' + l.name }))));
       const mk = !C.mootKnown || C.mootKnown(st);
       out.push(h('div', { class: 'sh-h', text: 'Leverage' }), h('div', { class: 'dim', text: !mk ? 'A personal secret on someone powerful. Each can be spent once: to stop one of their moves against you, or to call in a favour. A day may come when it is worth more.' : 'A personal secret on someone powerful. Each can be spent once: to pressure their seat at the Moot, to stop one of their moves against you, or to call in a favour.' }), gap());
       if (!lev.length) out.push(h('div', { class: 'dim', text: 'You hold nothing over anyone yet. Powerful people keep secrets, and some of them are overheard.' }));
-      lev.forEach(l => out.push(h('div', { class: 'card' }, h('div', { class: 'who', text: l.who }), h('b', { text: l.name }), h('div', { class: 'dim', text: l.text }), mk && l.seat ? h('div', { class: 'dim', style: 'font-size:12px', text: 'Can pressure ' + C.MOOT.seats[l.seat].name + ' at the Moot.' }) : null, gap(),
+      lev.forEach(l => out.push(h('div', { class: 'card' }, whoEl(l.who), h('b', { text: l.name }), h('div', { class: 'dim', text: l.text }), mk && l.seat ? h('div', { class: 'dim', style: 'font-size:12px', text: 'Can pressure ' + C.MOOT.seats[l.seat].name + ' at the Moot.' }) : null, gap(),
         h('div', { class: 'row' }, btn('Call in a favour', () => did(C.useLeverage(st, l.id, 'favour'), l.who), 'grow'), btn('Stop their next move', () => did(C.useLeverage(st, l.id, 'cancel'), l.who), 'grow')))));
       return out;
     }
