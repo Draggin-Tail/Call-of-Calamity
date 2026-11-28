@@ -61,10 +61,12 @@ for(const [w,h,o] of [[390,664,'portrait'],[780,350,'landscape']]){
  ok(u==='cleric'&&/pri/.test(s.cells.find(c=>c.c==='cleric').cls)&&s.acts[0]==='Primary(off)',o+': Set primary switches the class');
  await pick('paladin');s=await st();ok(s.lines.length===2,o+': tier III lines reach across tiers ('+s.lines.length+')');
  await shot('tier3');
+ const who=()=>p.evaluate(()=>{const e=document.querySelector('#stv .stv-hdr .stv-who b');const b=e&&e.getBoundingClientRect();return e&&b.width>20?e.textContent:null});
+ const w0=await who();ok(w0===await p.evaluate(()=>GAME_SHELL.state().roster[0].name),o+': the header names the unit beside Classes ('+w0+')');
  const n0=await p.evaluate(()=>document.querySelector('#stv .stv-hdr').textContent);
  await click('#stv .stv-arr[aria-label="Next unit"]');await p.waitForTimeout(150);s=await st();
  const n1=await p.evaluate(()=>document.querySelector('#stv .stv-hdr').textContent);
- ok(s.mode==='stv-classes'&&n0!==n1&&s.cells.some(c=>/pri/.test(c.cls)&&/sel/.test(c.cls)),o+': ▸ pages to the next unit\'s tree, with its primary selected');
+ const w1=await who();ok(s.mode==='stv-classes'&&n0!==n1&&w1&&w1!==w0&&s.cells.some(c=>/pri/.test(c.cls)&&/sel/.test(c.cls)),o+': ▸ pages to the next unit\'s tree, with its primary selected');
  await click('#stv .stv-arr[aria-label="Previous unit"]');await p.waitForTimeout(100);
  await click('#stv .stv-hdr button','Back');await p.waitForTimeout(150);s=await st();
  ok(s&&s.mode==='stv-status',o+': Back returns to Status');

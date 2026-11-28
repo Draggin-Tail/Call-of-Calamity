@@ -162,7 +162,8 @@ body.campaign #top .skirm{display:none}
 .stv-a,.stv-b,.stv-c{display:flex;flex-direction:column;gap:6px;min-height:0;min-width:0}
 .stv-frame{background:rgba(16,24,34,.92);border:1px solid var(--sl);border-radius:6px;box-shadow:inset 0 0 0 3px rgba(12,19,27,.9),inset 0 0 0 4px rgba(217,178,90,.22),0 6px 18px rgba(0,0,0,.45);min-width:0}
 .stv-hdr{display:flex;align-items:center;gap:8px;padding:4px 6px 4px 10px;flex:none}
-.stv-hdr h1{margin:0;font:700 18px var(--serif);flex:1}
+.stv-hdr h1{margin:0;font:700 18px var(--serif);flex:1;display:flex;align-items:baseline;gap:10px;min-width:0;white-space:nowrap}
+.stv-who{display:flex;align-items:baseline;gap:6px;min-width:0;padding-left:10px;border-left:1px solid rgba(217,178,90,.35)}.stv-who b{color:var(--sg);overflow:hidden;text-overflow:ellipsis}.stv-who small{font:700 12px var(--serif);color:#9aa3ad;flex:none}
 .stv-nav{display:flex;align-items:center;gap:2px;font:600 12px system-ui;color:#9aa3ad}
 .stv-arr{background:none;border:0;color:var(--sg);font-size:16px;min-width:34px;min-height:34px;cursor:pointer}
 .stv-id{display:flex;gap:9px;padding:8px;flex:none}
@@ -1220,7 +1221,7 @@ body.campaign #top .skirm{display:none}
   const colHead = (t, r) => h('h3', {}, h('span', { text: t }), r ? h('span', { class: 'dim', text: r }) : null);
   function statusHeader(title, u, nav) {
     const i = ST.roster.indexOf(u), n = ST.roster.length, go = d => { const v = ST.roster[(i + d + n) % n]; SV.id = v.id; SV.pick = null; SV.cls = null; drawStatus(); };
-    return frame('stv-hdr', h('h1', { text: title }), nav && n > 1 ? h('div', { class: 'stv-nav' }, h('button', { class: 'stv-arr', 'aria-label': 'Previous unit', onclick: () => go(-1), text: '◂' }), h('span', { text: (i + 1) + ' / ' + n }), h('button', { class: 'stv-arr', 'aria-label': 'Next unit', onclick: () => go(1), text: '▸' })) : null,
+    return frame('stv-hdr', h('h1', {}, title, SV.mode === 'classes' ? h('span', { class: 'stv-who' }, h('b', { text: u.name }), h('small', { text: 'Lv ' + u.level })) : null), nav && n > 1 ? h('div', { class: 'stv-nav' }, h('button', { class: 'stv-arr', 'aria-label': 'Previous unit', onclick: () => go(-1), text: '◂' }), h('span', { text: (i + 1) + ' / ' + n }), h('button', { class: 'stv-arr', 'aria-label': 'Next unit', onclick: () => go(1), text: '▸' })) : null,
       btn('Back', () => { if (SV.mode !== 'status') { SV.mode = 'status'; SV.pick = null; drawStatus(); } else closeStatus(); }, 'sm'));
   }
   function bar(k, l, pct, txt) { return h('div', { class: 'stv-bar' }, h('b', { text: l }), h('div', { class: 'stv-bt ' + k }, h('i', { style: 'width:' + Math.max(0, Math.min(100, pct)) + '%' })), h('span', { text: txt })); }
