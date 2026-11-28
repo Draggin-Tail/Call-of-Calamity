@@ -42,29 +42,59 @@ def figures_grid(path,purple,cols,rows):
             out.append(sub[ys[0]:ys[-1]+1,xs[0]:xs[-1]+1])
     return out
 NF=64
+def pose(im,fwd,lean=0,legs=0,sy=1.0,sx=1.0,rot=0,flash=None,dark=0):
+    """Deform one figure: squash/stretch from the feet, lean the body (shear above the hips, + is forward),
+    shear the legs (stride), tip over (rot degrees, backward), and tint (flash=(r,g,b,amount), dark=amount)."""
+    w,h=im.size
+    if sx!=1 or sy!=1: im=im.resize((max(1,round(w*sx)),max(1,round(h*sy))),Image.LANCZOS); w,h=im.size
+    a=np.asarray(im).astype(np.float32); P=12
+    out=np.zeros((h,w+2*P,4),np.float32)
+    for r in range(h):
+        t=(h-1-r)/max(1,h-1)   # 0 at the feet, 1 at the head
+        sh=lean*max(0.0,(t-0.35)/0.65)+legs*max(0.0,(0.35-t)/0.35)
+        sh*=fwd; i=int(np.floor(sh)); fr=sh-i
+        row=a[r]; x0=P+i
+        out[r,x0:x0+w]+=row*(1-fr); out[r,x0+1:x0+1+w]+=row*fr
+    if flash:
+        fr,fg,fb,k=flash; m=out[...,3]>0
+        for c,v in enumerate((fr,fg,fb)): out[...,c]=np.where(m,out[...,c]*(1-k)+v*k*out[...,3]/255,out[...,c])
+    if dark: out[...,:3]*=1-dark
+    o=Image.fromarray(out.clip(0,255).astype(np.uint8)); bb=o.getbbox()
+    if bb: o=o.crop((bb[0],0,bb[2],h))
+    if rot: o=o.rotate(rot*fwd,expand=True,resample=Image.BICUBIC); bb=o.getbbox(); o=o.crop(bb) if bb else o
+    return o
+# per animation: 4 frames of (pose kwargs, dx forward, dy)
+ANIMS=[
+  [dict(sy=1.0),0,0],[dict(sy=.99,sx=1.005),0,0],[dict(sy=.978,sx=1.01),0,0],[dict(sy=.99,sx=1.005),0,0],                       # idle: breathing
+  [dict(lean=2,legs=3,sy=.97,sx=1.02),0,0],[dict(lean=2,sy=1.0),0,-2],[dict(lean=2,legs=-3,sy=.97,sx=1.02),0,0],[dict(lean=2),0,-2],  # walk: stride, push off
+  [dict(lean=-4,sy=1.03,sx=.98),-2,0],[dict(lean=5,legs=-2,sy=.95,sx=1.05),4,0],[dict(lean=7,legs=-3,sy=.93,sx=1.08),7,0],[dict(lean=2),2,0],  # attack: wind-up, lunge, strike, recover
+  [dict(lean=-5,legs=1,flash=(255,255,255,.6)),-3,0],[dict(lean=-3,flash=(255,90,80,.3)),-3,0],[dict(lean=-1),-1,0],[dict(),0,0],          # hit: white flash, knocked back
+  [dict(lean=-3,sy=.95,flash=(255,255,255,.4)),-1,0],[dict(lean=4,legs=-2,sy=.8,sx=1.06),0,0],[dict(rot=55,sy=.85,dark=.1),0,0],[dict(rot=88,dark=.25),0,0],  # death: hit, knees buckle, tip, lie
+]
 def sheet(front,back,scale,team):
     def fit(arr):
         im=Image.fromarray(arr); w,h=im.size; s=scale
         return im.resize((max(1,round(w*s)),max(1,round(h*s))),Image.LANCZOS)
     F=fit(front);B=fit(back)
-    if team=='enemy': F,B=tint(F),tint(B)
+    F,B=(tint(F),tint(B)) if team=='enemy' else (blue(F),blue(B))
     out=Image.new('RGBA',(NF*4,NF*20))
-    def put(img,col,row,dx=0,dy=0,flip=False,rot=0):
-        im=img.transpose(Image.FLIP_LEFT_RIGHT) if flip else img
-        if rot: im=im.rotate(rot,expand=True,resample=Image.BICUBIC)
-        x=col*NF+(NF-im.width)//2+dx; y=row*NF+(NF-4)-im.height+dy
-        tile=Image.new('RGBA',(NF,NF)); tile.alpha_composite(im,(x-col*NF,y-row*NF)) if True else None
+    def put(img,col,row,dx=0,dy=0):
+        x=(NF-img.width)//2+dx; y=(NF-4)-img.height+dy
+        tile=Image.new('RGBA',(NF,NF)); tile.alpha_composite(img,(max(0,min(NF-img.width,x)),max(0,y)))
         out.alpha_composite(tile,(col*NF,row*NF))
-    dirs=[(F,False),(F,False),(F,True),(B,False)]   # down, left, right, up
+    dirs=[(F,False),(F,False),(F,True),(B,False)]   # down, left, right, up; the front art faces left, the back art faces right
     for di,(im,fl) in enumerate(dirs):
-        s=-1 if not fl else 1   # facing sign for forward shifts (front faces left)
-        if im is B: s=1
-        for f,dy in enumerate([0,-1,-2,-1]): put(im,f,0+di,0,dy,fl)
-        for f,dy in enumerate([0,-2,0,-2]): put(im,f,4+di,0,dy,fl)
-        for f,dx in enumerate([0,3,6,3]): put(im,f,8+di,s*dx,0,fl)
-        for f,dx in enumerate([-3,-4,-2,0]): put(im,f,12+di,s*dx,0,fl)
-        for f,rt in enumerate([0,30,70,90]): put(im,f,16+di,0,0,fl,rot=rt*(1 if fl else -1))
+        fwd=-1 if im is F else 1
+        for k,(kw,dx,dy) in enumerate(ANIMS):
+            p=pose(im,fwd,**kw); s=fwd
+            if fl: p=p.transpose(Image.FLIP_LEFT_RIGHT); s=-s
+            put(p,k%4,(k//4)*4+di,s*dx,dy)
     return out
+def blue(im):   # allies: the grey-blue cloth turns a clearer blue
+    a=np.asarray(im).astype(np.float32); r,g,b,al=[a[...,i] for i in range(4)]
+    mx=np.maximum(np.maximum(r,g),b); mn=np.minimum(np.minimum(r,g),b)
+    m=(b>=r)&(b>=g-4)&(mx-mn<90)&(mx>40)&(al>0)
+    return Image.fromarray(np.dstack([np.where(m,mx*.55,r),np.where(m,mx*.70,g),np.where(m,mx*1.05,b),al]).clip(0,255).astype(np.uint8))
 def tint(im):
     a=np.asarray(im).astype(np.float32); r,g,b,al=[a[...,i] for i in range(4)]
     mx=np.maximum(np.maximum(r,g),b); mn=np.minimum(np.minimum(r,g),b)
