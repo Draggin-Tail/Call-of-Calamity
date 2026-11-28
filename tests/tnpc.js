@@ -29,7 +29,7 @@ const IDS=['voss','harrow','osric','corisande','ilvane','thorne','crane','agathe
     const sc=await p.evaluate(()=>{const i=document.querySelector('#scn img');return i?{src:i.src.slice(0,40),w:i.naturalWidth}:null});
     const want=await p.evaluate(()=>[PORT.url({name:'Lord Marshal Voss',primary:'warlord'},'E'),PORT.url({name:'Raider',primary:'warlord'},'E')]);
     const full=await p.evaluate(()=>{const i=document.querySelector('#scn img');return i?i.src:''});
-    ok(full===want[0]&&want[0]!==want[1],'the scene box shows Voss\'s bust, not a drawn Warlord face');
+    ok((full===want[0]||full.endsWith('/'+want[0]))&&want[0]!==want[1],'the scene box shows Voss\'s bust, not a drawn Warlord face');
     if(process.env.SHOTS)await p.screenshot({path:process.env.SHOTS+'/npc_scene_'+o+'.png'});
     await p.evaluate(()=>Battle.skipScene());await p.waitForTimeout(800);
     ok(!errs.length,o+': no page errors '+errs.join(' | '));

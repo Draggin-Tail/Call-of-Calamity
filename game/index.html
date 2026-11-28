@@ -467,7 +467,7 @@ function predRows(tg,A){
 
 // ---- Unit cards (FFT style): portrait, name, level, class, HP, MP and the turn meter. Left card = the acting unit, right card = the unit you tapped (or are previewing).
 const esc=t=>String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-function portraitHTML(x,team){const src=window.PORT&&PORT.url(x,team);return src?`<img alt="" src="${src}">`:`<span>${esc((x.g||(x.n||x.name||'?')[0]||'?'))}</span>`}
+function portraitHTML(x,team){const src=window.PORT&&PORT.url(x,team);return src?`<img alt="" src="${src}"${/^data:/.test(src)?'':` style="background:radial-gradient(circle at 50% 40%,${team==='E'?'#5a2a26':'#2a3c5e'},#141820 75%)"`}>`:`<span>${esc((x.g||(x.n||x.name||'?')[0]||'?'))}</span>`}
 function unitCard(u,cls,badge){
   const J=JOBS[u.job]||{name:u.job},R=window.GAME_DATA.races&&window.GAME_DATA.races[u.build&&u.build.race||'human'],rn=R&&R.name&&(u.build&&u.build.race)&&u.build.race!=='human'?R.name+' ':'';
   const ct=Math.max(0,Math.min(100,Math.round(u.meter/CR.turn.meterThreshold*100))),hp=Math.max(0,u.hp),pc=Math.round(100*hp/Math.max(1,u.max));

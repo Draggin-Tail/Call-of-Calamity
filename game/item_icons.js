@@ -444,6 +444,8 @@ coin:`
     tier, pic, color: t => FRAME[t] || FRAME[1],
     url: (id, s) => packed(id, tier(id), s || 2) || draw(pic(id), tier(id), s || 2), onready: null,
     has: id => !!(ICON_SHEET[id] || ICON_SHEET[(G().gear[id] || {}).base]),
+    // [column, row] of the item's 16 px cell in icons.png, for a CSS background (no canvas: Safari on the githack preview refuses to export it)
+    cell: id => { const it = G().gear[id] || {}, e = ICON_SHEET[id] || ICON_SHEET[it.base]; return e ? [e[1] ? Math.max(0, Math.min(6, (tier(id) || 1) - 1)) : 0, e[0]] : null; },
     names: () => Object.keys(MAPS)
   };
 })();

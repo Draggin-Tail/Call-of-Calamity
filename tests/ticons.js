@@ -20,10 +20,25 @@ let fails=0;const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
   if(shop){
     await p.evaluate(id=>document.querySelector('button.n[aria-label="'+GAME_CAMPAIGN.NODES[id].name+'"]').click(),shop);await p.waitForTimeout(400);
     await p.evaluate(()=>{const x=[...document.querySelectorAll('#sh-sheet button')].find(x=>/^Shop$/.test(x.innerText.trim()));x&&x.click()});await p.waitForTimeout(600);
-    const rows=await p.evaluate(()=>[...document.querySelectorAll('#sh-sheet .card .stv-slot img')].filter(i=>i.complete&&i.naturalWidth===32).length);
+    const rows=await p.evaluate(()=>[...document.querySelectorAll('#sh-sheet .card .stv-slot .ii')].filter(i=>/icons\.png/.test(getComputedStyle(i).backgroundImage)&&i.offsetWidth===32).length);
     ok(rows>=3,'shop rows show 32 px item icons ('+rows+')');
     if(process.env.SHOTS)await p.screenshot({path:process.env.SHOTS+'/icons_shop.png'});
   }
   ok(errs.length===0,'no page errors'+(errs.length?': '+errs[0]:''));
+  // as on iPhone Safari with the raw.githack preview: canvas export is refused. Icons and class portraits must still show the art.
+  { const q=await b.newPage({viewport:{width:390,height:844},hasTouch:true});const e2=[];q.on('pageerror',e=>e2.push(String(e)));
+    await q.addInitScript(()=>{const d=CanvasRenderingContext2D.prototype.drawImage,t=HTMLCanvasElement.prototype.toDataURL;   // a canvas that drew an image file counts as tainted
+      CanvasRenderingContext2D.prototype.drawImage=function(i,...a){if(i instanceof HTMLImageElement||(i&&i._taint))this.canvas._taint=1;return d.call(this,i,...a)};
+      HTMLCanvasElement.prototype.toDataURL=function(...a){if(this._taint)throw new DOMException('The operation is insecure.','SecurityError');return t.apply(this,a)}});
+    await q.goto('http://localhost:8766/index.html');await q.waitForTimeout(2500);
+    await q.click('text=New campaign');await q.waitForTimeout(400);await q.click('button:has-text("Begin")',{force:true});await q.evaluate(()=>window.Battle&&Battle.skipScene&&Battle.skipScene());await q.waitForTimeout(800);
+    const tabs=async re=>q.evaluate(src=>{const R=new RegExp(src);const x=[...document.querySelectorAll('#sh-col button,#sh-sheet button,#ss-sheet button')].find(x=>x.offsetParent&&R.test(x.innerText.trim()));if(x)x.click();return !!x},re.source);
+    await q.evaluate(()=>{GAME_SHELL.state().world.flags.guide_off=1;GAME_SHELL.render()});await tabs(/^Close$/);await tabs(/^Onward$/);await q.waitForTimeout(300);await tabs(/^Roster$/);await q.waitForTimeout(300);
+    await q.evaluate(()=>[...document.querySelectorAll('#sh-col .card')][0].click());await q.waitForTimeout(600);
+    const s=await q.evaluate(()=>{const p=document.querySelector('#stv .stv-port');return {port:p&&p.getAttribute('src'),loaded:p&&p.complete&&p.naturalWidth>0,icons:[...document.querySelectorAll('#stv .stv-eq .stv-slot .ii')].filter(i=>/icons\.png/.test(getComputedStyle(i).backgroundImage)).length}});
+    ok(/^portraits_gai\/\w+\.png$/.test(s.port||'')&&s.loaded,'canvas export refused: the Status portrait is the class art file ('+s.port+')');
+    ok(s.icons>=3,'canvas export refused: equipment icons still come from icons.png ('+s.icons+')');
+    if(process.env.SHOTS)await q.screenshot({path:process.env.SHOTS+'/icons_safari.png'});
+    ok(e2.length===0,'canvas export refused: no page errors'+(e2.length?': '+e2[0]:''));await q.close(); }
   await b.close();console.log(fails?fails+' FAILED':'ALL PASS');process.exit(fails?1:0);
 })();
