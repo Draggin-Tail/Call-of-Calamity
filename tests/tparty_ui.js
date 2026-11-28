@@ -3,7 +3,7 @@
 const {chromium}=require('playwright');
 (async()=>{const b=await chromium.launch();const p=await b.newPage({viewport:{width:420,height:860}});const errs=[];p.on('pageerror',e=>errs.push(String(e)));
 await p.goto('http://localhost:8766/index.html');await p.waitForTimeout(2500);
-await p.click('text=New campaign');await p.waitForTimeout(400);await p.click('button:has-text("Begin")',{force:true});await p.waitForTimeout(1000);
+await p.click('text=New campaign');await p.waitForTimeout(400);await p.click('button:has-text("Begin")',{force:true});await p.evaluate(()=>window.Battle&&Battle.skipScene&&Battle.skipScene());await p.waitForTimeout(1000);
 const txt=()=>p.evaluate(()=>{const e=document.querySelector('#sh-sheet');return (e?e.innerText:'')+' '+document.querySelector('#sh-col').innerText}).then(x=>x.replace(/\n+/g,' | '));
 const setup=(node,fac,v,lvl)=>p.evaluate(([node,fac,v,lvl])=>{const C=GAME_CAMPAIGN,s=GAME_SHELL.state();s.world.flags.guide_off=1;s.world.location=node;C.discover(s,node);Object.keys(C.NODES[node].links||{}).forEach(i=>C.discover(s,i));s.factions.standing[fac]=v;s.inventory.gold=900;s.roster[0].level=lvl;GAME_SHELL.render();return true},[node,fac,v,lvl]);
 const openNode=async name=>{await p.evaluate(n=>document.querySelector('button.n[aria-label="'+n+'"]').click(),name);await p.waitForTimeout(500)};

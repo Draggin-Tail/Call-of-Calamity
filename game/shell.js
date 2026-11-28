@@ -481,7 +481,7 @@ body.campaign #top .skirm{display:none}
         ST = C.newGame({ race: newRace, name: nameVal, heroClass: newClass });
         ST.player.name = nameVal; ST.meta.name = nameVal + ' · ' + R.name;
         view = 'game'; tab = 'map'; sheetFn = null; document.body.classList.add('campaign'); autosave(); render();
-        sheet('Your story begins', () => [h('p', { style: 'white-space:pre-line', text: ST.world.flags.opening }), btn('Onward', closeSheet, 'pri full')]);
+        if (!playScene('opening_' + newRace)) sheet('Your story begins', () => [h('p', { style: 'white-space:pre-line', text: ST.world.flags.opening }), btn('Onward', closeSheet, 'pri full')]);
       }, 'pri full'));
     c.appendChild(main);
   }
@@ -1044,6 +1044,13 @@ body.campaign #top .skirm{display:none}
       out.push(btn('Roster', () => { closeSheet(); tab = 'party'; render(); }, 'full'));
       return out;
     });
+  }
+  // A story scene on the battle board (design/cinematics.md). Returns false when there is no script, so the caller shows its sheet instead.
+  function playScene(id, cb) {
+    const sc = typeof id === 'object' ? id : C.sceneScript && C.sceneScript(ST, id); if (!sc || !window.Battle || !window.Battle.scene) return false;
+    sheetFn = null; refreshSheet(); window.__campaignBattle = true; showShell(false);
+    window.Battle.scene(sc, { onChoose: cb && cb.onChoose, onDone: ch => { window.__campaignBattle = false; showShell(true); render(); if (cb && cb.onDone) cb.onDone(ch); } });
+    return true;
   }
   function runBattle(encId, optId) {
     const info = C.encounterBuilds(encId, optId), lim = C.partyLimit(ST, info.map), all = homeUnits().map(u => S.toBuild(u)), builds = all.slice(0, lim);
@@ -1710,6 +1717,6 @@ body.campaign #top .skirm{display:none}
       h('div', { class: 'dim', style: 'margin-top:14px', text: S.storageOk() ? 'Saves are kept in this browser. Download a file to keep a backup.' : 'Browser storage is blocked here: saves last only until you close this page. Download a file to keep your progress.' })));
   }
 
-  window.GAME_SHELL = { state: () => ST, render, _ownerField: () => ({ builds: ownerField.builds, key: ownerField.key }), showOnMap, nodeSheet: id => nodeSheet(id), openJournal: sub => { if (window.GAME_STORY_SCREENS) window.GAME_STORY_SCREENS.close(); jTab = sub || 'quests'; tab = 'quests'; render(); }, pathTo, travelPath: p => travel(p), open: () => { showShell(true); }, _set: s => { ST = s; view = 'game'; } };
+  window.GAME_SHELL = { state: () => ST, render, playScene, _ownerField: () => ({ builds: ownerField.builds, key: ownerField.key }), showOnMap, nodeSheet: id => nodeSheet(id), openJournal: sub => { if (window.GAME_STORY_SCREENS) window.GAME_STORY_SCREENS.close(); jTab = sub || 'quests'; tab = 'quests'; render(); }, pathTo, travelPath: p => travel(p), open: () => { showShell(true); }, _set: s => { ST = s; view = 'game'; } };
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mount); else mount();
 })();

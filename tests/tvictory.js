@@ -6,7 +6,7 @@ let fails=0;const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
 async function fight(b,w,h,o,win){
   const p=await b.newPage({viewport:{width:w,height:h},hasTouch:true});const errs=[];p.on('pageerror',e=>errs.push(String(e)));
   await p.goto('http://localhost:8766/index.html');await p.waitForTimeout(2500);
-  await p.click('text=New campaign');await p.waitForTimeout(400);await p.click('button:has-text("Begin")',{force:true});await p.waitForTimeout(1000);
+  await p.click('text=New campaign');await p.waitForTimeout(400);await p.click('button:has-text("Begin")',{force:true});await p.evaluate(()=>window.Battle&&Battle.skipScene&&Battle.skipScene());await p.waitForTimeout(1000);
   const clickT=async(sel,t)=>{await p.evaluate(([sel,t])=>{const x=[...document.querySelectorAll(sel)].find(x=>x.innerText.trim()===t&&x.offsetParent);x&&x.click()},[sel,t]);await p.waitForTimeout(400)};
   await clickT('#sh-sheet button','Close');await clickT('#ss-sheet button','Onward');
   // the leader is one level-up away and has JP banked just short of a skill, so the screen has a level-up and a newly learnable skill to show

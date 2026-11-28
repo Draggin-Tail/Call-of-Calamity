@@ -90,6 +90,7 @@
       const act = s.act && t >= s.act.t0 && t < s.act.t0 + s.act.dur ? s.act : null;
       if (act && act.aim) { const p = screenOf(act.aim.x, act.aim.y); if (p) face = dirOf(p[0] - cx, p[1] - cy); }
       if (!face && s.walkUntil && t < s.walkUntil) face = s.face;
+      if (!face && u.inScene) { const p = u.faceAt && screenOf(u.faceAt.x, u.faceAt.y); face = (p && dirOf(p[0] - cx, p[1] - cy)) || u.sceneFace || s.face || 'down'; }   // scenes: scripted facing, else the way it last walked
       if (!face) {
         let best = null, bd = 1e9;
         for (const v of SPR.units()) {

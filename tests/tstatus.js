@@ -7,7 +7,7 @@ let fails=0;const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
 for(const [w,h,o] of [[390,664,'portrait'],[780,350,'landscape']]){
  const p=await b.newPage({viewport:{width:w,height:h},hasTouch:true});const errs=[];p.on('pageerror',e=>errs.push(String(e)));
  await p.goto('http://localhost:8766/index.html');await p.waitForTimeout(2500);
- await p.click('text=New campaign');await p.waitForTimeout(300);await p.click('button:has-text("Begin")',{force:true});await p.waitForTimeout(1000);
+ await p.click('text=New campaign');await p.waitForTimeout(300);await p.click('button:has-text("Begin")',{force:true});await p.evaluate(()=>window.Battle&&Battle.skipScene&&Battle.skipScene());await p.waitForTimeout(1000);
  await p.evaluate(()=>{const s=GAME_SHELL.state();s.world.flags.guide_off=1;const it=s.inventory.items;it.t2_iron_sword=1;it.spear=1;it.t2_round_shield=1;it.swift_charm=2;it.iron_mace=1;it.t3_chain_coif=1;
    s.roster[0].level=6;s.roster[0].jp={squire:400};GAME_SAVE.learnSkill(s,s.roster[0].id,'brace');GAME_SHELL.render()});
  const tabs=async re=>p.evaluate(src=>{const R=new RegExp(src);const x=[...document.querySelectorAll('#sh-col button,#sh-sheet button,#ss-sheet button')].find(x=>x.offsetParent&&R.test(x.innerText.trim()));if(x)x.click();return !!x},re.source);

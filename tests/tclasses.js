@@ -7,7 +7,7 @@ let fails=0;const ok=(c,m)=>{console.log((c?'PASS ':'FAIL ')+m);if(!c)fails++};
 for(const [w,h,o] of [[390,664,'portrait'],[780,350,'landscape']]){
  const p=await b.newPage({viewport:{width:w,height:h},hasTouch:true});const errs=[];p.on('pageerror',e=>errs.push(String(e)));
  await p.goto('http://localhost:8766/index.html');await p.waitForTimeout(2500);
- await p.click('text=New campaign');await p.waitForTimeout(300);await p.click('button:has-text("Begin")',{force:true});await p.waitForTimeout(1000);
+ await p.click('text=New campaign');await p.waitForTimeout(300);await p.click('button:has-text("Begin")',{force:true});await p.evaluate(()=>window.Battle&&Battle.skipScene&&Battle.skipScene());await p.waitForTimeout(1000);
  // the first unit: squire and acolyte mastered, so sentinel / bulwark / cleric / warrior are unlocked; scout half learned
  await p.evaluate(()=>{const s=GAME_SHELL.state();s.world.flags.guide_off=1;const u=s.roster[0],D=GAME_DATA;u.learned=u.learned||{};
    for(const c of ['squire','acolyte'])u.learned[c]=D.classes[c].ab.slice();u.learned.scout=D.classes.scout.ab.slice(0,2);
